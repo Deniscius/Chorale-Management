@@ -9,6 +9,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Instrument;
 use App\Models\InstrumentMaintenance;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -24,7 +25,7 @@ class MaintenanceForm extends Component
     #[Validate('required|exists:instruments,id')]
     public ?string $instrument_id = null;
 
-    #[Validate('required')]
+    #[Validate]
     public string $type = 'entretien';
 
     #[Validate('nullable|string|max:1000')]
@@ -42,11 +43,19 @@ class MaintenanceForm extends Component
     #[Validate('nullable|date')]
     public ?string $scheduled_for = null;
 
-    #[Validate('required')]
+    #[Validate]
     public string $status = 'planifiee';
 
     #[Validate('nullable|string|max:2000')]
     public ?string $notes = null;
+
+    protected function rules(): array
+    {
+        return [
+            'type' => ['required', Rule::enum(MaintenanceType::class)],
+            'status' => ['required', Rule::enum(MaintenanceStatus::class)],
+        ];
+    }
 
     public function mount(?InstrumentMaintenance $maintenance = null): void
     {

@@ -8,6 +8,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Budget;
 use App\Models\Choir;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -23,7 +24,7 @@ class Form extends Component
     #[Validate('required|integer|min:2000|max:2100')]
     public string $year = '';
 
-    #[Validate('required')]
+    #[Validate]
     public string $category = 'Fonctionnement';
 
     #[Validate('nullable|exists:choirs,id')]
@@ -40,6 +41,13 @@ class Form extends Component
 
     #[Validate('nullable|string|max:2000')]
     public ?string $notes = null;
+
+    protected function rules(): array
+    {
+        return [
+            'category' => ['required', Rule::enum(BudgetCategory::class)],
+        ];
+    }
 
     public function mount(?Budget $budget = null): void
     {

@@ -10,6 +10,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\LiturgicalSeason;
 use App\Models\Work;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -25,7 +26,7 @@ class Form extends Component
     #[Validate('required|string|max:255')]
     public string $title = '';
 
-    #[Validate('required')]
+    #[Validate]
     public string $type = 'motet';
 
     #[Validate('nullable|exists:liturgical_seasons,id')]
@@ -87,6 +88,13 @@ class Form extends Component
 
     #[Validate('nullable|string|max:2000')]
     public ?string $notes = null;
+
+    protected function rules(): array
+    {
+        return [
+            'type' => ['required', Rule::enum(WorkType::class)],
+        ];
+    }
 
     public function mount(?Work $work = null): void
     {

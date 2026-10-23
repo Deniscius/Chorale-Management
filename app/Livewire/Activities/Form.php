@@ -10,6 +10,7 @@ use App\Models\Activity;
 use App\Models\Choir;
 use App\Models\Member;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -25,7 +26,7 @@ class Form extends Component
     #[Validate('required|string|max:255')]
     public string $title = '';
 
-    #[Validate('required')]
+    #[Validate]
     public string $type = 'repetition';
 
     #[Validate('nullable|string|max:3000')]
@@ -52,7 +53,7 @@ class Form extends Component
     #[Validate('nullable|numeric|min:0')]
     public ?string $budget_spent = null;
 
-    #[Validate('required')]
+    #[Validate]
     public string $status = 'planifiee';
 
     #[Validate('nullable|string|max:5000')]
@@ -60,6 +61,14 @@ class Form extends Component
 
     #[Validate('boolean')]
     public bool $is_public = false;
+
+    protected function rules(): array
+    {
+        return [
+            'type' => ['required', Rule::enum(ActivityType::class)],
+            'status' => ['required', Rule::enum(ActivityStatus::class)],
+        ];
+    }
 
     public function mount(?Activity $activity = null): void
     {

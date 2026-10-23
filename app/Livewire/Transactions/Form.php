@@ -13,6 +13,7 @@ use App\Models\Budget;
 use App\Models\Member;
 use App\Models\Transaction;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -25,7 +26,7 @@ class Form extends Component
 
     public ?Transaction $transaction = null;
 
-    #[Validate('required')]
+    #[Validate]
     public string $type = 'recette';
 
     #[Validate('required|date')]
@@ -46,10 +47,10 @@ class Form extends Component
     #[Validate('nullable|string|max:100')]
     public ?string $category = null;
 
-    #[Validate('required')]
+    #[Validate]
     public string $payment_method = 'especes';
 
-    #[Validate('required')]
+    #[Validate]
     public string $status = 'brouillon';
 
     #[Validate('nullable|exists:members,id')]
@@ -60,6 +61,15 @@ class Form extends Component
 
     #[Validate('nullable|string|max:2000')]
     public ?string $notes = null;
+
+    protected function rules(): array
+    {
+        return [
+            'type' => ['required', Rule::enum(TransactionType::class)],
+            'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
+            'status' => ['required', Rule::enum(TransactionStatus::class)],
+        ];
+    }
 
     public function mount(?Transaction $transaction = null): void
     {

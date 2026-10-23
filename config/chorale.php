@@ -14,6 +14,8 @@ return [
      */
     'reminders' => [
         'enabled' => (bool) env('REMINDERS_ENABLED', true),
+        'queued' => (bool) env('REMINDERS_QUEUED', true),
+        'lease_minutes' => (int) env('REMINDERS_LEASE_MINUTES', 60),
         'days_before' => (int) env('REMINDERS_DAYS_BEFORE', 2),
         'send_at' => env('REMINDERS_SEND_AT', '08:00'),
         'sms_enabled' => (bool) env('REMINDERS_SMS_ENABLED', false),

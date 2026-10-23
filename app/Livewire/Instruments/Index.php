@@ -95,6 +95,7 @@ class Index extends Component
         return Instrument::query()
             ->with('custodian')
             ->withCount('movements')
+            ->withSum(['movements as loaned_quantity' => fn ($q) => $q->whereIn('type', ['sortie', 'pret'])->whereNull('actual_return_on')], 'quantity')
             ->when($this->search !== '', function (Builder $query) {
                 $like = '%'.$this->search.'%';
 

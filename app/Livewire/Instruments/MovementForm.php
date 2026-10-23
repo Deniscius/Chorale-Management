@@ -9,6 +9,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Instrument;
 use App\Models\InstrumentMovement;
 use App\Models\Member;
+use App\Services\InstrumentLoans;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -25,6 +26,9 @@ class MovementForm extends Component
 
     #[Validate('required|exists:instruments,id')]
     public ?string $instrument_id = null;
+
+    #[Validate('required|integer|min:1')]
+    public string $quantity = '1';
 
     #[Validate]
     public string $type = 'sortie';
@@ -70,6 +74,7 @@ class MovementForm extends Component
         if ($movement) {
             $this->fill([
                 'instrument_id' => $movement->instrument_id,
+                'quantity' => (string) $movement->quantity,
                 'type' => $movement->type->value,
                 'moved_on' => $movement->moved_on->format('Y-m-d'),
                 'reason' => $movement->reason,
@@ -93,6 +98,7 @@ class MovementForm extends Component
 
         $data = [
             'instrument_id' => (int) $this->instrument_id,
+            'quantity' => (int) $this->quantity,
             'type' => $this->type,
             'moved_on' => $this->moved_on,
             'reason' => $this->reason,
@@ -104,13 +110,8 @@ class MovementForm extends Component
             'notes' => $this->notes,
         ];
 
-        if ($this->movement) {
-            $this->movement->update($data);
-            $message = 'Mouvement mis à jour.';
-        } else {
-            $this->movement = InstrumentMovement::create($data + ['created_by' => auth()->id()]);
-            $message = 'Mouvement enregistré.';
-        }
+        $this->movement = app(InstrumentLoans::class)->save($this->movement, $data);
+        $message = 'Mouvement enregistré.';
 
         $this->dispatch('toast', type: 'success', message: $message);
         $this->dispatch('close-form');

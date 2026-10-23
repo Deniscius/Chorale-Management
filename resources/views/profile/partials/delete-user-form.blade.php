@@ -29,6 +29,7 @@
                 mot de passe pour confirmer la suppression.
             </p>
 
+            <x-input-error :messages="$errors->userDeletion->get('role')" class="mt-2" />
             <div class="mt-6">
                 <x-input-label for="password" value="Mot de passe" class="sr-only" />
 

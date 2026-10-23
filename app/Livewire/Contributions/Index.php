@@ -101,7 +101,7 @@ class Index extends Component
         app(ReceiptLedger::class)->saveContribution($contribution, [
             'status' => ContributionStatus::Payee->value,
             'paid_amount' => $contribution->due_amount,
-            'paid_on' => $contribution->paid_on ?? today(),
+            'paid_on' => today(),
         ]);
 
         $this->dispatch('toast', type: 'success', message: 'Cotisation marquée comme payée.');

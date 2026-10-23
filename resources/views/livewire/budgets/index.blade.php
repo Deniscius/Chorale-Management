@@ -99,7 +99,7 @@
                         <x-money :value="$budget->committed_amount" />
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-slate-700">
-                        <x-money :value="$budget->realized_amount" />
+                        <x-money :value="$budget->actualRealized()" />
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-slate-900">
                         <x-money :value="$budget->available()" />

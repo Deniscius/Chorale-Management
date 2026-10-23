@@ -7,6 +7,7 @@ use App\Enums\DonorType;
 use App\Enums\PaymentMethod;
 use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
+use App\Livewire\Concerns\SearchesMembers;
 use App\Models\Donation;
 use App\Models\Member;
 use App\Services\ReceiptLedger;
@@ -19,6 +20,7 @@ use Livewire\Component;
 class Form extends Component
 {
     use InteractsWithModule;
+    use SearchesMembers;
 
     public const MODULE_KEY = UserRole::MODULE_COMPTABILITE;
 
@@ -137,16 +139,8 @@ class Form extends Component
     {
         if ($this->donor_type === DonorType::Anonyme->value) {
             $this->donor_name = null;
+            $this->member_id = null;
         }
-    }
-
-    #[Computed]
-    public function members()
-    {
-        return Member::query()
-            ->orderBy('last_name')
-            ->orderBy('first_name')
-            ->get();
     }
 
     #[Computed]

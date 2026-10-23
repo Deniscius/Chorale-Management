@@ -17,6 +17,18 @@
 @endphp
 
 <div x-data="{
+        dirty: false,
+        allowClose() {
+            return !this.dirty || window.confirm('Vos modifications ne sont pas enregistrées. Voulez-vous les abandonner ?');
+        },
+        guardClose(event) {
+            const trigger = event.target.closest('[wire\\:click]');
+            const action = trigger?.getAttribute('wire:click') || '';
+            if ((action.includes('close-form') || action.includes('close-access')) && !this.allowClose()) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }
+        },
         returnFocus: null,
         previousOverflow: '',
         init() {
@@ -53,7 +65,9 @@
             }
         },
      }"
-    x-on:keydown.escape.window="$dispatch('close-form')" x-on:keydown.tab="trapTab($event)"
+    x-on:input="dirty = true" x-on:change="dirty = true" x-on:click.capture="guardClose($event)"
+    x-on:beforeunload.window="if (dirty) { $event.preventDefault(); $event.returnValue = ''; }"
+    x-on:keydown.escape.window="if (allowClose()) $dispatch('close-form')" x-on:keydown.tab="trapTab($event)"
     class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="{{ $id }}">
 
     <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm animate-fade-in" wire:click="$dispatch('close-form')"

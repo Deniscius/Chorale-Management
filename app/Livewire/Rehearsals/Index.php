@@ -193,6 +193,12 @@ class Index extends Component
     /**
      * Demande une proposition de compte rendu à l'assistant.
      */
+    #[Computed]
+    public function reportContext(): string
+    {
+        return $this->reportRehearsal ? app(ChoraleAssistant::class)->rehearsalPrompt($this->reportRehearsal) : '';
+    }
+
     public function generateReport(): void
     {
         $this->authorizeManage();

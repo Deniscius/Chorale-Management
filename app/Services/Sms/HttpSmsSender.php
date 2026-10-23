@@ -33,6 +33,10 @@ class HttpSmsSender implements SmsSender
                 'message' => $message,
             ]);
 
+        if ($response->clientError()) {
+            throw new DeliveryRejected('L’opérateur SMS a refusé le message (HTTP '.$response->status().').');
+        }
+
         if ($response->failed()) {
             throw new RuntimeException(
                 'L’opérateur SMS a refusé le message (HTTP '.$response->status().').'

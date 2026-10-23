@@ -16,6 +16,11 @@ trait InteractsWithModule
      *
      * La classe utilisatrice doit déclarer la constante MODULE_KEY.
      */
+    public function bootInteractsWithModule(): void
+    {
+        $this->authorizeView();
+    }
+
     protected function moduleKey(): string
     {
         return static::MODULE_KEY;

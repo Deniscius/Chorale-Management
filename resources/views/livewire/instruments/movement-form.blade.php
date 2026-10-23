@@ -1,6 +1,7 @@
 <div>
     <form wire:submit="save" class="space-y-5">
         <x-validation-summary />
+        <x-input name="quantity" label="Quantité déplacée" type="number" min="1" wire:model="quantity" />
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
                 <x-input-label for="instrument_id" value="Instrument" />

@@ -5,6 +5,7 @@ namespace App\Livewire\Members;
 use App\Enums\UserRole;
 use App\Models\Member;
 use App\Models\User;
+use App\Services\AccountWriter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -91,7 +92,7 @@ class Access extends Component
         $user->email = $this->email;
         $user->role = $this->role;
         $user->member_id = $this->member->id;
-        $user->save();
+        $user = app(AccountWriter::class)->save($user->exists ? $user : null, $user->getAttributes());
 
         $this->reset('password');
         $this->member->refresh();
@@ -116,7 +117,9 @@ class Access extends Component
             return;
         }
 
-        $user?->delete();
+        if ($user) {
+            app(AccountWriter::class)->delete($user);
+        }
 
         $this->dispatch('toast', type: 'success', message: 'Accès retiré.');
         $this->dispatch('close-access');

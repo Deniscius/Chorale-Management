@@ -1,5 +1,6 @@
 <div>
     <form wire:submit="save" class="space-y-5">
+        <x-validation-summary />
         <div class="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
             <p class="font-medium text-slate-800">{{ $member->full_name }}</p>
             <p class="mt-0.5 text-xs text-slate-500">

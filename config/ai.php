@@ -9,8 +9,9 @@
  *  - « openrouter » : API compatible OpenAI, service hébergé ;
  *  - « ollama »     : modèle exécuté localement, aucune donnée ne sort du serveur.
  *
- * Aucune donnée sensible (montants, coordonnées personnelles) n'est transmise
- * au fournisseur : seules les informations utiles à la rédaction le sont.
+ * Les notes libres sont exclues. Le contexte (date, lieu, œuvres, effectifs)
+ * est affiché pour relecture avant génération ; vérifier les champs saisis
+ * avant tout envoi à un fournisseur distant.
  */
 return [
 

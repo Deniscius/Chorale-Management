@@ -40,6 +40,7 @@ jobs:
           cache: npm
       - run: composer install --no-interaction --prefer-dist
       - run: cp .env.example .env && php artisan key:generate
-      - run: npm ci && npm run build
+      - run: npm ci && npm audit --audit-level=moderate && npm run build
       - run: php vendor/phpunit/phpunit/phpunit
+      - run: composer audit
       - run: php vendor/bin/pint --test app/Services/ReceiptLedger.php app/Services/ReferenceSequence.php app/Services/TransactionWriter.php app/Support/CalendarYears.php tests/Feature/PostgreSqlAndLedgerTest.php

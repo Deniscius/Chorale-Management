@@ -1,6 +1,7 @@
 <?php
 
 use App\Console\Commands\SendRehearsalReminders;
+use App\Services\ReminderDispatcher;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -15,3 +16,6 @@ Schedule::command(SendRehearsalReminders::class)
     ->withoutOverlapping()
     ->onOneServer()
     ->when(fn () => (bool) config('chorale.reminders.enabled'));
+
+Schedule::call(fn () => app(ReminderDispatcher::class)->recoverStale())
+    ->name('chorale:recover-reminders')->everyFiveMinutes()->withoutOverlapping()->onOneServer();

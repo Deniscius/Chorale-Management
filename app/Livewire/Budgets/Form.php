@@ -37,7 +37,7 @@ class Form extends Component
     public ?string $committed_amount = null;
 
     #[Validate('nullable|numeric|min:0')]
-    public ?string $realized_amount = null;
+    public ?string $opening_realized_amount = null;
 
     #[Validate('nullable|string|max:2000')]
     public ?string $notes = null;
@@ -62,7 +62,7 @@ class Form extends Component
                 'choir_id' => $budget->choir_id,
                 'allocated_amount' => $budget->allocated_amount,
                 'committed_amount' => $budget->committed_amount,
-                'realized_amount' => $budget->realized_amount,
+                'opening_realized_amount' => $budget->opening_realized_amount,
                 'notes' => $budget->notes,
             ]);
         } else {
@@ -83,7 +83,7 @@ class Form extends Component
             'choir_id' => $this->choir_id !== null && $this->choir_id !== '' ? (int) $this->choir_id : null,
             'allocated_amount' => $this->allocated_amount !== null && $this->allocated_amount !== '' ? (float) $this->allocated_amount : 0,
             'committed_amount' => $this->committed_amount !== null && $this->committed_amount !== '' ? (float) $this->committed_amount : 0,
-            'realized_amount' => $this->realized_amount !== null && $this->realized_amount !== '' ? (float) $this->realized_amount : 0,
+            'opening_realized_amount' => $this->budget?->opening_realized_amount ?? 0,
             'notes' => $this->notes,
         ];
 

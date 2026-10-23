@@ -7,6 +7,7 @@ use App\Enums\ReminderStatus;
 use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Reminder;
+use App\Services\ReminderDispatcher;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -49,6 +50,13 @@ class History extends Component
         }
     }
 
+    public function resolve(int $id, string $decision): void
+    {
+        $this->authorizeManage();
+        app(ReminderDispatcher::class)->resolve($id, $decision);
+        $this->dispatch('toast', type: 'success', message: 'Rappel rapproché.');
+    }
+
     public function resetFilters(): void
     {
         $this->reset(['search', 'channel', 'status']);
@@ -87,6 +95,7 @@ class History extends Component
             'total' => (int) $counts->sum(),
             'envoyes' => (int) ($counts['envoye'] ?? 0),
             'echecs' => (int) ($counts['echec'] ?? 0),
+            'incertains' => (int) ($counts['incertain'] ?? 0),
             'sms' => Reminder::where('channel', ReminderChannel::Sms->value)->count(),
         ];
     }

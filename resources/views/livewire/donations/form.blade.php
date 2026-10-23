@@ -39,7 +39,9 @@
 
             <div>
                 <x-input-label for="member_id" value="Choriste concerné" />
-                <select id="member_id" wire:model="member_id"
+                <x-input name="memberSearch" label="Rechercher un choriste" wire:model.live.debounce.300ms="memberSearch" placeholder="Nom ou prénom" />
+                <p class="mb-1 text-xs text-slate-500">30 premiers résultats ; affinez la recherche si nécessaire.</p>
+                <select id="member_id" wire:model.live="member_id" @disabled($donor_type === \App\Enums\DonorType::Anonyme->value)
                     class="form-select mt-1">
                     <option value="">—</option>
                     @foreach ($this->members as $member)

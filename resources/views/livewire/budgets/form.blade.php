@@ -45,10 +45,11 @@
                 <x-input-error :messages="$errors->get('committed_amount')" class="mt-1" />
             </div>
 
-            <div>
-                <x-input-label for="realized_amount" value="Montant réalisé (FCFA)" />
-                <x-text-input id="realized_amount" type="number" step="0.01" min="0" wire:model="realized_amount" class="mt-1 block w-full" />
-                <x-input-error :messages="$errors->get('realized_amount')" class="mt-1" />
+            <div class="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+                Le réalisé est calculé depuis les dépenses validées.
+                @if ($budget && (float) $budget->opening_realized_amount > 0)
+                    Reprise antérieure conservée : <x-money :value="$budget->opening_realized_amount" />.
+                @endif
             </div>
         </div>
 

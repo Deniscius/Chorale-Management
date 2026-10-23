@@ -2,9 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Enums\ActivityStatus;
+use App\Enums\UserRole;
 use App\Models\Activity;
 use App\Models\Choir;
 use App\Models\Member;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class ActivitySeeder extends Seeder
@@ -17,11 +20,11 @@ class ActivitySeeder extends Seeder
         $activites = Activity::factory()->count(16)->make();
 
         foreach ($activites as $activite) {
-            $activite->save([
+            $activite->fill([
                 'choir_id' => $chorale->id,
                 'organizer_id' => $membres->random()->id,
-                'created_by' => 1,
-            ]);
+                'created_by' => User::where('role', UserRole::Admin->value)->value('id'),
+            ])->save();
 
             $participants = $membres->random(random_int(5, 20));
 
@@ -29,7 +32,7 @@ class ActivitySeeder extends Seeder
                 $activite->participants()->attach($participant->id, [
                     'role' => 'participant',
                     'status' => match (true) {
-                        $activite->status === 'terminee' => 'present',
+                        $activite->status === ActivityStatus::Terminee => 'present',
                         random_int(1, 100) <= 70 => 'present',
                         random_int(1, 100) <= 85 => 'excuse',
                         default => 'absent',

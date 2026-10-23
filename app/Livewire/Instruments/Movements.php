@@ -113,9 +113,9 @@ class Movements extends Component
                 $like = '%'.$this->search.'%';
 
                 $query->where(function (Builder $q) use ($like) {
-                    $q->where('destination', 'like', $like)
-                        ->orWhere('reason', 'like', $like)
-                        ->orWhereHas('instrument', fn (Builder $i) => $i->where('name', 'like', $like));
+                    $q->whereLike('destination', $like)
+                        ->orWhereLike('reason', $like)
+                        ->orWhereHas('instrument', fn (Builder $i) => $i->whereLike('name', $like));
                 });
             })
             ->when($this->type !== '', fn (Builder $query) => $query->where('type', $this->type))

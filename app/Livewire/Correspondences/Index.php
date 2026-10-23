@@ -11,6 +11,7 @@ use App\Models\Correspondence;
 use App\Models\CorrespondenceEvent;
 use App\Models\CorrespondenceService;
 use App\Models\Member;
+use App\Support\CalendarYears;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
@@ -257,13 +258,7 @@ class Index extends Component
     #[Computed]
     public function years(): array
     {
-        return Correspondence::query()
-            ->selectRaw('DISTINCT strftime("%Y", correspondence_date) as annee')
-            ->orderByDesc('annee')
-            ->pluck('annee')
-            ->filter()
-            ->values()
-            ->all();
+        return CalendarYears::for(new Correspondence, 'correspondence_date');
     }
 
     #[Computed]

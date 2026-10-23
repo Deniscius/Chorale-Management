@@ -83,7 +83,7 @@ class Ensembles extends Component
     {
         return InstrumentEnsemble::query()
             ->with('conductor')
-            ->when($this->search !== '', fn (Builder $query) => $query->where('name', 'like', '%'.$this->search.'%'))
+            ->when($this->search !== '', fn (Builder $query) => $query->whereLike('name', '%'.$this->search.'%'))
             ->orderBy('name')
             ->paginate(15);
     }

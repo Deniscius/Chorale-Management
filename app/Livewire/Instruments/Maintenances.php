@@ -95,9 +95,9 @@ class Maintenances extends Component
                 $like = '%'.$this->search.'%';
 
                 $query->where(function (Builder $q) use ($like) {
-                    $q->where('description', 'like', $like)
-                        ->orWhere('provider', 'like', $like)
-                        ->orWhereHas('instrument', fn (Builder $i) => $i->where('name', 'like', $like));
+                    $q->whereLike('description', $like)
+                        ->orWhereLike('provider', $like)
+                        ->orWhereHas('instrument', fn (Builder $i) => $i->whereLike('name', $like));
                 });
             })
             ->when($this->type !== '', fn (Builder $query) => $query->where('type', $this->type))

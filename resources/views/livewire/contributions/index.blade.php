@@ -1,4 +1,5 @@
 <div>
+    <x-validation-summary />
     <x-page-header title="Cotisations des choristes" icon="users"
         :subtitle="'Suivi des cotisations mensuelles — '.$this->stats['total'].' ligne(s).'">
         <x-slot name="actions">

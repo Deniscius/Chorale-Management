@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Enums\CorrespondenceType;
 use App\Models\Correspondence;
-use Illuminate\Support\Str;
 
 /**
  * Génération des références (chronos) du registre de courrier.
@@ -18,19 +17,7 @@ class CorrespondenceReferenceGenerator
      */
     public function next(CorrespondenceType $type, ?int $year = null): string
     {
-        $year ??= now()->year;
-        $prefix = $type->referencePrefix();
-
-        $last = Correspondence::withTrashed()
-            ->where('reference', 'like', "{$prefix}/{$year}/%")
-            ->orderByDesc('reference')
-            ->value('reference');
-
-        $sequence = $last
-            ? ((int) Str::afterLast($last, '/')) + 1
-            : 1;
-
-        return sprintf('%s/%d/%04d', $prefix, $year, $sequence);
+        return app(ReferenceSequence::class)->next('correspondences', $type->referencePrefix(), $year ?? now()->year);
     }
 
     /**

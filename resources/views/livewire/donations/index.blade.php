@@ -1,4 +1,5 @@
 <div>
+    <x-validation-summary />
     <x-page-header title="Dons" icon="sparkles"
         :subtitle="'Dons et offrandes reçus par la chorale — '.$this->stats['nombre'].' don(s).'">
         <x-slot name="actions">

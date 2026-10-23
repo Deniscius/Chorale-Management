@@ -70,10 +70,10 @@ class ReferenceGenerationTest extends TestCase
 
         $this->assertSame("OP/{$year}/0001", $generator->next());
 
-        $premiere = Transaction::factory()->recette()->create();
-        $seconde = Transaction::factory()->depense()->create();
+        $premiere = Transaction::factory()->recette()->create(['transaction_date' => now()->startOfYear()]);
+        $seconde = Transaction::factory()->depense()->create(['transaction_date' => now()->startOfYear()]);
 
-        $this->assertSame("OP/{$year}/0001", $premiere->reference);
-        $this->assertSame("OP/{$year}/0002", $seconde->reference);
+        $this->assertSame("OP/{$year}/0002", $premiere->reference);
+        $this->assertSame("OP/{$year}/0003", $seconde->reference);
     }
 }

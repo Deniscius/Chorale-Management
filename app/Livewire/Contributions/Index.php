@@ -7,6 +7,7 @@ use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Contribution;
 use App\Models\Member;
+use App\Services\ReceiptLedger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -83,7 +84,7 @@ class Index extends Component
     {
         $this->authorizeManage();
 
-        Contribution::findOrFail($contributionId)->delete();
+        app(ReceiptLedger::class)->deleteContribution($contributionId);
 
         $this->dispatch('toast', type: 'success', message: 'Cotisation supprimée.');
     }
@@ -97,7 +98,7 @@ class Index extends Component
 
         $contribution = Contribution::findOrFail($contributionId);
 
-        $contribution->update([
+        app(ReceiptLedger::class)->saveContribution($contribution, [
             'status' => ContributionStatus::Payee->value,
             'paid_amount' => $contribution->due_amount,
             'paid_on' => $contribution->paid_on ?? today(),
@@ -113,8 +114,8 @@ class Index extends Component
             ->with('member')
             ->when($this->search !== '', fn (Builder $query) => $query->whereHas(
                 'member',
-                fn (Builder $m) => $m->where('last_name', 'like', '%'.$this->search.'%')
-                    ->orWhere('first_name', 'like', '%'.$this->search.'%')
+                fn (Builder $m) => $m->whereLike('last_name', '%'.$this->search.'%')
+                    ->orWhereLike('first_name', '%'.$this->search.'%')
             ))
             ->when($this->year !== '', fn (Builder $query) => $query->where('year', (int) $this->year))
             ->when($this->month !== '', fn (Builder $query) => $query->where('month', (int) $this->month))

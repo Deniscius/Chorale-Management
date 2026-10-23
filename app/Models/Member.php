@@ -160,10 +160,10 @@ class Member extends Model
         $like = '%'.$term.'%';
 
         return $query->where(function (Builder $q) use ($like) {
-            $q->where('first_name', 'like', $like)
-                ->orWhere('last_name', 'like', $like)
-                ->orWhere('email', 'like', $like)
-                ->orWhere('phone', 'like', $like);
+            $q->whereLike('first_name', $like)
+                ->orWhereLike('last_name', $like)
+                ->orWhereLike('email', $like)
+                ->orWhereLike('phone', $like);
         });
     }
 }

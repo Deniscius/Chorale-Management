@@ -19,6 +19,7 @@ class Transaction extends Model
 
     protected $fillable = [
         'choir_id',
+        'contribution_id',
         'reference',
         'type',
         'transaction_date',
@@ -62,6 +63,16 @@ class Transaction extends Model
                 );
             }
         });
+    }
+
+    public function isLocked(): bool
+    {
+        return in_array($this->status, [TransactionStatus::Validee, TransactionStatus::Cloturee], true);
+    }
+
+    public function isReceipt(): bool
+    {
+        return $this->contribution_id !== null || Donation::where('transaction_id', $this->id)->exists();
     }
 
     public function choir(): BelongsTo

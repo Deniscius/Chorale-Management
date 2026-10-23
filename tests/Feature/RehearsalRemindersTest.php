@@ -251,7 +251,7 @@ class RehearsalRemindersTest extends TestCase
     {
         $rehearsal = Rehearsal::factory()->create([
             'date' => today()->addDays(2),
-            'venue' => str_repeat('Très longue salle paroissiale ', 10),
+            'venue' => mb_substr(str_repeat('Très longue salle paroissiale ', 10), 0, 250),
         ]);
 
         $dispatcher = app(ReminderDispatcher::class);

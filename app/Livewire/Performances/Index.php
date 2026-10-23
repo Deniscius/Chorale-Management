@@ -97,9 +97,9 @@ class Index extends Component
                 $like = '%'.$this->search.'%';
 
                 $query->where(function (Builder $q) use ($like) {
-                    $q->where('title', 'like', $like)
-                        ->orWhere('venue', 'like', $like)
-                        ->orWhere('audience', 'like', $like);
+                    $q->whereLike('title', $like)
+                        ->orWhereLike('venue', $like)
+                        ->orWhereLike('audience', $like);
                 });
             })
             ->when($this->type !== '', fn (Builder $query) => $query->where('type', $this->type))

@@ -12,6 +12,7 @@ use App\Models\Activity;
 use App\Models\Budget;
 use App\Models\Member;
 use App\Models\Transaction;
+use App\Services\TransactionWriter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -79,6 +80,12 @@ class Index extends Component
     {
         $this->authorizeManage();
 
+        $transaction = Transaction::findOrFail($transactionId);
+        if ($transaction->isLocked() || $transaction->isReceipt()) {
+            $this->dispatch('toast', type: 'error', message: 'Opération protégée : utilisez le règlement d’origine ou une écriture de régularisation.');
+
+            return;
+        }
         $this->editingId = $transactionId;
         $this->showForm = true;
     }
@@ -94,8 +101,7 @@ class Index extends Component
     {
         $this->authorizeManage();
 
-        Transaction::findOrFail($transactionId)->delete();
-
+        app(TransactionWriter::class)->delete($transactionId);
         $this->dispatch('toast', type: 'success', message: 'Opération supprimée.');
     }
 
@@ -106,14 +112,7 @@ class Index extends Component
     {
         $this->authorizeManage();
 
-        $transaction = Transaction::findOrFail($transactionId);
-
-        $transaction->update([
-            'status' => TransactionStatus::Validee->value,
-            'validated_by' => auth()->id(),
-            'validated_at' => now(),
-        ]);
-
+        app(TransactionWriter::class)->transition($transactionId, TransactionStatus::Validee);
         $this->dispatch('toast', type: 'success', message: 'Opération validée.');
     }
 
@@ -124,12 +123,7 @@ class Index extends Component
     {
         $this->authorizeManage();
 
-        Transaction::findOrFail($transactionId)->update([
-            'status' => TransactionStatus::Rejetee->value,
-            'validated_by' => auth()->id(),
-            'validated_at' => now(),
-        ]);
-
+        app(TransactionWriter::class)->transition($transactionId, TransactionStatus::Rejetee);
         $this->dispatch('toast', type: 'success', message: 'Opération rejetée.');
     }
 
@@ -142,9 +136,9 @@ class Index extends Component
                 $like = '%'.$this->search.'%';
 
                 $query->where(function (Builder $q) use ($like) {
-                    $q->where('reference', 'like', $like)
-                        ->orWhere('description', 'like', $like)
-                        ->orWhere('category', 'like', $like);
+                    $q->whereLike('reference', $like)
+                        ->orWhereLike('description', $like)
+                        ->orWhereLike('category', $like);
                 });
             })
             ->when($this->type !== '', fn (Builder $query) => $query->where('type', $this->type))

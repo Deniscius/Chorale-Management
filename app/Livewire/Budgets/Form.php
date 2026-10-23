@@ -53,6 +53,7 @@ class Form extends Component
     {
         $this->authorizeManage();
 
+        $budget = $budget?->exists ? $budget : null;
         $this->budget = $budget;
 
         if ($budget) {

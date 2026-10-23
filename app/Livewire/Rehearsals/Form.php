@@ -9,6 +9,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Rehearsal;
 use App\Models\Work;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
@@ -45,7 +46,7 @@ class Form extends Component
      *
      * @var array<int, int>
      */
-    #[Validate('array')]
+    #[Validate('array|max:500')]
     public array $works = [];
 
     #[Validate('nullable|string|max:2000')]
@@ -56,6 +57,7 @@ class Form extends Component
         return [
             'type' => ['required', Rule::enum(RehearsalType::class)],
             'status' => ['required', Rule::enum(EventStatus::class)],
+            'works.*' => ['integer', 'distinct', Rule::exists('works', 'id')->whereNull('deleted_at')],
         ];
     }
 
@@ -63,6 +65,7 @@ class Form extends Component
     {
         $this->authorizeManage();
 
+        $rehearsal = $rehearsal?->exists ? $rehearsal : null;
         $this->rehearsal = $rehearsal;
 
         if ($rehearsal) {
@@ -97,37 +100,27 @@ class Form extends Component
             'notes' => $this->notes,
         ];
 
-        if ($this->rehearsal) {
-            $this->rehearsal->update($data);
-            $message = 'Répétition mise à jour.';
-        } else {
-            $this->rehearsal = Rehearsal::create($data + ['created_by' => auth()->id()]);
-            $message = 'Répétition enregistrée.';
-        }
+        $editing = $this->rehearsal !== null;
+        $this->rehearsal = DB::transaction(function () use ($data) {
+            $entry = $this->rehearsal ? Rehearsal::query()->lockForUpdate()->findOrFail($this->rehearsal->id) : new Rehearsal(['created_by' => auth()->id()]);
+            $entry->fill($data)->save();
+            $entry->works()->sync(collect($this->works)->map(fn ($id) => (int) $id)->all());
 
-        $this->syncProgram();
+            return $entry;
+        });
+        $message = $editing ? 'Répétition mise à jour.' : 'Répétition enregistrée.';
 
         $this->dispatch('toast', type: 'success', message: $message);
         $this->dispatch('close-form');
-    }
-
-    /**
-     * Synchronise le programme d'œuvres de la répétition.
-     */
-    private function syncProgram(): void
-    {
-        $ids = collect($this->works)->map(fn ($id) => (int) $id)->unique()->values();
-
-        $this->rehearsal->works()->sync($ids->all());
     }
 
     #[Computed]
     public function availableWorks()
     {
         return Work::query()
-            ->where('is_repertoire', true)
+            ->where(fn ($q) => $q->where('is_repertoire', true)->orWhereIn('id', $this->works))
             ->orderBy('title')
-            ->get();
+            ->get(['id', 'title', 'type', 'duration_minutes']);
     }
 
     #[Computed]

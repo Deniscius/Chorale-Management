@@ -91,7 +91,7 @@ class Ensembles extends Component
     #[Computed]
     public function editingEnsemble(): ?InstrumentEnsemble
     {
-        return $this->editingId ? InstrumentEnsemble::find($this->editingId) : null;
+        return $this->editingId ? InstrumentEnsemble::findOrFail($this->editingId) : null;
     }
 
     #[Computed]

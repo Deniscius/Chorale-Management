@@ -141,13 +141,13 @@ class Index extends Component
     #[Computed]
     public function editingMember(): ?Member
     {
-        return $this->editingId ? Member::find($this->editingId) : null;
+        return $this->editingId ? Member::findOrFail($this->editingId) : null;
     }
 
     #[Computed]
     public function accessMember(): ?Member
     {
-        return $this->accessMemberId ? Member::with('user')->find($this->accessMemberId) : null;
+        return $this->accessMemberId ? Member::with('user')->findOrFail($this->accessMemberId) : null;
     }
 
     #[Computed]

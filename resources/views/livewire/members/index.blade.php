@@ -194,7 +194,7 @@
 
     @if ($showAccess && $this->accessMember)
         <div wire:key="member-access">
-            <x-modal-panel title="Rôle d'accès du choriste"
+            <x-modal-panel close-event="close-access" title="Rôle d'accès du choriste"
                 subtitle="Attribuez à ce choriste le rôle qui détermine ses modules.">
                 <livewire:members.access :member="$this->accessMember" />
             </x-modal-panel>

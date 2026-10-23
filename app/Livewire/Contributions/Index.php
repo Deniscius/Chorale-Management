@@ -134,7 +134,7 @@ class Index extends Component
     #[Computed]
     public function editingContribution(): ?Contribution
     {
-        return $this->editingId ? Contribution::find($this->editingId) : null;
+        return $this->editingId ? Contribution::findOrFail($this->editingId) : null;
     }
 
     #[Computed]

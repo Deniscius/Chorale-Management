@@ -170,7 +170,7 @@
     </div>
 
     @if ($showTeam && $this->canConfigureTeam)
-        <x-modal-panel title="Accès aux archives" size="lg">
+        <x-modal-panel close-event="close-team" title="Accès aux archives" size="lg">
             <livewire:documents.team-settings :commission="$this->commission" :key="'team-'.$this->commission" />
         </x-modal-panel>
     @endif

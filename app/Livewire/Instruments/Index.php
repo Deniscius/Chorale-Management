@@ -117,7 +117,7 @@ class Index extends Component
     #[Computed]
     public function editingInstrument(): ?Instrument
     {
-        return $this->editingId ? Instrument::find($this->editingId) : null;
+        return $this->editingId ? Instrument::findOrFail($this->editingId) : null;
     }
 
     #[Computed]

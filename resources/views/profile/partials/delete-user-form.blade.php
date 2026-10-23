@@ -5,7 +5,7 @@
         </h2>
 
         <p class="mt-1 text-sm text-slate-600">
-            Une fois votre compte supprimé, toutes ses données seront définitivement effacées. Avant toute suppression,
+            Une fois votre compte supprimé, son accès à l’application sera définitivement retiré. Avant toute suppression,
             merci de télécharger les informations que vous souhaitez conserver.
         </p>
     </header>
@@ -16,7 +16,7 @@
     >Supprimer le compte</x-danger-button>
 
     <x-modal name="confirm-user-deletion" :show="$errors->userDeletion->isNotEmpty()" focusable>
-        <form method="post" action="{{ route('profile.destroy') }}" class="p-6">
+        <form method="post" action="{{ route('profile.destroy') }}" class="space-y-4" x-on:submit="dirty = false">
             @csrf
             @method('delete')
 
@@ -25,16 +25,16 @@
             </h2>
 
             <p class="mt-1 text-sm text-slate-600">
-                Une fois votre compte supprimé, toutes ses données seront définitivement effacées. Veuillez saisir votre
+                Une fois votre compte supprimé, son accès à l’application sera définitivement retiré. Veuillez saisir votre
                 mot de passe pour confirmer la suppression.
             </p>
 
             <x-input-error :messages="$errors->userDeletion->get('role')" class="mt-2" />
             <div class="mt-6">
-                <x-input-label for="password" value="Mot de passe" class="sr-only" />
+                <x-input-label for="delete-account-password" value="Mot de passe" class="sr-only" />
 
                 <x-text-input
-                    id="password"
+                    id="delete-account-password"
                     name="password"
                     type="password"
                     class="mt-1 block w-3/4"

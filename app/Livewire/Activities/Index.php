@@ -185,7 +185,7 @@ class Index extends Component
     #[Computed]
     public function editingActivity(): ?Activity
     {
-        return $this->editingId ? Activity::find($this->editingId) : null;
+        return $this->editingId ? Activity::findOrFail($this->editingId) : null;
     }
 
     #[Computed]

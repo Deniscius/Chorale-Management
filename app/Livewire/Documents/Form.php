@@ -95,7 +95,9 @@ class Form extends Component
 
         $this->assertCanUpload($commission);
         if ($this->document) {
-            $this->assertCanUpload($this->document->fresh()->commission);
+            $source = $this->document->fresh();
+            abort_unless($source, 404);
+            $this->assertCanUpload($source->commission);
         }
 
         $this->validate();

@@ -14,39 +14,39 @@
 
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
-                <x-input-label for="role" value="Rôle attribué" />
-                <select id="role" wire:model="role"
+                <x-input-label for="members-access-role" value="Rôle attribué" />
+                <select id="members-access-role" aria-describedby="members-access-role-error" aria-invalid="{{ $errors->has('role') ? 'true' : 'false' }}" wire:model="role"
                     class="form-select mt-1">
                     @foreach ($this->roleOptions as $value => $label)
                         <option value="{{ $value }}">{{ $label }}</option>
                     @endforeach
                 </select>
-                <x-input-error :messages="$errors->get('role')" class="mt-1" />
+                <x-input-error id="members-access-role-error" :messages="$errors->get('role')" class="mt-1" />
                 <p class="mt-1 text-xs text-slate-500">
                     Détermine les modules consultables et modifiables par ce choriste.
                 </p>
             </div>
 
             <div>
-                <x-input-label for="username" value="Identifiant de connexion" />
-                <x-text-input id="username" type="text" wire:model="username" class="mt-1 block w-full"
+                <x-input-label for="members-access-username" value="Identifiant de connexion" />
+                <x-text-input id="members-access-username" type="text" name="username" aria-describedby="members-access-username-error" aria-invalid="{{ $errors->has('username') ? 'true' : 'false' }}" wire:model="username" class="mt-1 block w-full"
                     autocapitalize="none" spellcheck="false" required />
-                <x-input-error :messages="$errors->get('username')" class="mt-1" />
+                <x-input-error id="members-access-username-error" :messages="$errors->get('username')" class="mt-1" />
             </div>
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
-                <x-input-label for="email" value="Adresse e-mail" />
-                <x-text-input id="email" type="email" wire:model="email" class="mt-1 block w-full" required />
-                <x-input-error :messages="$errors->get('email')" class="mt-1" />
+                <x-input-label for="members-access-email" value="Adresse e-mail" />
+                <x-text-input id="members-access-email" type="email" name="email" aria-describedby="members-access-email-error" aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" wire:model="email" class="mt-1 block w-full" required />
+                <x-input-error id="members-access-email-error" :messages="$errors->get('email')" class="mt-1" />
             </div>
 
             <div>
-                <x-input-label for="password" value="Mot de passe" />
-                <x-text-input id="password" type="password" wire:model="password" class="mt-1 block w-full"
+                <x-input-label for="members-access-password" value="Mot de passe" />
+                <x-text-input id="members-access-password" type="password" name="password" aria-describedby="members-access-password-error" aria-invalid="{{ $errors->has('password') ? 'true' : 'false' }}" wire:model="password" class="mt-1 block w-full"
                     autocomplete="new-password" />
-                <x-input-error :messages="$errors->get('password')" class="mt-1" />
+                <x-input-error id="members-access-password-error" :messages="$errors->get('password')" class="mt-1" />
                 <p class="mt-1 text-xs text-slate-500">Laissez vide pour générer un mot de passe aléatoire.</p>
             </div>
         </div>
@@ -68,7 +68,7 @@
                     class="btn btn-secondary">
                     Annuler
                 </button>
-                <button type="submit"
+                <button type="submit" wire:loading.attr="disabled" wire:target="save,revoke"
                     class="btn btn-primary">
                     <span wire:loading.remove wire:target="save">Enregistrer</span>
                     <span wire:loading wire:target="save">Enregistrement…</span>

@@ -129,7 +129,7 @@ class Index extends Component
     #[Computed]
     public function editingRehearsal(): ?Rehearsal
     {
-        return $this->editingId ? Rehearsal::with('works')->find($this->editingId) : null;
+        return $this->editingId ? Rehearsal::with('works')->findOrFail($this->editingId) : null;
     }
 
     #[Computed]
@@ -176,7 +176,7 @@ class Index extends Component
     #[Computed]
     public function reportRehearsal(): ?Rehearsal
     {
-        return $this->reportId ? Rehearsal::with('works')->find($this->reportId) : null;
+        return $this->reportId ? Rehearsal::with('works')->findOrFail($this->reportId) : null;
     }
 
     /**

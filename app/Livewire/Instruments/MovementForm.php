@@ -69,6 +69,7 @@ class MovementForm extends Component
     {
         $this->authorizeManage();
 
+        $movement = $movement?->exists ? $movement : null;
         $this->movement = $movement;
 
         if ($movement) {

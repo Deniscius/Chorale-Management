@@ -74,6 +74,7 @@ class Form extends Component
     {
         $this->authorizeManage();
 
+        $activity = $activity?->exists ? $activity : null;
         $this->activity = $activity;
 
         if ($activity) {

@@ -87,6 +87,13 @@
                     </td>
                     <td class="whitespace-nowrap px-4 py-3">
                         <x-enum-badge :enum="$reminder->status" />
+                        @if ($reminder->status === \App\Enums\ReminderStatus::Incertain && $this->canManage())
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                <button class="btn btn-secondary" wire:click="resolve({{ $reminder->id }}, 'sent')" wire:confirm="Confirmez-vous avoir vérifié que le fournisseur a bien envoyé ce rappel ?">Déjà envoyé</button>
+                                <button class="btn btn-secondary" wire:click="resolve({{ $reminder->id }}, 'retry')" wire:confirm="Après vérification du fournisseur, confirmez la relance. Elle peut créer un doublon si le premier envoi a déjà abouti.">Relancer</button>
+                                <button class="btn btn-secondary" wire:click="resolve({{ $reminder->id }}, 'ignore')">Ignorer</button>
+                            </div>
+                        @endif
                         @if ($reminder->error)
                             <p class="mt-1 max-w-xs truncate text-xs text-red-600" title="{{ $reminder->error }}">
                                 {{ $reminder->error }}

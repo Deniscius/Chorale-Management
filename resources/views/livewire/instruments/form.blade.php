@@ -86,7 +86,7 @@
         </div>
 
         <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-            <input type="checkbox" wire:model="is_borrowed"
+            <input type="checkbox" disabled @checked($is_borrowed) title="Disponibilité calculée depuis les mouvements"
                 class="rounded border-slate-300 text-slate-900 shadow-sm focus:ring-slate-500">
             <span class="text-sm font-medium text-slate-700">Instrument actuellement sorti ou prêté</span>
         </label>

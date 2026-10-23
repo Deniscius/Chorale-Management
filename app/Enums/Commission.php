@@ -4,6 +4,7 @@ namespace App\Enums;
 
 use App\Enums\Concerns\HasColor;
 use App\Enums\Concerns\HasLabel;
+use App\Models\User;
 
 /**
  * Commissions de la chorale auxquelles un document peut être rattaché.
@@ -71,6 +72,16 @@ enum Commission: string
      *
      * @return array<int, self>
      */
+    public function canView(?User $user): bool
+    {
+        return $user !== null && in_array($this, self::forRole($user->role), true);
+    }
+
+    public function canManage(?User $user): bool
+    {
+        return $this->canView($user) && $user->canManageModule($this->module());
+    }
+
     public static function forRole(UserRole $role): array
     {
         if ($role === UserRole::Admin || $role === UserRole::Directeur) {

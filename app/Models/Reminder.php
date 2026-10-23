@@ -27,6 +27,7 @@ class Reminder extends Model
         'status',
         'sent_at',
         'error',
+        'lease_token', 'reserved_at', 'sending_at', 'attempts',
     ];
 
     protected function casts(): array
@@ -35,6 +36,7 @@ class Reminder extends Model
             'channel' => ReminderChannel::class,
             'status' => ReminderStatus::class,
             'sent_at' => 'datetime',
+            'reserved_at' => 'datetime', 'sending_at' => 'datetime', 'attempts' => 'integer',
         ];
     }
 

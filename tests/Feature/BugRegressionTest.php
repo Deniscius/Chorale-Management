@@ -108,12 +108,12 @@ class BugRegressionTest extends TestCase
         $this->assertTrue($second->refresh()->is_borrowed);
     }
 
-    public function test_an_older_movement_does_not_override_the_latest(): void
+    public function test_an_unclosed_older_loan_remains_borrowed_even_with_a_later_return_record(): void
     {
         $instrument = Instrument::factory()->create();
         InstrumentMovement::factory()->create(['instrument_id' => $instrument->id, 'type' => 'retour', 'moved_on' => '2026-01-02']);
         InstrumentMovement::factory()->create(['instrument_id' => $instrument->id, 'type' => 'pret', 'moved_on' => '2026-01-01', 'actual_return_on' => null]);
-        $this->assertFalse($instrument->refresh()->is_borrowed);
+        $this->assertTrue($instrument->refresh()->is_borrowed);
     }
 
     public function test_quick_participant_edits_reject_invalid_values(): void

@@ -85,7 +85,7 @@ class ChoraleAssistant
         PROMPT;
     }
 
-    private function rehearsalPrompt(Rehearsal $rehearsal): string
+    public function rehearsalPrompt(Rehearsal $rehearsal): string
     {
         $rehearsal->loadMissing('works');
 
@@ -112,7 +112,6 @@ class ChoraleAssistant
             'Œuvres au programme : '.($works !== '' ? $works : 'aucune œuvre renseignée'),
             'Choristes présents : '.$present,
             'Choristes absents : '.$absent,
-            'Notes de séance : '.($rehearsal->notes ?: 'aucune'),
         ];
 
         return "Rédige le compte rendu de cette répétition.\n\n".implode("\n", $lines);

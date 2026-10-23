@@ -5,6 +5,7 @@ namespace App\Livewire\Users;
 use App\Enums\UserRole;
 use App\Models\Member;
 use App\Models\User;
+use App\Services\AccountWriter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -95,7 +96,7 @@ class Form extends Component
         }
 
         if ($this->user) {
-            $this->user->update($data);
+            $this->user = app(AccountWriter::class)->save($this->user, $data);
             $message = 'Compte utilisateur mis à jour.';
         } else {
             if (blank($this->password)) {
@@ -105,7 +106,7 @@ class Form extends Component
             }
 
             $data['password'] = $this->password;
-            $this->user = User::create($data);
+            $this->user = app(AccountWriter::class)->save(null, $data);
             $message = 'Compte utilisateur créé.';
         }
 
@@ -158,6 +159,11 @@ class Form extends Component
         $used = User::whereNotNull('member_id')->pluck('member_id')->all();
 
         return $this->members->reject(fn (Member $member) => in_array($member->id, $used, true) && $member->id !== $this->member_id);
+    }
+
+    public function hydrate(): void
+    {
+        abort_unless(auth()->user()?->can('manage-users'), 403);
     }
 
     public function render(): View

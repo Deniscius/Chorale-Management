@@ -7,6 +7,7 @@ use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Budget;
 use App\Models\Choir;
+use App\Models\Transaction;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -90,6 +91,7 @@ class Index extends Component
     {
         return Budget::query()
             ->with('choir')
+            ->withPostedExpenses()
             ->withCount('transactions')
             ->when($this->search !== '', fn (Builder $query) => $query->whereLike('category', '%'.$this->search.'%'))
             ->when($this->year !== '', fn (Builder $query) => $query->where('year', (int) $this->year))
@@ -133,7 +135,7 @@ class Index extends Component
     {
         $allocated = (float) Budget::sum('allocated_amount');
         $committed = (float) Budget::sum('committed_amount');
-        $realized = (float) Budget::sum('realized_amount');
+        $realized = (float) Budget::sum('opening_realized_amount') + (float) Transaction::validated()->where('type', 'depense')->whereHas('budget')->sum('amount');
 
         return [
             'total' => Budget::count(),

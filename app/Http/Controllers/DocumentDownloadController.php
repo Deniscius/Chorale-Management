@@ -19,7 +19,7 @@ class DocumentDownloadController extends Controller
     public function __invoke(Document $document): BinaryFileResponse|StreamedResponse
     {
         abort_unless(
-            auth()->user()?->canAccessModule($document->commission->module()),
+            $document->commission->canView(auth()->user()),
             403,
             'Document non accessible avec votre rôle.',
         );

@@ -95,7 +95,7 @@
                         <p class="text-sm font-semibold text-slate-900">{{ $instrument->name }}</p>
                         <p class="mt-0.5 text-xs text-slate-500">
                             @if ($instrument->serial_number) N° {{ $instrument->serial_number }} @endif
-                            @if ($instrument->quantity > 1) · {{ $instrument->quantity }} unités @endif
+                            · {{ $instrument->availableQuantity() }} / {{ $instrument->quantity }} unité(s) disponible(s)
                         </p>
                     </td>
                     <td class="whitespace-nowrap px-4 py-3">

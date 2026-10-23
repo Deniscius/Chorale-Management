@@ -5,96 +5,67 @@ namespace App\Services;
 use App\Enums\MemberStatus;
 use App\Enums\ReminderChannel;
 use App\Enums\ReminderStatus;
+use App\Jobs\SendReminder;
 use App\Mail\RehearsalReminder;
 use App\Models\Member;
 use App\Models\Rehearsal;
 use App\Models\Reminder;
 use App\Services\Sms\SmsSender;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
-/**
- * Envoi des rappels de répétition.
- *
- * Le service sépare trois responsabilités :
- *
- *  - la sélection des répétitions à rappeler (délai configurable) ;
- *  - la construction du message, identique pour tous les canaux ;
- *  - l'envoi proprement dit, journalisé dans la table `reminders`.
- *
- * La journalisation préalable garantit l'idempotence : si la commande est
- * relancée le même jour, aucun choriste ne reçoit deux fois le même rappel.
- */
-class ReminderDispatcher
+final class ReminderDispatcher
 {
     public function __construct(private readonly SmsSender $sms) {}
 
-    /**
-     * Répétitions planifiées devant faire l'objet d'un rappel.
-     *
-     * @return Collection<int, Rehearsal>
-     */
     public function rehearsalsToRemind(): Collection
     {
-        $days = max(0, (int) config('chorale.reminders.days_before', 2));
-
-        return Rehearsal::query()
-            ->with('works')
-            ->whereDate('date', today()->addDays($days))
-            ->whereIn('status', ['planifiee', 'reportee'])
-            ->orderBy('date')
-            ->get();
+        return Rehearsal::with('works')->whereDate('date', today()->addDays(max(0, (int) config('chorale.reminders.days_before', 2))))->whereIn('status', ['planifiee', 'reportee'])->orderBy('date')->get();
     }
 
-    /**
-     * Envoie les rappels de toutes les répétitions concernées.
-     *
-     * @return array{rehearsals: int, sent: int, skipped: int, failed: int}
-     */
     public function dispatchAll(bool $dryRun = false): array
     {
-        $rehearsals = $this->rehearsalsToRemind();
-        $totals = ['rehearsals' => $rehearsals->count(), 'sent' => 0, 'skipped' => 0, 'failed' => 0];
-
-        foreach ($rehearsals as $rehearsal) {
-            $result = $this->dispatchForRehearsal($rehearsal, $dryRun);
-
-            $totals['sent'] += $result['sent'];
-            $totals['skipped'] += $result['skipped'];
-            $totals['failed'] += $result['failed'];
+        if (! $dryRun) {
+            $this->recoverStale();
+        }
+        $total = ['rehearsals' => 0, 'sent' => 0, 'queued' => 0, 'skipped' => 0, 'failed' => 0];
+        foreach ($this->rehearsalsToRemind() as $r) {
+            $total['rehearsals']++;
+            foreach ($this->dispatchForRehearsal($r, $dryRun) as $key => $n) {
+                $total[$key] += $n;
+            }
         }
 
-        return $totals;
+        return $total;
     }
 
-    /**
-     * Envoie les rappels d'une répétition à tous les choristes concernés.
-     *
-     * @return array{sent: int, skipped: int, failed: int}
-     */
     public function dispatchForRehearsal(Rehearsal $rehearsal, bool $dryRun = false): array
     {
+        if (! $dryRun) {
+            $this->recoverStale();
+        }
         $rehearsal->loadMissing('works');
-
-        $result = ['sent' => 0, 'skipped' => 0, 'failed' => 0];
-
-        $members = Member::query()
-            ->where('status', MemberStatus::Actif->value)
-            ->where(function ($query) {
-                $query->where('notify_email', true)->orWhere('notify_sms', true);
-            })
-            ->orderBy('id')
-            ->lazyById(200);
-
+        $result = ['sent' => 0, 'queued' => 0, 'skipped' => 0, 'failed' => 0];
+        $members = Member::where('status', MemberStatus::Actif->value)->where(fn ($q) => $q->where('notify_email', true)->orWhere('notify_sms', true))->orderBy('id')->lazyById(200);
         foreach ($members as $member) {
-            foreach ($this->channelsFor($member) as $channel) {
+            $channels = [];
+            if ($member->canReceiveEmail()) {
+                $channels[] = ReminderChannel::Mail;
+            }if ($member->canReceiveSms()) {
+                $channels[] = ReminderChannel::Sms;
+            }
+            foreach ($channels as $channel) {
+                if ($dryRun) {
+                    $result['skipped']++;
+
+                    continue;
+                }
                 $recipient = $channel === ReminderChannel::Mail ? $member->email : $member->phone;
-
-                $outcome = $this->send($rehearsal, $member, $channel, (string) $recipient, $dryRun);
-
+                $outcome = $this->reserve($rehearsal, $member, $channel, (string) $recipient);
                 $result[$outcome]++;
             }
         }
@@ -102,111 +73,116 @@ class ReminderDispatcher
         return $result;
     }
 
-    /**
-     * Canaux réellement disponibles pour un choriste.
-     *
-     * @return array<int, ReminderChannel>
-     */
-    private function channelsFor(Member $member): array
+    private function reserve(Rehearsal $r, Member $m, ReminderChannel $channel, string $recipient): string
     {
-        $channels = [];
+        $entry = DB::transaction(function () use ($r, $m, $channel, $recipient) {
+            // firstOrCreate uses a savepoint on PostgreSQL when uniqueness races.
+            $entry = Reminder::firstOrCreate(['rehearsal_id' => $r->id, 'member_id' => $m->id, 'channel' => $channel->value], ['recipient' => $recipient, 'subject' => $this->subject($r), 'body' => $this->body($r, $channel), 'status' => ReminderStatus::EnAttente, 'lease_token' => (string) Str::uuid(), 'reserved_at' => now()]);
+            $created = $entry->wasRecentlyCreated;
+            $entry = Reminder::query()->lockForUpdate()->findOrFail($entry->id);
+            if (! $created && $entry->status !== ReminderStatus::Echec) {
+                return null;
+            }
+            if (! $created) {
+                $entry->update(['status' => ReminderStatus::EnAttente, 'recipient' => $recipient, 'subject' => $this->subject($r), 'body' => $this->body($r, $channel), 'error' => null, 'sent_at' => null, 'lease_token' => (string) Str::uuid(), 'reserved_at' => now(), 'sending_at' => null]);
+            }
 
-        if ($member->canReceiveEmail()) {
-            $channels[] = ReminderChannel::Mail;
+            return $entry;
+        }, 3);
+        if (! $entry) {
+            return 'skipped';
         }
 
-        if ($member->canReceiveSms()) {
-            $channels[] = ReminderChannel::Sms;
-        }
-
-        return $channels;
+        return $this->schedule($entry);
     }
 
-    /**
-     * Envoie un rappel sur un canal et journalise le résultat.
-     *
-     * @return 'sent'|'skipped'|'failed'
-     */
-    private function send(
-        Rehearsal $rehearsal,
-        Member $member,
-        ReminderChannel $channel,
-        string $recipient,
-        bool $dryRun,
-    ): string {
-        // Idempotence : le rappel a-t-il déjà été traité ?
-        $alreadySent = Reminder::query()
-            ->where('rehearsal_id', $rehearsal->getKey())
-            ->where('member_id', $member->getKey())
-            ->where('channel', $channel->value)
-            ->whereIn('status', [ReminderStatus::Envoye->value, ReminderStatus::EnAttente->value])
-            ->exists();
+    private function schedule(Reminder $entry): string
+    {
+        if (config('chorale.reminders.queued', true)) {
+            SendReminder::dispatch($entry->id, $entry->lease_token, $entry->channel->value)->afterCommit();
 
-        if ($alreadySent) {
-            return 'skipped';
+            return 'queued';
         }
 
-        $subject = $this->subject($rehearsal);
-        $body = $this->body($rehearsal, $channel);
+        return $this->deliver($entry->id, $entry->lease_token);
+    }
 
-        if ($dryRun) {
-            return 'skipped';
-        }
-
-        try {
-            $reminder = DB::transaction(fn () => Reminder::create([
-                'rehearsal_id' => $rehearsal->getKey(),
-                'member_id' => $member->getKey(),
-                'channel' => $channel,
-                'recipient' => $recipient,
-                'subject' => $subject,
-                'body' => $body,
-                'status' => ReminderStatus::EnAttente,
-            ]));
-        } catch (UniqueConstraintViolationException) {
-            $reminder = Reminder::query()
-                ->where('rehearsal_id', $rehearsal->getKey())
-                ->where('member_id', $member->getKey())
-                ->where('channel', $channel->value)
-                ->firstOrFail();
-
-            // Une seule exécution peut reprendre une ligne en échec.
-            $claimed = Reminder::query()->whereKey($reminder->getKey())
-                ->where('status', ReminderStatus::Echec->value)
-                ->update([
-                    'status' => ReminderStatus::EnAttente->value,
-                    'recipient' => $recipient,
-                    'subject' => $subject,
-                    'body' => $body,
-                    'error' => null,
-                    'sent_at' => null,
-                ]);
-
-            if (! $claimed) {
-                return 'skipped';
+    public function deliver(int $id, string $token, bool $retry = false): string
+    {
+        $entry = DB::transaction(function () use ($id, $token, $retry) {
+            $entry = Reminder::query()->lockForUpdate()->find($id);
+            if (! $entry || $entry->lease_token !== $token || ! in_array($entry->status, $retry ? [ReminderStatus::EnAttente, ReminderStatus::Echec] : [ReminderStatus::EnAttente], true) || $entry->sending_at) {
+                return null;
             }
-        }
+            $entry->load(['member', 'rehearsal.works']);
+            $allowed = $entry->member?->status === MemberStatus::Actif && ($entry->channel === ReminderChannel::Mail ? $entry->member?->canReceiveEmail() : $entry->member?->canReceiveSms());
+            $recipient = $entry->channel === ReminderChannel::Mail ? $entry->member?->email : $entry->member?->phone;
+            if (! $allowed || ! $entry->rehearsal || $recipient !== $entry->recipient) {
+                $entry->update(['status' => ReminderStatus::Ignore, 'error' => 'Destinataire ou préférences modifiés avant envoi.']);
 
+                return null;
+            }
+            $entry->update(['status' => ReminderStatus::EnAttente, 'sending_at' => now(), 'attempts' => $entry->attempts + 1]);
+
+            return $entry;
+        }, 3);
+        if (! $entry) {
+            return 'skipped';
+        }
         try {
-            if ($channel === ReminderChannel::Mail) {
-                Mail::to($recipient)->send(new RehearsalReminder($rehearsal, $member, $body));
+            if ($entry->channel === ReminderChannel::Mail) {
+                Mail::to($entry->recipient)->send(new RehearsalReminder($entry->rehearsal, $entry->member, $entry->body));
             } else {
-                $this->sms->send($recipient, $body);
+                $this->sms->send($entry->recipient, $entry->body);
             }
-
-            $reminder->update([
-                'status' => ReminderStatus::Envoye,
-                'sent_at' => now(),
-            ]);
+            $this->finish($id, $token, ['status' => 'envoye', 'sent_at' => now(), 'error' => null]);
 
             return 'sent';
-        } catch (Throwable $exception) {
-            $reminder->update([
-                'status' => ReminderStatus::Echec,
-                'error' => $exception->getMessage(),
-            ]);
+        } catch (Throwable $e) {
+            $this->finish($id, $token, ['status' => 'echec', 'sending_at' => null, 'error' => mb_substr($e->getMessage(), 0, 2000)]);
 
             return 'failed';
+        }
+    }
+
+    private function finish(int $id, string $token, array $data): void
+    {
+        DB::transaction(function () use ($id, $token, $data) {
+            $entry = Reminder::query()->lockForUpdate()->find($id);
+            if ($entry && $entry->lease_token === $token && $entry->status === ReminderStatus::EnAttente) {
+                $entry->update($data);
+            }
+        }, 3);
+    }
+
+    public function recoverStale(): int
+    {
+        $cutoff = now()->subMinutes(max(5, (int) config('chorale.reminders.lease_minutes', 60)));
+
+        // An expired reservation may already have reached the provider: never blindly resend.
+        return Reminder::where('status', 'en_attente')->where(function ($q) use ($cutoff) {
+            $q->where('reserved_at', '<', $cutoff)->orWhere(fn ($q) => $q->whereNull('reserved_at')->where('created_at', '<', $cutoff));
+        })->update(['status' => 'incertain', 'error' => 'Envoi interrompu ou réservation expirée. Vérifiez le fournisseur avant de décider une relance.']);
+    }
+
+    public function resolve(int $id, string $decision): void
+    {
+        if (! in_array($decision, ['sent', 'retry', 'ignore'], true)) {
+            throw ValidationException::withMessages(['operation' => 'Décision inconnue.']);
+        }
+        $entry = DB::transaction(function () use ($id, $decision) {
+            $entry = Reminder::query()->lockForUpdate()->findOrFail($id);
+            if ($entry->status !== ReminderStatus::Incertain) {
+                throw ValidationException::withMessages(['operation' => 'Seuls les envois à vérifier peuvent être rapprochés.']);
+            }
+            $entry->update(['status' => match ($decision) {
+                'sent' => ReminderStatus::Envoye,'ignore' => ReminderStatus::Ignore,default => ReminderStatus::EnAttente
+            }, 'sent_at' => $decision === 'sent' ? now() : null, 'error' => null, 'sending_at' => null, 'lease_token' => (string) Str::uuid(), 'reserved_at' => now()]);
+
+            return $entry;
+        }, 3);
+        if ($decision === 'retry') {
+            $this->schedule($entry);
         }
     }
 

@@ -5,6 +5,7 @@ namespace App\Livewire\Users;
 use App\Enums\UserRole;
 use App\Models\Member;
 use App\Models\User;
+use App\Services\AccountWriter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -76,7 +77,7 @@ class Index extends Component
             return;
         }
 
-        User::findOrFail($userId)->delete();
+        app(AccountWriter::class)->delete(User::findOrFail($userId));
     }
 
     #[Computed]
@@ -140,6 +141,11 @@ class Index extends Component
                 ->map(fn (UserRole $role): string => strtolower($role->label()))
                 ->implode(', '),
         ];
+    }
+
+    public function hydrate(): void
+    {
+        abort_unless(auth()->user()?->can('manage-users'), 403);
     }
 
     public function render(): View

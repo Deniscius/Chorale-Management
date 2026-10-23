@@ -9,7 +9,9 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Instrument;
 use App\Models\Member;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -107,17 +109,22 @@ class Form extends Component
             'current_value' => $this->current_value !== null && $this->current_value !== '' ? (float) $this->current_value : 0,
             'location' => $this->location,
             'custodian_id' => $this->custodian_id,
-            'is_borrowed' => $this->is_borrowed,
             'notes' => $this->notes,
         ];
 
-        if ($this->instrument) {
-            $this->instrument->update($data);
-            $message = 'Instrument mis à jour.';
-        } else {
-            $this->instrument = Instrument::create($data);
-            $message = 'Instrument ajouté à l\'inventaire.';
-        }
+        $this->instrument = DB::transaction(function () use ($data) {
+            $entry = $this->instrument ? Instrument::query()->lockForUpdate()->findOrFail($this->instrument->id) : new Instrument;
+            $out = $entry->exists ? $entry->movements()->whereIn('type', ['sortie', 'pret'])->whereNull('actual_return_on')->sum('quantity') : 0;
+            if ($data['quantity'] < $out) {
+                throw ValidationException::withMessages(['quantity' => 'La quantité ne peut pas être inférieure aux unités encore prêtées.']);
+            }
+            $entry->fill($data);
+            $entry->is_borrowed = $out > 0;
+            $entry->save();
+
+            return $entry;
+        }, 3);
+        $message = 'Instrument enregistré.';
 
         $this->dispatch('toast', type: 'success', message: $message);
         $this->dispatch('close-form');

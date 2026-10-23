@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\BudgetFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,6 +21,7 @@ class Budget extends Model
         'allocated_amount',
         'committed_amount',
         'realized_amount',
+        'opening_realized_amount',
         'notes',
     ];
 
@@ -30,6 +32,7 @@ class Budget extends Model
             'allocated_amount' => 'decimal:2',
             'committed_amount' => 'decimal:2',
             'realized_amount' => 'decimal:2',
+            'opening_realized_amount' => 'decimal:2',
         ];
     }
 
@@ -46,9 +49,24 @@ class Budget extends Model
     /**
      * Reste disponible sur la ligne budgétaire.
      */
+    public function actualRealized(): float
+    {
+        $posted = $this->getAttribute('posted_expenses');
+        if (! array_key_exists('posted_expenses', $this->getAttributes())) {
+            $posted = $this->transactions()->validated()->where('type', 'depense')->sum('amount');
+        }
+
+        return round((float) $this->opening_realized_amount + (float) $posted, 2);
+    }
+
+    public function scopeWithPostedExpenses(Builder $query): void
+    {
+        $query->withSum(['transactions as posted_expenses' => fn ($q) => $q->validated()->where('type', 'depense')], 'amount');
+    }
+
     public function available(): float
     {
-        return (float) $this->allocated_amount - (float) $this->realized_amount;
+        return (float) $this->allocated_amount - $this->actualRealized();
     }
 
     /**
@@ -60,6 +78,6 @@ class Budget extends Model
             return 0.0;
         }
 
-        return round((float) $this->realized_amount / (float) $this->allocated_amount * 100, 1);
+        return round($this->actualRealized() / (float) $this->allocated_amount * 100, 1);
     }
 }

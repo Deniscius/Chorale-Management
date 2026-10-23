@@ -6,9 +6,9 @@ use App\Enums\Commission;
 use App\Enums\UserRole;
 use App\Models\Document;
 use App\Models\User;
+use App\Services\DocumentArchive;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
@@ -102,12 +102,7 @@ class Index extends Component
 
         $this->assertCanUpload($document->commission->value);
 
-        // Le fichier archivé est retiré du disque privé avec la fiche.
-        if (Storage::disk('local')->exists($document->path)) {
-            Storage::disk('local')->delete($document->path);
-        }
-
-        $document->delete();
+        app(DocumentArchive::class)->delete($document);
 
         $this->dispatch('toast', type: 'success', message: 'Document retiré de l\'archive.');
     }
@@ -159,7 +154,7 @@ class Index extends Component
 
     public function canUpload(Commission $commission): bool
     {
-        return auth()->user()?->canManageModule($commission->module()) ?? false;
+        return $commission->canManage(auth()->user());
     }
 
     #[Computed]
@@ -238,11 +233,13 @@ class Index extends Component
 
         $this->assertAllowedCommission($value);
 
-        abort_unless($this->canUpload($commission), 403, "Dépôt de documents réservé aux responsables de la commission.");
+        abort_unless($this->canUpload($commission), 403, 'Dépôt de documents réservé aux responsables de la commission.');
     }
 
     public function render(): View
     {
+        $this->assertAllowedCommission($this->commission);
+
         return view('livewire.documents.index');
     }
 }

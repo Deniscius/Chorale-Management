@@ -9,6 +9,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Instrument;
 use App\Models\InstrumentMovement;
 use App\Models\Member;
+use App\Services\InstrumentLoans;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -94,12 +95,7 @@ class Movements extends Component
     {
         $this->authorizeManage();
 
-        $movement = InstrumentMovement::findOrFail($movementId);
-
-        $movement->update([
-            'actual_return_on' => today(),
-            'condition_on_return' => $movement->condition_on_return?->value ?? $movement->instrument?->condition?->value,
-        ]);
+        app(InstrumentLoans::class)->close($movementId);
 
         $this->dispatch('toast', type: 'success', message: 'Mouvement clôturé.');
     }

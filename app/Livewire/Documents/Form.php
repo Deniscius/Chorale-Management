@@ -3,11 +3,10 @@
 namespace App\Livewire\Documents;
 
 use App\Enums\Commission;
-use App\Models\Choir;
 use App\Models\Document;
 use App\Models\User;
+use App\Services\DocumentArchive;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -77,6 +76,9 @@ class Form extends Component
         abort_unless($commission !== null, 404);
 
         $this->assertCanUpload($commission);
+        if ($this->document) {
+            $this->assertCanUpload($this->document->fresh()->commission);
+        }
 
         $this->validate();
 
@@ -93,32 +95,8 @@ class Form extends Component
             'category' => $this->category ?: null,
         ];
 
-        if ($this->file) {
-            $stored = $this->file->store('documents/'.$commission->value, 'local');
-
-            // Remplace l'ancien fichier pour éviter les orphelins.
-            if ($this->document) {
-                Storage::disk('local')->delete($this->document->path);
-            }
-
-            $data = array_merge($data, [
-                'original_name' => $this->file->getClientOriginalName(),
-                'path' => $stored,
-                'mime_type' => $this->file->getMimeType(),
-                'size' => $this->file->getSize(),
-            ]);
-        }
-
-        if ($this->document) {
-            $this->document->update($data);
-            $message = 'Document mis à jour.';
-        } else {
-            $data['choir_id'] = Choir::query()->value('id');
-            $data['uploaded_by'] = auth()->id();
-            $data['member_id'] = null;
-            $this->document = Document::create($data);
-            $message = 'Document archivé.';
-        }
+        $this->document = app(DocumentArchive::class)->save($this->document, $data, $this->file);
+        $message = 'Document archivé.';
 
         $this->reset('file');
 
@@ -173,8 +151,8 @@ class Form extends Component
 
     protected function assertCanUpload(Commission $commission): void
     {
-        abort_unless(auth()->user()?->canManageModule($commission->module()), 403,
-            "Dépôt de documents réservé aux responsables de la commission.");
+        abort_unless($commission->canManage(auth()->user()), 403,
+            'Dépôt de documents réservé aux responsables de la commission.');
     }
 
     public function render(): View

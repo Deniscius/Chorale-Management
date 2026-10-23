@@ -61,7 +61,7 @@ class ChoraleAssistantTest extends TestCase
 
         $this->assertSame('Compte rendu de test.', $report);
         $this->assertStringContainsString('Salle paroissiale', $fake->lastPrompt);
-        $this->assertStringContainsString('Travail sur les nuances.', $fake->lastPrompt);
+        $this->assertStringNotContainsString('Travail sur les nuances.', $fake->lastPrompt);
         $this->assertStringContainsString('français', $fake->lastSystem);
     }
 

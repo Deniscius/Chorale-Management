@@ -14,6 +14,7 @@ enum ReminderStatus: string
     case Envoye = 'envoye';
     case Echec = 'echec';
     case Ignore = 'ignore';
+    case Incertain = 'incertain';
 
     use HasColor;
     use HasLabel;
@@ -25,6 +26,7 @@ enum ReminderStatus: string
             self::Envoye->value => 'Envoyé',
             self::Echec->value => 'Échec',
             self::Ignore->value => 'Ignoré',
+            self::Incertain->value => 'À vérifier',
         ];
     }
 
@@ -35,6 +37,7 @@ enum ReminderStatus: string
             self::Envoye->value => 'green',
             self::Echec->value => 'red',
             self::Ignore->value => 'slate',
+            self::Incertain->value => 'amber',
         ];
     }
 }

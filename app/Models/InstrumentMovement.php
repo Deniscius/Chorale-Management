@@ -16,6 +16,7 @@ class InstrumentMovement extends Model
 
     protected $fillable = [
         'instrument_id',
+        'quantity',
         'type',
         'moved_on',
         'reason',
@@ -31,6 +32,7 @@ class InstrumentMovement extends Model
     protected function casts(): array
     {
         return [
+            'quantity' => 'integer',
             'type' => MovementType::class,
             'moved_on' => 'date',
             'expected_return_on' => 'date',
@@ -56,12 +58,9 @@ class InstrumentMovement extends Model
 
     private function syncInstrumentAvailability(int $instrumentId): void
     {
-        $last = self::query()->where('instrument_id', $instrumentId)
-            ->orderByDesc('moved_on')->orderByDesc('id')->first();
-
-        $borrowed = $last !== null
-            && in_array($last->type, [MovementType::Sortie, MovementType::Pret], true)
-            && $last->actual_return_on === null;
+        $borrowed = self::query()->where('instrument_id', $instrumentId)
+            ->whereIn('type', [MovementType::Sortie->value, MovementType::Pret->value])
+            ->whereNull('actual_return_on')->exists();
 
         Instrument::query()->whereKey($instrumentId)->update(['is_borrowed' => $borrowed]);
     }

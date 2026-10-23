@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\ContributionStatus;
 use App\Enums\DonationType;
+use App\Enums\DonorType;
 use App\Enums\TransactionStatus;
 use App\Models\Contribution;
 use App\Models\Donation;
@@ -27,6 +28,10 @@ final class ReceiptLedger
                 $this->assertDraft($entry);
             }
             $donation->fill($data);
+            if ($donation->donor_type === DonorType::Anonyme) {
+                $donation->donor_name = null;
+                $donation->member_id = null;
+            }
             $donation->choir_id = $donation->member_id ? Member::findOrFail($donation->member_id)->choir_id : $donation->choir_id;
             if ($donation->donation_type === DonationType::DonMateriel) {
                 if ($entry) {
@@ -64,6 +69,7 @@ final class ReceiptLedger
             $contribution = $contribution?->exists ? Contribution::query()->lockForUpdate()->findOrFail($contribution->id) : new Contribution;
             $entries = $contribution->exists ? $contribution->receipts()->lockForUpdate()->get() : collect();
             $validated = $entries->filter(fn (Transaction $entry) => $entry->isLocked())->sum(fn ($entry) => $this->cents($entry->amount));
+            $previousPaidOn = $contribution->paid_on;
             $contribution->fill($data);
             $paid = $this->cents($contribution->paid_amount ?? 0);
             $due = $this->cents($contribution->due_amount);
@@ -79,6 +85,9 @@ final class ReceiptLedger
             }
             $contribution->status = $paid > 0 ? ($paid >= $due ? ContributionStatus::Payee : ContributionStatus::Partiel)
                 : ($contribution->status === ContributionStatus::Retard ? ContributionStatus::Retard : ContributionStatus::Due);
+            if ($validated > 0 && $paid === $validated) {
+                $contribution->paid_on = $previousPaidOn;
+            }
             $contribution->paid_on = $paid > 0 ? ($contribution->paid_on ?? today()) : null;
             $contribution->choir_id = Member::findOrFail($contribution->member_id)->choir_id;
             $contribution->save();
@@ -88,7 +97,7 @@ final class ReceiptLedger
                 $pending ??= new Transaction;
                 $pending->fill([
                     'contribution_id' => $contribution->id, 'type' => 'recette',
-                    'transaction_date' => $contribution->paid_on,
+                    'transaction_date' => $data['paid_on'] ?? ($pending->exists ? $pending->transaction_date : ($validated > 0 ? today() : $contribution->paid_on)),
                     'description' => 'Cotisation '.$contribution->month.'/'.$contribution->year,
                     'amount' => number_format($remaining / 100, 2, '.', ''), 'member_id' => $contribution->member_id,
                     'choir_id' => $contribution->choir_id, 'category' => 'Cotisations',

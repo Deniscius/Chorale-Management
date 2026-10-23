@@ -3,7 +3,15 @@
 namespace App\Providers;
 
 use App\Enums\UserRole;
+use App\Http\Middleware\EnsureModuleAccess;
+use App\Models\Budget;
+use App\Models\Contribution;
+use App\Models\Document;
+use App\Models\Donation;
+use App\Models\Reminder;
+use App\Models\Transaction;
 use App\Models\User;
+use App\Observers\AuditObserver;
 use App\Services\Ai\AiClient;
 use App\Services\Ai\NullAiClient;
 use App\Services\Ai\OllamaClient;
@@ -15,10 +23,13 @@ use App\Services\Sms\HttpSmsSender;
 use App\Services\Sms\LogSmsSender;
 use App\Services\Sms\SmsSender;
 use App\View\Composers\ChoraleIdentityComposer;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -62,9 +73,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        foreach (['mail', 'sms'] as $channel) {
+            RateLimiter::for('reminder-'.$channel,
+                fn () => Limit::perMinute(60)->by('reminder-'.$channel));
+        }
+
         // Livewire fournit Alpine : on l'injecte sur toutes les pages (même sans
         // composant Livewire) pour que les interactions x-data de la coque restent actives.
         app('livewire')->forceAssetInjection();
+        Livewire::addPersistentMiddleware([EnsureModuleAccess::class]);
+        foreach ([User::class, Document::class, Donation::class, Contribution::class, Budget::class, Transaction::class, Reminder::class] as $model) {
+            $model::observe(AuditObserver::class);
+        }
 
         // Bonne pratique : le chargement paresseux des relations est interdit
         // hors production. Une requête N+1 provoque désormais une exception

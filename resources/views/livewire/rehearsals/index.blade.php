@@ -163,6 +163,11 @@
         <x-modal-panel title="Compte rendu assisté" size="lg"
             subtitle="Proposition rédigée à partir de la séance : relisez et corrigez avant d’enregistrer.">
             <div class="space-y-4">
+                <p class="text-sm text-slate-600">Les notes libres sont exclues de l’envoi à l’IA. Vérifiez le contexte avant de générer une proposition.</p>
+                <details class="rounded-lg border p-3 text-sm">
+                    <summary>Voir les informations transmises à l’IA</summary>
+                    <pre class="mt-3 whitespace-pre-wrap">{{ $this->reportContext }}</pre>
+                </details>
                 <div class="rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">
                     <p class="font-medium text-slate-800">
                         {{ $this->reportRehearsal->date->translatedFormat('l j F Y') }}

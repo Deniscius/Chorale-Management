@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentDownloadController;
 use App\Http\Controllers\ProfileController;
 use App\Livewire\Activities\Index as ActivitiesIndex;
+use App\Livewire\Audit\Index;
 use App\Livewire\Budgets\Index as BudgetsIndex;
 use App\Livewire\Contributions\Index as ContributionsIndex;
 use App\Livewire\Correspondences\Index as CorrespondencesIndex;
@@ -122,6 +123,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/parametres/chorale', SettingsChorale::class)
         ->middleware('can:manage-settings')
         ->name('settings.chorale');
+
+    Route::get('/administration/journal', Index::class)
+        ->middleware('can:manage-users')->name('audit.index');
 
     // Profil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

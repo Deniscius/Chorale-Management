@@ -345,8 +345,7 @@ l'enregistre.
 
 - Deux fournisseurs pris en charge : **OpenRouter** (service hébergé) et
   **Ollama** (modèle local — aucune donnée ne quitte le serveur).
-- Seules les informations utiles à la rédaction sont transmises : ni montants,
-  ni coordonnées personnelles (vérifié par les tests).
+- Les notes libres sont exclues de l’envoi. Le contexte exact (date, lieu, œuvres, effectifs) est affiché avant génération pour relecture ; vérifier les champs saisis avant tout envoi à un fournisseur distant.
 - Activation : `AI_ENABLED=true`, `AI_PROVIDER`, puis la clé ou l'URL du
   fournisseur (voir `.env.example`).
 - Rôles autorisés : `config/ai.php` (`roles`), en plus du droit de gestion du
@@ -498,3 +497,5 @@ php artisan queue:work --tries=3 --timeout=90
 ## Licence
 
 Projet interne. Tous droits réservés à la chorale.
+
+Les corrections de l’audit et les étapes de déploiement sont décrites dans [docs/AUDIT-CORRECTIONS.md](docs/AUDIT-CORRECTIONS.md).

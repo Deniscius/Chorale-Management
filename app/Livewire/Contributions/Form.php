@@ -6,8 +6,8 @@ use App\Enums\ContributionStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
+use App\Livewire\Concerns\SearchesMembers;
 use App\Models\Contribution;
-use App\Models\Member;
 use App\Services\ReceiptLedger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
@@ -18,6 +18,7 @@ use Livewire\Component;
 class Form extends Component
 {
     use InteractsWithModule;
+    use SearchesMembers;
 
     public const MODULE_KEY = UserRole::MODULE_COMPTABILITE;
 
@@ -73,7 +74,7 @@ class Form extends Component
                 'month' => (string) $contribution->month,
                 'due_amount' => $contribution->due_amount,
                 'paid_amount' => $contribution->paid_amount,
-                'paid_on' => $contribution->paid_on?->format('Y-m-d'),
+                'paid_on' => $contribution->receipts()->whereIn('status', ['validee', 'cloturee'])->exists() ? today()->format('Y-m-d') : $contribution->paid_on?->format('Y-m-d'),
                 'status' => $contribution->status->value,
                 'notes' => $contribution->notes,
             ]);
@@ -123,15 +124,6 @@ class Form extends Component
             $this->status = ContributionStatus::Payee->value;
             $this->paid_on = $this->paid_on ?: today()->format('Y-m-d');
         }
-    }
-
-    #[Computed]
-    public function members()
-    {
-        return Member::query()
-            ->orderBy('last_name')
-            ->orderBy('first_name')
-            ->get();
     }
 
     #[Computed]

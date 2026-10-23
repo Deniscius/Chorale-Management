@@ -47,9 +47,10 @@ class SendRehearsalReminders extends Command
         }
 
         $this->components->info(sprintf(
-            '%d répétition(s) traitée(s) — %d envoi(s), %d ignoré(s), %d échec(s)%s.',
+            '%d répétition(s) traitée(s) — %d envoi(s), %d mis en file, %d ignoré(s), %d échec(s)%s.',
             $result['rehearsals'],
             $result['sent'],
+            $result['queued'],
             $result['skipped'],
             $result['failed'],
             $dryRun ? ' (simulation)' : '',

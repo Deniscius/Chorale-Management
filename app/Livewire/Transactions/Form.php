@@ -7,10 +7,10 @@ use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
+use App\Livewire\Concerns\SearchesMembers;
 use App\Models\Account;
 use App\Models\Activity;
 use App\Models\Budget;
-use App\Models\Member;
 use App\Models\Transaction;
 use App\Services\TransactionWriter;
 use Illuminate\Contracts\View\View;
@@ -22,6 +22,7 @@ use Livewire\Component;
 class Form extends Component
 {
     use InteractsWithModule;
+    use SearchesMembers;
 
     public const MODULE_KEY = UserRole::MODULE_COMPTABILITE;
 
@@ -136,16 +137,6 @@ class Form extends Component
     public function budgets()
     {
         return Budget::query()->orderByDesc('year')->orderBy('category')->get();
-    }
-
-    #[Computed]
-    public function members()
-    {
-        return Member::query()
-            ->where('status', 'actif')
-            ->orderBy('last_name')
-            ->orderBy('first_name')
-            ->get();
     }
 
     #[Computed]

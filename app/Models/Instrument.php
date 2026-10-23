@@ -74,6 +74,13 @@ class Instrument extends Model
     /**
      * Sorties non clôturées (prêts en cours).
      */
+    public function availableQuantity(): int
+    {
+        $out = array_key_exists('loaned_quantity', $this->getAttributes()) ? ($this->getAttribute('loaned_quantity') ?? 0) : $this->movements()->whereIn('type', ['sortie', 'pret'])->whereNull('actual_return_on')->sum('quantity');
+
+        return max(0, $this->quantity - (int) $out);
+    }
+
     public function pendingReturns(): int
     {
         return $this->movements()

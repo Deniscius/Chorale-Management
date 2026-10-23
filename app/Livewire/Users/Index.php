@@ -20,6 +20,9 @@ class Index extends Component
     #[Url(as: 'q', except: '')]
     public string $search = '';
 
+    #[Url(as: 'vue', except: '')]
+    public string $overview = '';
+
     #[Url(as: 'role', except: '')]
     public string $role = '';
 
@@ -34,14 +37,14 @@ class Index extends Component
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['search', 'role'], true)) {
+        if (in_array($property, ['overview', 'search', 'role'], true)) {
             $this->resetPage();
         }
     }
 
     public function resetFilters(): void
     {
-        $this->reset(['search', 'role']);
+        $this->reset(['search', 'role', 'overview']);
         $this->resetPage();
     }
 
@@ -85,6 +88,8 @@ class Index extends Component
     {
         return User::query()
             ->with('member')
+            ->when($this->overview === 'commissions', fn ($q) => $q->whereLike('role', 'commission_%'))
+            ->when($this->overview === 'lies', fn ($q) => $q->whereNotNull('member_id'))
             ->when($this->search !== '', function (Builder $query) {
                 $needle = '%'.$this->search.'%';
 

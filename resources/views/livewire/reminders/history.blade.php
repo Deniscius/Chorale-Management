@@ -3,10 +3,10 @@
         :subtitle="'Journal des messages envoyés aux choristes — '.$this->stats['total'].' envoi(s) enregistré(s).'" />
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Rappels journalisés" :value="$this->stats['total']" icon="bell" color="slate" />
-        <x-stat-card label="Envoyés" :value="$this->stats['envoyes']" icon="check" color="green" />
-        <x-stat-card label="Échecs" :value="$this->stats['echecs']" icon="alert" color="red" />
-        <x-stat-card label="Par SMS" :value="$this->stats['sms']" icon="chat" color="blue" />
+        <x-stat-card label="Rappels journalisés" :value="$this->stats['total']" icon="bell" color="slate" :href="route('reminders.index', []).'#resultats'" />
+        <x-stat-card label="Envoyés" :value="$this->stats['envoyes']" icon="check" color="green" :href="route('reminders.index', ['statut'=>'envoye']).'#resultats'" />
+        <x-stat-card label="Échecs" :value="$this->stats['echecs']" icon="alert" color="red" :href="route('reminders.index', ['statut'=>'echec']).'#resultats'" />
+        <x-stat-card label="Par SMS" :value="$this->stats['sms']" icon="chat" color="blue" :href="route('reminders.index', ['canal'=>'sms']).'#resultats'" />
     </div>
 
     <x-filter-bar class="mt-6">
@@ -55,7 +55,7 @@
     </x-filter-bar>
 
     <div class="mt-4">
-        <x-data-table :headers="[
+        <x-data-table id="resultats" :headers="[
             ['label' => 'Date d’envoi'],
             ['label' => 'Destinataire'],
             ['label' => 'Répétition'],

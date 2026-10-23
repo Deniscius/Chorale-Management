@@ -14,11 +14,11 @@
 
     {{-- Indicateurs --}}
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Effectif total" :value="$this->stats['total']" icon="users" color="slate" />
-        <x-stat-card label="Choristes actifs" :value="$this->stats['actif']" icon="users" color="green" />
-        <x-stat-card label="En attente d'adhésion" :value="$this->stats['invite']" icon="inbox" color="amber" />
+        <x-stat-card label="Effectif total" :value="$this->stats['total']" icon="users" color="slate" :href="route('members.index', []).'#resultats'" />
+        <x-stat-card label="Choristes actifs" :value="$this->stats['actif']" icon="users" color="green" :href="route('members.index', ['statut'=>'actif']).'#resultats'" />
+        <x-stat-card label="En attente d'adhésion" :value="$this->stats['invite']" icon="inbox" color="amber" :href="route('members.index', ['statut'=>'invite']).'#resultats'" />
         <x-stat-card label="Répartition" :value="count($this->stats['par_voix'])" icon="music" color="purple"
-            hint="voix différentes représentées" />
+            hint="voix différentes représentées" :href="route('members.index', []).'#resultats'" />
     </div>
 
     {{-- Filtres --}}
@@ -73,7 +73,7 @@
     {{-- Liste --}}
     <div class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200">
+            <table id="resultats" class="min-w-full divide-y divide-slate-200">
                 <thead class="bg-slate-50">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Choriste</th>

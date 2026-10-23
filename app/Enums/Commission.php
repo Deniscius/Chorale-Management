@@ -4,6 +4,7 @@ namespace App\Enums;
 
 use App\Enums\Concerns\HasColor;
 use App\Enums\Concerns\HasLabel;
+use App\Models\CommissionTeam;
 use App\Models\User;
 
 /**
@@ -72,6 +73,24 @@ enum Commission: string
      *
      * @return array<int, self>
      */
+    public function hasPrivateArchive(): bool
+    {
+        return in_array($this, [self::Liturgique, self::Secretariat], true);
+    }
+
+    public function canManageArchive(?User $user, ?CommissionTeam $team = null): bool
+    {
+        if (! $this->hasPrivateArchive()) {
+            return $this->canManage($user);
+        }
+        if (! $user) {
+            return false;
+        }
+        $team ??= CommissionTeam::where('commission', $this->value)->first();
+
+        return $team?->allows($user) ?? false;
+    }
+
     public function canView(?User $user): bool
     {
         return $user !== null && in_array($this, self::forRole($user->role), true);

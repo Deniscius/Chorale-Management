@@ -14,12 +14,15 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Recettes" :value="\App\Support\Money::compact($this->stats['recettes'])" icon="banknotes" color="green" />
-        <x-stat-card label="Dépenses" :value="\App\Support\Money::compact($this->stats['depenses'])" icon="banknotes" color="red" />
-        <x-stat-card label="Solde" :value="\App\Support\Money::compact($this->stats['solde'])" icon="chart" color="blue" />
-        <x-stat-card label="Brouillons" :value="$this->stats['brouillons']" icon="folder" color="amber" />
+        <x-stat-card label="Recettes" :value="\App\Support\Money::compact($this->stats['recettes'])" icon="banknotes" color="green" :href="route('transactions.index', ['type'=>'recette','vue'=>'validees']).'#resultats'" />
+        <x-stat-card label="Dépenses" :value="\App\Support\Money::compact($this->stats['depenses'])" icon="banknotes" color="red" :href="route('transactions.index', ['type'=>'depense','vue'=>'validees']).'#resultats'" />
+        <x-stat-card label="Solde" :value="\App\Support\Money::compact($this->stats['solde'])" icon="chart" color="blue" :href="route('transactions.index', ['vue'=>'validees']).'#resultats'" />
+        <x-stat-card label="Brouillons" :value="$this->stats['brouillons']" icon="folder" color="amber" :href="route('transactions.index', ['statut'=>'brouillon']).'#resultats'" />
     </div>
 
+    @if ($overview !== '')
+        <p class="my-3 text-sm text-slate-600">Sélection issue d’une carte de synthèse. <a class="underline" href="{{ url()->current() }}" wire:navigate>Tout afficher</a></p>
+    @endif
     <x-filter-bar class="mt-6">
         <div class="grid gap-3 md:grid-cols-6">
             <div class="md:col-span-2">
@@ -98,7 +101,7 @@
     </x-filter-bar>
 
     <div class="mt-4">
-        <x-data-table :headers="[
+        <x-data-table id="resultats" :headers="[
             ['label' => 'Référence'],
             ['label' => 'Date'],
             ['label' => 'Libellé'],

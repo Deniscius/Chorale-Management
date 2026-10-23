@@ -26,6 +26,15 @@
             </div>
         </div>
 
+        <div class="grid gap-4 sm:grid-cols-2">
+            <x-input name="document_date" label="Date du document / de la messe" type="date" wire:model="document_date" />
+            @if (\App\Enums\Commission::tryFrom($commission)?->hasPrivateArchive())
+                <x-select name="visibility" label="Visibilité" wire:model="visibility">
+                    <option value="private">Privé — responsable et associé</option>
+                    <option value="published">Partagé — utilisateurs connectés</option>
+                </x-select>
+            @endif
+        </div>
         <div>
             <x-input-label for="title" value="Titre du document" />
             <x-text-input id="title" type="text" wire:model="title" class="mt-1 block w-full" required autofocus />
@@ -71,7 +80,7 @@
                 class="btn btn-secondary">
                 Annuler
             </button>
-            <button type="submit" wire:loading.attr="disabled" wire:target="save"
+            <button type="submit" wire:loading.attr="disabled" wire:target="save,file"
                 class="btn btn-primary">
                 <span wire:loading.remove wire:target="save">Enregistrer</span>
                 <span wire:loading wire:target="save">Enregistrement…</span>

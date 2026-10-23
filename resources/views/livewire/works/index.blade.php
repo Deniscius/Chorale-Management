@@ -2,6 +2,8 @@
     <x-page-header title="Œuvres & partitions" icon="book"
         :subtitle="'Répertoire, œuvres et supports — '.$this->stats['total'].' œuvre(s) enregistrée(s).'">
         <x-slot name="actions">
+            <a href="{{ route('documents.index',['commission'=>'commission_liturgique','categorie'=>'Partition']) }}" wire:navigate class="btn btn-secondary">Archives des partitions</a>
+            <a href="{{ route('documents.index',['commission'=>'commission_liturgique','categorie'=>'Programme de messe']) }}" wire:navigate class="btn btn-secondary">Programmes de messe</a>
             @if ($this->canManage())
                 <button type="button" wire:click="create"
                     class="btn btn-primary">
@@ -13,14 +15,17 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Œuvres au catalogue" :value="$this->stats['total']" icon="book" color="slate" />
+        <x-stat-card label="Œuvres au catalogue" :value="$this->stats['total']" icon="book" color="slate" :href="route('works.index', []).'#resultats'" />
         <x-stat-card label="Au répertoire" :value="$this->stats['repertoire']" icon="music" color="purple"
-            hint="œuvres chantées régulièrement" />
+            hint="œuvres chantées régulièrement" :href="route('works.index', ['repertoire'=>'oui']).'#resultats'" />
         <x-stat-card label="Partitions disponibles" :value="$this->stats['partitions']" icon="folder" color="green"
-            hint="fichiers PDF référencés" />
-        <x-stat-card label="Durée totale" :value="$this->stats['duree'].' min'" icon="calendar" color="amber" />
+            hint="fichiers PDF référencés" :href="route('documents.index', ['commission'=>'commission_liturgique','categorie'=>'Partition']).'#resultats'" />
+        <x-stat-card label="Durée totale" :value="$this->stats['duree'].' min'" icon="calendar" color="amber" :href="route('works.index', []).'#resultats'" />
     </div>
 
+    @if ($overview !== '')
+        <p class="my-3 text-sm text-slate-600">Sélection issue d’une carte de synthèse. <a class="underline" href="{{ url()->current() }}" wire:navigate>Tout afficher</a></p>
+    @endif
     <x-filter-bar class="mt-6">
         <div class="grid gap-3 md:grid-cols-5">
             <div class="md:col-span-2">
@@ -87,7 +92,7 @@
     </x-filter-bar>
 
     <div class="mt-4">
-        <x-data-table :headers="[
+        <x-data-table id="resultats" :headers="[
             ['label' => 'Œuvre'],
             ['label' => 'Type'],
             ['label' => 'Auteur'],

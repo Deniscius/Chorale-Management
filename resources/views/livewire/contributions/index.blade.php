@@ -14,13 +14,16 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Cotisations" :value="$this->stats['total']" icon="users" color="slate" />
-        <x-stat-card label="Montant dû" :value="\App\Support\Money::compact($this->stats['du'])" icon="banknotes" color="blue" />
-        <x-stat-card label="Encaissé" :value="\App\Support\Money::compact($this->stats['encaisse'])" icon="sparkles" color="green" />
+        <x-stat-card label="Cotisations" :value="$this->stats['total']" icon="users" color="slate" :href="route('contributions.index', []).'#resultats'" />
+        <x-stat-card label="Montant dû" :value="\App\Support\Money::compact($this->stats['du'])" icon="banknotes" color="blue" :href="route('contributions.index', []).'#resultats'" />
+        <x-stat-card label="Encaissé" :value="\App\Support\Money::compact($this->stats['encaisse'])" icon="sparkles" color="green" :href="route('contributions.index', ['vue'=>'reglees']).'#resultats'" />
         <x-stat-card label="Reste à recouvrer" :value="\App\Support\Money::compact($this->stats['reste'])" icon="folder" color="amber"
-            :hint="$this->stats['impayees'].' impayée(s)'" />
+            :hint="$this->stats['impayees'].' impayée(s)'" :href="route('contributions.index', ['vue'=>'impayees']).'#resultats'" />
     </div>
 
+    @if ($overview !== '')
+        <p class="my-3 text-sm text-slate-600">Sélection issue d’une carte de synthèse. <a class="underline" href="{{ url()->current() }}" wire:navigate>Tout afficher</a></p>
+    @endif
     <x-filter-bar class="mt-6">
         <div class="grid gap-3 md:grid-cols-4">
             <div>
@@ -81,7 +84,7 @@
     </x-filter-bar>
 
     <div class="mt-4">
-        <x-data-table :headers="[
+        <x-data-table id="resultats" :headers="[
             ['label' => 'Choriste'],
             ['label' => 'Exercice'],
             ['label' => 'Mois'],

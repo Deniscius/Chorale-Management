@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Enums\UserRole;
 use App\Http\Middleware\EnsureModuleAccess;
 use App\Models\Budget;
+use App\Models\CommissionTeam;
 use App\Models\Contribution;
 use App\Models\Document;
 use App\Models\Donation;
@@ -82,7 +83,7 @@ class AppServiceProvider extends ServiceProvider
         // composant Livewire) pour que les interactions x-data de la coque restent actives.
         app('livewire')->forceAssetInjection();
         Livewire::addPersistentMiddleware([EnsureModuleAccess::class]);
-        foreach ([User::class, Document::class, Donation::class, Contribution::class, Budget::class, Transaction::class, Reminder::class] as $model) {
+        foreach ([CommissionTeam::class, User::class, Document::class, Donation::class, Contribution::class, Budget::class, Transaction::class, Reminder::class] as $model) {
             $model::observe(AuditObserver::class);
         }
 

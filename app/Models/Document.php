@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Commission;
+use App\Enums\UserRole;
 use Database\Factories\DocumentFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,6 +35,7 @@ class Document extends Model
         'size',
         'member_id',
         'uploaded_by',
+        'visibility', 'document_date', 'correspondence_id',
     ];
 
     protected function casts(): array
@@ -41,7 +43,57 @@ class Document extends Model
         return [
             'commission' => Commission::class,
             'size' => 'integer',
+            'document_date' => 'date',
         ];
+    }
+
+    public function team(): BelongsTo
+    {
+        return $this->belongsTo(CommissionTeam::class, 'commission', 'commission');
+    }
+
+    public function correspondence(): BelongsTo
+    {
+        return $this->belongsTo(Correspondence::class);
+    }
+
+    public function canManage(?User $user): bool
+    {
+        return $this->commission->canManageArchive($user, $this->team);
+    }
+
+    public function canView(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        return $this->commission->hasPrivateArchive()
+            ? ($this->visibility === 'published' || $this->canManage($user))
+            : $this->commission->canView($user);
+    }
+
+    public function scopeReadable(Builder $query, ?User $user): Builder
+    {
+        if (! $user) {
+            return $query->whereRaw('1=0');
+        }
+        $legacy = array_map(fn ($c) => $c->value, array_filter(Commission::forRole($user->role), fn ($c) => ! $c->hasPrivateArchive()));
+
+        return $query->where(function (Builder $q) use ($user, $legacy) {
+            $q->whereIn('commission', $legacy)->orWhere(function (Builder $q) use ($user) {
+                $q->whereIn('commission', [Commission::Liturgique->value, Commission::Secretariat->value])
+                    ->where(fn ($q) => $q->where('visibility', 'published')->orWhereHas('team', function ($q) use ($user) {
+                        $q->where('associate_id', $user->id)->orWhere(function ($q) use ($user) {
+                            $q->where('leader_id', $user->id)->where('commission', match ($user->role) {
+                                UserRole::CommissionLiturgique => Commission::Liturgique->value,
+                                UserRole::Secretaire => Commission::Secretariat->value,
+                                default => '__none__',
+                            });
+                        });
+                    }));
+            });
+        });
     }
 
     public function choir(): BelongsTo

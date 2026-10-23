@@ -26,6 +26,9 @@ class Maintenances extends Component
     #[Url(as: 'q', except: '')]
     public string $search = '';
 
+    #[Url(as: 'vue', except: '')]
+    public string $overview = '';
+
     #[Url(as: 'type', except: '')]
     public string $type = '';
 
@@ -43,14 +46,14 @@ class Maintenances extends Component
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['search', 'type', 'status'], true)) {
+        if (in_array($property, ['overview', 'search', 'type', 'status'], true)) {
             $this->resetPage();
         }
     }
 
     public function resetFilters(): void
     {
-        $this->reset(['search', 'type', 'status']);
+        $this->reset(['search', 'type', 'status', 'overview']);
         $this->resetPage();
     }
 
@@ -91,6 +94,7 @@ class Maintenances extends Component
     {
         return InstrumentMaintenance::query()
             ->with('instrument')
+            ->when($this->overview === 'a_faire', fn ($q) => $q->whereIn('status', ['planifiee', 'en_cours']))
             ->when($this->search !== '', function (Builder $query) {
                 $like = '%'.$this->search.'%';
 

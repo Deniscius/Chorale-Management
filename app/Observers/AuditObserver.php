@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\AuditEvent;
 use App\Models\Budget;
+use App\Models\CommissionTeam;
 use App\Models\Contribution;
 use App\Models\Document;
 use App\Models\Donation;
@@ -18,7 +19,8 @@ final class AuditObserver
     {
         return match ($model::class) {
             User::class => ['role', 'member_id'],
-            Document::class => ['commission', 'path', 'size'],
+            Document::class => ['commission', 'path', 'size', 'visibility', 'correspondence_id'],
+            CommissionTeam::class => ['commission', 'leader_id', 'associate_id'],
             Donation::class => ['amount', 'donor_type', 'member_id', 'transaction_id', 'donated_on'],
             Contribution::class => ['member_id', 'year', 'month', 'due_amount', 'paid_amount', 'paid_on', 'status'],
             Budget::class => ['year', 'category', 'allocated_amount', 'committed_amount', 'opening_realized_amount'],

@@ -17,6 +17,7 @@
         [
             'label' => 'Commission liturgique',
             'items' => [
+                ['route' => 'documents.index', 'parameters'=>['commission'=>'commission_liturgique'], 'label'=>'Archives liturgiques', 'icon'=>'archive'],
                 ['route' => 'works.index', 'label' => 'Œuvres & partitions', 'icon' => 'book', 'module' => UserRole::MODULE_LITURGIQUE],
                 ['route' => 'rehearsals.index', 'label' => 'Répétitions', 'icon' => 'music', 'module' => UserRole::MODULE_LITURGIQUE],
                 ['route' => 'performances.index', 'label' => 'Célébrations & concerts', 'icon' => 'sparkles', 'module' => UserRole::MODULE_LITURGIQUE],
@@ -36,6 +37,7 @@
         [
             'label' => 'Secrétariat',
             'items' => [
+                ['route' => 'documents.index', 'parameters'=>['commission'=>'commission_secretariat'], 'label'=>'Archives des courriers', 'icon'=>'archive'],
                 ['route' => 'correspondences.index', 'label' => 'Courriers', 'icon' => 'mail', 'module' => UserRole::MODULE_COURRIERS],
                 ['route' => 'activities.index', 'label' => 'Activités', 'icon' => 'chart', 'module' => UserRole::MODULE_ACTIVITES],
                 ['route' => 'documents.index', 'label' => 'Archives documentaires', 'icon' => 'archive'],
@@ -107,9 +109,14 @@
                     </p>
                     <ul class="space-y-1">
                         @foreach ($visible as $item)
-                            @php $active = request()->routeIs($item['route']) || request()->routeIs($item['route'] . '*'); @endphp
+                            @php
+                                $active = request()->routeIs($item['route']) || request()->routeIs($item['route'] . '*');
+                                if ($item['route'] === 'documents.index') {
+                                    $active = $active && request()->query('commission', '') === ($item['parameters']['commission'] ?? '');
+                                }
+                            @endphp
                             <li>
-                                <a href="{{ route($item['route']) }}" wire:navigate.hover
+                                <a href="{{ route($item['route'], $item['parameters'] ?? []) }}" wire:navigate.hover
                                     aria-current="{{ $active ? 'page' : 'false' }}"
                                     @class([
                                         'nav-item',

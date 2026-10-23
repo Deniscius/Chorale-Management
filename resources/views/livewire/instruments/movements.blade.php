@@ -13,10 +13,10 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Mouvements" :value="$this->stats['total']" icon="cube" color="slate" />
-        <x-stat-card label="En cours" :value="$this->stats['en_cours']" icon="chart" color="blue" />
-        <x-stat-card label="Retours en retard" :value="$this->stats['en_retard']" icon="wrench" color="red" />
-        <x-stat-card label="Clôturés" :value="$this->stats['clotures']" icon="sparkles" color="green" />
+        <x-stat-card label="Mouvements" :value="$this->stats['total']" icon="cube" color="slate" :href="route('instruments.movements', []).'#resultats'" />
+        <x-stat-card label="En cours" :value="$this->stats['en_cours']" icon="chart" color="blue" :href="route('instruments.movements', ['statut'=>'en_cours']).'#resultats'" />
+        <x-stat-card label="Retours en retard" :value="$this->stats['en_retard']" icon="wrench" color="red" :href="route('instruments.movements', ['statut'=>'en_retard']).'#resultats'" />
+        <x-stat-card label="Clôturés" :value="$this->stats['clotures']" icon="sparkles" color="green" :href="route('instruments.movements', ['statut'=>'cloture']).'#resultats'" />
     </div>
 
     <x-filter-bar class="mt-6">
@@ -68,7 +68,7 @@
     </x-filter-bar>
 
     <div class="mt-4">
-        <x-data-table :headers="[
+        <x-data-table id="resultats" :headers="[
             ['label' => 'Date'],
             ['label' => 'Instrument'],
             ['label' => 'Type'],

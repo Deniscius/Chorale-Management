@@ -31,6 +31,9 @@ class Index extends Component
     #[Url(as: 'q', except: '')]
     public string $search = '';
 
+    #[Url(as: 'vue', except: '')]
+    public string $overview = '';
+
     #[Url(as: 'type', except: '')]
     public string $type = '';
 
@@ -57,14 +60,14 @@ class Index extends Component
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['search', 'type', 'status', 'category', 'month', 'year'], true)) {
+        if (in_array($property, ['overview', 'search', 'type', 'status', 'category', 'month', 'year'], true)) {
             $this->resetPage();
         }
     }
 
     public function resetFilters(): void
     {
-        $this->reset(['search', 'type', 'status', 'category', 'month', 'year']);
+        $this->reset(['search', 'type', 'status', 'category', 'month', 'year', 'overview']);
         $this->resetPage();
     }
 
@@ -132,6 +135,7 @@ class Index extends Component
     {
         return Transaction::query()
             ->with(['account', 'budget', 'member', 'activity'])
+            ->when($this->overview === 'validees', fn ($q) => $q->validated())
             ->when($this->search !== '', function (Builder $query) {
                 $like = '%'.$this->search.'%';
 

@@ -13,10 +13,10 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Événements" :value="$this->stats['total']" icon="sparkles" color="slate" />
-        <x-stat-card label="À venir" :value="$this->stats['avenir']" icon="calendar" color="blue" />
-        <x-stat-card label="Budget cumulé" :value="\App\Support\Money::compact($this->stats['budget'])" icon="banknotes" color="amber" />
-        <x-stat-card label="Recettes escomptées" :value="\App\Support\Money::compact($this->stats['recettes'])" icon="chart" color="green" />
+        <x-stat-card label="Événements" :value="$this->stats['total']" icon="sparkles" color="slate" :href="route('performances.index', []).'#resultats'" />
+        <x-stat-card label="À venir" :value="$this->stats['avenir']" icon="calendar" color="blue" :href="route('performances.index', ['periode'=>'avenir']).'#resultats'" />
+        <x-stat-card label="Budget cumulé" :value="\App\Support\Money::compact($this->stats['budget'])" icon="banknotes" color="amber" :href="route('performances.index', []).'#resultats'" />
+        <x-stat-card label="Recettes escomptées" :value="\App\Support\Money::compact($this->stats['recettes'])" icon="chart" color="green" :href="route('performances.index', []).'#resultats'" />
     </div>
 
     <x-filter-bar class="mt-6">
@@ -78,7 +78,7 @@
     </x-filter-bar>
 
     <div class="mt-4">
-        <x-data-table :headers="[
+        <x-data-table id="resultats" :headers="[
             ['label' => 'Événement'],
             ['label' => 'Type'],
             ['label' => 'Date & lieu'],

@@ -26,6 +26,9 @@ class Index extends Component
     #[Url(as: 'q', except: '')]
     public string $search = '';
 
+    #[Url(as: 'vue', except: '')]
+    public string $overview = '';
+
     #[Url(as: 'annee', except: '')]
     public string $year = '';
 
@@ -46,14 +49,14 @@ class Index extends Component
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['search', 'year', 'month', 'status'], true)) {
+        if (in_array($property, ['overview', 'search', 'year', 'month', 'status'], true)) {
             $this->resetPage();
         }
     }
 
     public function resetFilters(): void
     {
-        $this->reset(['search', 'year', 'month', 'status']);
+        $this->reset(['search', 'year', 'month', 'status', 'overview']);
         $this->resetPage();
     }
 
@@ -112,6 +115,8 @@ class Index extends Component
     {
         return Contribution::query()
             ->with('member')
+            ->when($this->overview === 'reglees', fn ($q) => $q->where('paid_amount', '>', 0))
+            ->when($this->overview === 'impayees', fn ($q) => $q->whereColumn('paid_amount', '<', 'due_amount'))
             ->when($this->search !== '', fn (Builder $query) => $query->whereHas(
                 'member',
                 fn (Builder $m) => $m->whereLike('last_name', '%'.$this->search.'%')

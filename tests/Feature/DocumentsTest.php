@@ -6,6 +6,7 @@ use App\Enums\Commission;
 use App\Enums\UserRole;
 use App\Livewire\Documents\Form;
 use App\Livewire\Documents\Index;
+use App\Models\CommissionTeam;
 use App\Models\Document;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -40,6 +41,7 @@ class DocumentsTest extends TestCase
         Storage::fake('local');
 
         $user = User::factory()->role(UserRole::Secretaire)->create();
+        CommissionTeam::where('commission', Commission::Secretariat->value)->update(['leader_id' => $user->id]);
 
         Livewire::actingAs($user)
             ->test(Form::class, ['document' => null, 'commission' => Commission::Secretariat->value])
@@ -63,6 +65,7 @@ class DocumentsTest extends TestCase
         Storage::fake('local');
 
         $user = User::factory()->role(UserRole::Secretaire)->create();
+        CommissionTeam::where('commission', Commission::Secretariat->value)->update(['leader_id' => $user->id]);
 
         Livewire::actingAs($user)
             ->test(Form::class, ['document' => null, 'commission' => Commission::Secretariat->value])
@@ -78,6 +81,7 @@ class DocumentsTest extends TestCase
         Storage::fake('local');
 
         $user = User::factory()->role(UserRole::Secretaire)->create();
+        CommissionTeam::where('commission', Commission::Secretariat->value)->update(['leader_id' => $user->id]);
 
         $component = Livewire::actingAs($user)
             ->test(Form::class, ['document' => null, 'commission' => Commission::Secretariat->value])
@@ -106,6 +110,7 @@ class DocumentsTest extends TestCase
         Storage::fake('local');
 
         $user = User::factory()->role(UserRole::Secretaire)->create();
+        CommissionTeam::where('commission', Commission::Secretariat->value)->update(['leader_id' => $user->id]);
         $path = 'documents/'.Commission::Secretariat->value.'/pv.pdf';
 
         Storage::disk('local')->put($path, '%PDF-1.4 contenu de test');
@@ -147,6 +152,7 @@ class DocumentsTest extends TestCase
         Storage::fake('local');
 
         $user = User::factory()->role(UserRole::Secretaire)->create();
+        CommissionTeam::where('commission', Commission::Secretariat->value)->update(['leader_id' => $user->id]);
 
         $document = Document::factory()->create([
             'commission' => Commission::Secretariat->value,
@@ -163,6 +169,7 @@ class DocumentsTest extends TestCase
         Storage::fake('local');
 
         $user = User::factory()->role(UserRole::Secretaire)->create();
+        CommissionTeam::where('commission', Commission::Secretariat->value)->update(['leader_id' => $user->id]);
         $path = 'documents/'.Commission::Secretariat->value.'/a-supprimer.pdf';
 
         Storage::disk('local')->put($path, 'contenu');

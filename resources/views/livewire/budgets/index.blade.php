@@ -13,11 +13,11 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Budget alloué" :value="\App\Support\Money::compact($this->stats['alloue'])" icon="banknotes" color="blue" />
-        <x-stat-card label="Engagé" :value="\App\Support\Money::compact($this->stats['engage'])" icon="folder" color="amber" />
-        <x-stat-card label="Réalisé" :value="\App\Support\Money::compact($this->stats['realise'])" icon="sparkles" color="green" />
+        <x-stat-card label="Budget alloué" :value="\App\Support\Money::compact($this->stats['alloue'])" icon="banknotes" color="blue" :href="route('budgets.index', []).'#resultats'" />
+        <x-stat-card label="Engagé" :value="\App\Support\Money::compact($this->stats['engage'])" icon="folder" color="amber" :href="route('budgets.index', []).'#resultats'" />
+        <x-stat-card label="Réalisé" :value="\App\Support\Money::compact($this->stats['realise'])" icon="sparkles" color="green" :href="route('budgets.index', []).'#resultats'" />
         <x-stat-card label="Disponible" :value="\App\Support\Money::compact($this->stats['disponible'])" icon="chart" color="purple"
-            :hint="$this->stats['taux'].' % consommés'" />
+            :hint="$this->stats['taux'].' % consommés'" :href="route('budgets.index', []).'#resultats'" />
     </div>
 
     <x-filter-bar class="mt-6">
@@ -69,7 +69,7 @@
     </x-filter-bar>
 
     <div class="mt-4">
-        <x-data-table :headers="[
+        <x-data-table id="resultats" :headers="[
             ['label' => 'Exercice'],
             ['label' => 'Poste'],
             ['label' => 'Alloué', 'align' => 'text-right'],

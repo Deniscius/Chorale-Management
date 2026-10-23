@@ -13,12 +13,15 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Interventions" :value="$this->stats['total']" icon="wrench" color="slate" />
-        <x-stat-card label="Planifiées / en cours" :value="$this->stats['planifiees']" icon="calendar" color="amber" />
-        <x-stat-card label="Terminées" :value="$this->stats['terminees']" icon="sparkles" color="green" />
-        <x-stat-card label="Coût cumulé" :value="\App\Support\Money::compact($this->stats['cout'])" icon="banknotes" color="purple" />
+        <x-stat-card label="Interventions" :value="$this->stats['total']" icon="wrench" color="slate" :href="route('instruments.maintenances', []).'#resultats'" />
+        <x-stat-card label="Planifiées / en cours" :value="$this->stats['planifiees']" icon="calendar" color="amber" :href="route('instruments.maintenances', ['vue'=>'a_faire']).'#resultats'" />
+        <x-stat-card label="Terminées" :value="$this->stats['terminees']" icon="sparkles" color="green" :href="route('instruments.maintenances', ['statut'=>'terminee']).'#resultats'" />
+        <x-stat-card label="Coût cumulé" :value="\App\Support\Money::compact($this->stats['cout'])" icon="banknotes" color="purple" :href="route('instruments.maintenances', []).'#resultats'" />
     </div>
 
+    @if ($overview !== '')
+        <p class="my-3 text-sm text-slate-600">Sélection issue d’une carte de synthèse. <a class="underline" href="{{ url()->current() }}" wire:navigate>Tout afficher</a></p>
+    @endif
     <x-filter-bar class="mt-6">
         <div class="grid gap-3 md:grid-cols-3">
             <div>
@@ -68,7 +71,7 @@
     </x-filter-bar>
 
     <div class="mt-4">
-        <x-data-table :headers="[
+        <x-data-table id="resultats" :headers="[
             ['label' => 'Instrument'],
             ['label' => 'Type'],
             ['label' => 'Description'],

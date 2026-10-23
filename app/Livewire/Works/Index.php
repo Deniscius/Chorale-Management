@@ -6,6 +6,7 @@ use App\Enums\Difficulty;
 use App\Enums\UserRole;
 use App\Enums\WorkType;
 use App\Livewire\Concerns\InteractsWithModule;
+use App\Models\Document;
 use App\Models\LiturgicalSeason;
 use App\Models\Work;
 use Illuminate\Contracts\View\View;
@@ -25,6 +26,9 @@ class Index extends Component
 
     #[Url(as: 'q', except: '')]
     public string $search = '';
+
+    #[Url(as: 'vue', except: '')]
+    public string $overview = '';
 
     #[Url(as: 'type', except: '')]
     public string $type = '';
@@ -49,14 +53,14 @@ class Index extends Component
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['search', 'type', 'seasonId', 'difficulty', 'repertoire'], true)) {
+        if (in_array($property, ['overview', 'search', 'type', 'seasonId', 'difficulty', 'repertoire'], true)) {
             $this->resetPage();
         }
     }
 
     public function resetFilters(): void
     {
-        $this->reset(['search', 'type', 'seasonId', 'difficulty', 'repertoire']);
+        $this->reset(['search', 'type', 'seasonId', 'difficulty', 'repertoire', 'overview']);
         $this->resetPage();
     }
 
@@ -112,6 +116,7 @@ class Index extends Component
     {
         return Work::query()
             ->with('season')
+            ->when($this->overview === 'saisons', fn ($q) => $q->whereNotNull('season_id'))
             ->when($this->search !== '', function (Builder $query) {
                 $like = '%'.$this->search.'%';
 
@@ -161,7 +166,7 @@ class Index extends Component
         return [
             'total' => Work::count(),
             'repertoire' => Work::where('is_repertoire', true)->count(),
-            'partitions' => Work::whereNotNull('pdf_path')->where('pdf_path', '!=', '')->count(),
+            'partitions' => Document::query()->readable(auth()->user())->where('commission', 'commission_liturgique')->where('category', 'Partition')->count(),
             'duree' => (int) Work::sum('duration_minutes'),
         ];
     }

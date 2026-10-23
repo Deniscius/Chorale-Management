@@ -3,11 +3,13 @@
 namespace App\Livewire\Documents;
 
 use App\Enums\Commission;
+use App\Models\Correspondence;
 use App\Models\Document;
 use App\Models\User;
 use App\Services\DocumentArchive;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -37,15 +39,29 @@ class Form extends Component
     #[Validate('nullable|string|max:80')]
     public ?string $category = null;
 
+    #[Validate('required|in:private,published')]
+    public string $visibility = 'private';
+
+    #[Validate('nullable|date')]
+    public ?string $document_date = null;
+
+    #[Locked]
+    public ?int $correspondenceId = null;
+
     /**
      * Fichier en cours de téléversement (temporaire Livewire).
      */
     #[Validate('nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,webp|max:10240')]
     public $file = null;
 
-    public function mount(?Document $document = null, ?string $commission = null): void
+    public function mount(?Document $document = null, ?string $commission = null, ?int $correspondenceId = null): void
     {
+        $document = $document?->exists ? $document : null;
         $this->document = $document;
+        $this->correspondenceId = $document?->correspondence_id ?? $correspondenceId;
+        if ($this->correspondenceId) {
+            Correspondence::findOrFail($this->correspondenceId);
+        }
 
         if ($document) {
             $this->assertCanUpload($document->commission);
@@ -55,6 +71,8 @@ class Form extends Component
                 'title' => $document->title,
                 'description' => $document->description,
                 'category' => $document->category,
+                'visibility' => $document->visibility === 'published' ? 'published' : 'private',
+                'document_date' => $document->document_date?->format('Y-m-d'),
             ]);
 
             return;
@@ -93,6 +111,9 @@ class Form extends Component
             'title' => $this->title,
             'description' => $this->description ?: null,
             'category' => $this->category ?: null,
+            'visibility' => $this->visibility,
+            'document_date' => $this->document_date ?: null,
+            'correspondence_id' => $this->correspondenceId,
         ];
 
         $this->document = app(DocumentArchive::class)->save($this->document, $data, $this->file);
@@ -117,8 +138,8 @@ class Form extends Component
         }
 
         return array_values(array_filter(
-            Commission::forRole($user->role),
-            fn (Commission $commission): bool => $user->canManageModule($commission->module()),
+            Commission::cases(),
+            fn (Commission $commission): bool => $commission->canManageArchive($user),
         ));
     }
 
@@ -144,6 +165,8 @@ class Form extends Component
             'Budget' => 'Budget',
             'Convocation' => 'Convocation',
             'Partition' => 'Partition',
+            'Programme de messe' => 'Programme de messe',
+            'Courrier' => 'Courrier',
             'Contrat' => 'Contrat',
             'Autre' => 'Autre',
         ];
@@ -151,8 +174,15 @@ class Form extends Component
 
     protected function assertCanUpload(Commission $commission): void
     {
-        abort_unless($commission->canManage(auth()->user()), 403,
+        abort_unless($commission->canManageArchive(auth()->user()), 403,
             'Dépôt de documents réservé aux responsables de la commission.');
+    }
+
+    public function hydrate(): void
+    {
+        if ($this->document) {
+            $this->assertCanUpload($this->document->fresh()->commission);
+        }
     }
 
     public function render(): View

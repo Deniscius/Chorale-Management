@@ -11,13 +11,16 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Comptes actifs" :value="$this->stats['total']" icon="users" color="slate" />
-        <x-stat-card label="Administrateurs" :value="$this->stats['admins']" icon="cog" color="red" />
+        <x-stat-card label="Comptes actifs" :value="$this->stats['total']" icon="users" color="slate" :href="route('users.index', []).'#resultats'" />
+        <x-stat-card label="Administrateurs" :value="$this->stats['admins']" icon="cog" color="red" :href="route('users.index', ['role'=>'admin']).'#resultats'" />
         <x-stat-card label="Membres de commission" :value="$this->stats['commissions']" icon="sparkles" color="purple"
-            :hint="$this->stats['commissions_libelles']" />
-        <x-stat-card label="Rattachés à un choriste" :value="$this->stats['liens']" icon="music" color="green" />
+            :hint="$this->stats['commissions_libelles']" :href="route('users.index', ['vue'=>'commissions']).'#resultats'" />
+        <x-stat-card label="Rattachés à un choriste" :value="$this->stats['liens']" icon="music" color="green" :href="route('users.index', ['vue'=>'lies']).'#resultats'" />
     </div>
 
+    @if ($overview !== '')
+        <p class="my-3 text-sm text-slate-600">Sélection issue d’une carte de synthèse. <a class="underline" href="{{ url()->current() }}" wire:navigate>Tout afficher</a></p>
+    @endif
     <x-filter-bar class="mt-6">
         <div class="grid gap-3 md:grid-cols-3">
             <div class="md:col-span-2">
@@ -56,7 +59,7 @@
     </x-filter-bar>
 
     <div class="mt-4">
-        <x-data-table :headers="[
+        <x-data-table id="resultats" :headers="[
             ['label' => 'Utilisateur'],
             ['label' => 'Rôle'],
             ['label' => 'Choriste rattaché'],

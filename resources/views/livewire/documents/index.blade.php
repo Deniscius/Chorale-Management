@@ -1,7 +1,11 @@
 <div>
+    @php $archiveRoute = $correspondenceId ? 'correspondences.documents' : 'documents.index'; $archiveParameters = $correspondenceId ? ['correspondence' => $correspondenceId] : []; @endphp
     <x-page-header title="Archives documentaires" icon="archive"
-        subtitle="Documents de référence conservés par chaque commission : comptes rendus, rapports, statuts, budgets.">
+        subtitle="Programmes de messe, partitions et pièces de courrier conservés pour les consultations ultérieures.">
         <x-slot name="actions">
+            @if ($this->canConfigureTeam)
+                <button type="button" wire:click="configureTeam" class="btn btn-secondary">Responsable et associé</button>
+            @endif
             @if ($this->canUploadCurrent)
                 <button type="button" wire:click="create"
                     class="btn btn-primary">
@@ -12,11 +16,15 @@
         </x-slot>
     </x-page-header>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <x-stat-card label="Documents archivés" :value="$this->stats['total']" icon="archive" color="slate" />
-        <x-stat-card label="Volume total" :value="\App\Support\Files::size($this->stats['octets'])" icon="folder" color="blue" />
-        <x-stat-card label="Commissions accessibles" :value="$this->stats['commissions']" icon="building" color="violet" />
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <x-stat-card label="Documents accessibles" :value="$this->stats['total']" icon="archive" color="slate" :href="route($archiveRoute, $archiveParameters + ['commission'=>$commission]).'#resultats'" />
+        <x-stat-card label="Privés" :value="$this->stats['prives']" icon="folder" color="blue" :href="route($archiveRoute, $archiveParameters + ['commission'=>$commission,'visibilite'=>'private']).'#resultats'" />
+        <x-stat-card label="Partagés" :value="$this->stats['partages']" icon="users" color="green" :href="route($archiveRoute, $archiveParameters + ['commission'=>$commission,'visibilite'=>'published']).'#resultats'" />
+        <x-stat-card label="Volume accessible" :value="\App\Support\Files::size($this->stats['octets'])" icon="folder" color="violet" :href="route($archiveRoute, $archiveParameters + ['commission'=>$commission]).'#resultats'" />
     </div>
+    @if (\App\Enums\Commission::from($commission)->hasPrivateArchive())
+        <p class="mt-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-900">Privé : responsable et associé désignés uniquement. Partagé : tous les utilisateurs connectés. Les compteurs affichent uniquement les documents qui vous sont accessibles.</p>
+    @endif
 
     {{-- Onglets par commission --}}
     <div class="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Commissions">
@@ -65,7 +73,14 @@
             </div>
         </div>
 
-        @if ($this->search !== '' || $this->category !== '')
+        <div class="mt-3 grid gap-3 sm:grid-cols-2">
+            <x-select name="visibility" label="Visibilité" wire:model.live="visibility">
+                <option value="">Toutes les visibilités</option><option value="private">Privés</option><option value="published">Partagés</option>
+            </x-select>
+            <x-input name="year" label="Année du document" type="number" min="1000" max="9999" wire:model.live.debounce.300ms="year" />
+        </div>
+
+        @if ($this->search !== '' || $this->category !== '' || $this->visibility !== '' || $this->year !== '')
             <div class="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
                 <span class="text-xs text-slate-500">Filtres actifs</span>
                 <button type="button" wire:click="resetFilters"
@@ -76,15 +91,15 @@
         @endif
     </x-filter-bar>
 
-    <div class="mt-4">
+    <div id="resultats" class="mt-4 scroll-mt-20">
         <x-data-table :headers="[
             ['label' => 'Document'],
-            ['label' => 'Catégorie'],
+            ['label' => 'Catégorie / visibilité'],
             ['label' => 'Taille', 'align' => 'text-right'],
-            ['label' => 'Déposé le'],
+            ['label' => 'Date du document'],
             ['label' => 'Actions', 'align' => 'text-right'],
         ]" empty-title="Aucun document"
-            empty-message="Cette commission n'a pas encore de document archivé."
+            empty-message="Aucun document accessible ne correspond à cette sélection."
             empty-icon="archive">
             @forelse ($this->documents as $document)
                 <tr wire:key="document-{{ $document->id }}" class="transition hover:bg-slate-50">
@@ -103,6 +118,9 @@
                         </div>
                     </td>
                     <td class="whitespace-nowrap px-4 py-3">
+                        @if ($document->commission->hasPrivateArchive())
+                            <x-badge>{{ $document->visibility === 'published' ? 'Partagé' : 'Privé' }}</x-badge>
+                        @endif
                         @if ($document->category)
                             <x-badge>{{ $document->category }}</x-badge>
                         @else
@@ -113,7 +131,7 @@
                         {{ $document->humanSize() }}
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
-                        {{ $document->created_at->format('d/m/Y') }}
+                        {{ ($document->document_date ?? $document->created_at)->format('d/m/Y') }}
                         @if ($document->uploader)
                             <p class="text-xs text-slate-400">{{ $document->uploader->name }}</p>
                         @endif
@@ -130,6 +148,12 @@
                                 <span class="px-2 text-xs text-rose-500" title="Fichier introuvable">absent</span>
                             @endif
 
+                            @if ($document->commission->hasPrivateArchive() && $this->canUpload($document->commission))
+                                <button type="button" class="btn btn-soft btn-sm" wire:click="share({{ $document->id }}, {{ $document->visibility === 'published' ? 'false' : 'true' }})"
+                                    wire:confirm="{{ $document->visibility === 'published' ? 'Retirer le partage de ce document ?' : 'Partager ce fichier avec tous les utilisateurs connectés ?' }}">
+                                    {{ $document->visibility === 'published' ? 'Rendre privé' : 'Partager' }}
+                                </button>
+                            @endif
                             @if ($this->canUpload($document->commission))
                                 <x-row-actions edit="edit" :id="$document->id" remove="delete"
                                     :confirm="'Retirer ce document de l\'archive ?'" />
@@ -145,10 +169,15 @@
         {{ $this->documents->links() }}
     </div>
 
+    @if ($showTeam && $this->canConfigureTeam)
+        <x-modal-panel title="Accès aux archives" size="lg">
+            <livewire:documents.team-settings :commission="$this->commission" :key="'team-'.$this->commission" />
+        </x-modal-panel>
+    @endif
     @if ($showForm)
         <x-modal-panel :title="$editingId ? 'Modifier le document' : 'Importer un document'"
             subtitle="Le document sera conservé dans l'archive de la commission sélectionnée.">
-            <livewire:documents.form :document="$this->editingDocument" :commission="$this->commission" />
+            <livewire:documents.form :document="$this->editingDocument" :commission="$this->commission" :correspondence-id="$this->correspondenceId" />
         </x-modal-panel>
     @endif
 </div>

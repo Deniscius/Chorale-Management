@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Correspondences;
 
+use App\Enums\Commission;
 use App\Enums\Confidentiality;
 use App\Enums\CorrespondenceChannel;
 use App\Enums\CorrespondenceStatus;
@@ -11,15 +12,19 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Correspondence;
 use App\Models\CorrespondenceService;
 use App\Models\Member;
+use App\Services\DocumentArchive;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class Form extends Component
 {
     use InteractsWithModule;
+    use WithFileUploads;
 
     public const MODULE_KEY = UserRole::MODULE_COURRIERS;
 
@@ -67,8 +72,8 @@ class Form extends Component
     #[Validate('nullable|exists:members,id')]
     public ?string $assigned_to = null;
 
-    #[Validate('nullable|string|max:255')]
-    public ?string $document_path = null;
+    #[Validate('nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,webp|max:10240')]
+    public $attachment = null;
 
     #[Validate('nullable|string|max:2000')]
     public ?string $notes = null;
@@ -87,6 +92,7 @@ class Form extends Component
     {
         $this->authorizeManage();
 
+        $correspondence = $correspondence?->exists ? $correspondence : null;
         $this->correspondence = $correspondence;
 
         if ($correspondence) {
@@ -105,7 +111,6 @@ class Form extends Component
                 'confidentiality' => $correspondence->confidentiality->value,
                 'status' => $correspondence->status->value,
                 'assigned_to' => $correspondence->assigned_to,
-                'document_path' => $correspondence->document_path,
                 'notes' => $correspondence->notes,
             ]);
         } else {
@@ -135,17 +140,26 @@ class Form extends Component
             'confidentiality' => $this->confidentiality,
             'status' => $this->status,
             'assigned_to' => $this->assigned_to !== null && $this->assigned_to !== '' ? (int) $this->assigned_to : null,
-            'document_path' => $this->document_path,
             'notes' => $this->notes,
         ];
 
-        if ($this->correspondence) {
-            $this->correspondence->update($data);
-            $message = 'Courrier mis à jour.';
-        } else {
-            $this->correspondence = Correspondence::create($data + ['created_by' => auth()->id()]);
-            $message = 'Courrier enregistré ('.$this->correspondence->reference.').';
+        if ($this->attachment) {
+            abort_unless(Commission::Secretariat->canManageArchive(auth()->user()), 403);
         }
+        $this->correspondence = DB::transaction(function () use ($data) {
+            $entry = $this->correspondence ? Correspondence::query()->lockForUpdate()->findOrFail($this->correspondence->id) : new Correspondence(['created_by' => auth()->id()]);
+            $entry->fill($data)->save();
+            if ($this->attachment) {
+                app(DocumentArchive::class)->save(null, [
+                    'commission' => Commission::Secretariat->value, 'category' => 'Courrier', 'title' => 'Pièce jointe : '.$entry->reference,
+                    'document_date' => $entry->correspondence_date, 'correspondence_id' => $entry->id, 'visibility' => 'private',
+                ], $this->attachment);
+            }
+
+            return $entry;
+        });
+        $message = 'Courrier enregistré ('.$this->correspondence->reference.').';
+        $this->reset('attachment');
 
         $this->dispatch('toast', type: 'success', message: $message);
         $this->dispatch('close-form');

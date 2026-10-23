@@ -4,12 +4,15 @@ namespace App\Livewire\Documents;
 
 use App\Enums\Commission;
 use App\Enums\UserRole;
+use App\Models\CommissionTeam;
+use App\Models\Correspondence;
 use App\Models\Document;
 use App\Models\User;
 use App\Services\DocumentArchive;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -37,13 +40,29 @@ class Index extends Component
     #[Url(as: 'categorie', except: '')]
     public string $category = '';
 
+    #[Url(as: 'visibilite', except: '')]
+    public string $visibility = '';
+
+    #[Url(as: 'annee', except: '')]
+    public string $year = '';
+
+    #[Locked]
+    public ?int $correspondenceId = null;
+
+    public bool $showTeam = false;
+
     public bool $showForm = false;
 
     public ?int $editingId = null;
 
-    public function mount(): void
+    public function mount(?Correspondence $correspondence = null): void
     {
         abort_unless(auth()->check(), 403);
+        if ($correspondence?->exists) {
+            abort_unless(auth()->user()->canAccessModule(UserRole::MODULE_COURRIERS) || Commission::Secretariat->canManageArchive(auth()->user()), 403);
+            $this->correspondenceId = $correspondence->id;
+            $this->commission = Commission::Secretariat->value;
+        }
 
         // Par défaut, on ouvre la première commission accessible.
         if ($this->commission === '') {
@@ -56,7 +75,7 @@ class Index extends Component
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['search', 'commission', 'category'], true)) {
+        if (in_array($property, ['search', 'commission', 'category', 'visibility', 'year'], true)) {
             $this->resetPage();
         }
 
@@ -67,8 +86,21 @@ class Index extends Component
 
     public function resetFilters(): void
     {
-        $this->reset(['search', 'category']);
+        $this->reset(['search', 'category', 'visibility', 'year']);
         $this->resetPage();
+    }
+
+    #[On('close-team')]
+    public function closeTeam(): void
+    {
+        $this->showTeam = false;
+        unset($this->teams);
+    }
+
+    public function configureTeam(): void
+    {
+        abort_unless($this->canConfigureTeam, 403);
+        $this->showTeam = true;
     }
 
     public function create(): void
@@ -93,6 +125,7 @@ class Index extends Component
     public function closeForm(): void
     {
         $this->showForm = false;
+        $this->showTeam = false;
         $this->editingId = null;
     }
 
@@ -121,7 +154,11 @@ class Index extends Component
             return [];
         }
 
-        return Commission::forRole($user->role);
+        if ($this->correspondenceId) {
+            return [Commission::Secretariat];
+        }
+
+        return array_values(array_filter(Commission::cases(), fn ($c) => $c->hasPrivateArchive() || $c->canView($user)));
     }
 
     /**
@@ -140,7 +177,7 @@ class Index extends Component
 
         return array_values(array_filter(
             $this->allowedCommissions,
-            fn (Commission $commission): bool => $user->canManageModule($commission->module()),
+            fn (Commission $commission): bool => $this->canUpload($commission),
         ));
     }
 
@@ -154,14 +191,18 @@ class Index extends Component
 
     public function canUpload(Commission $commission): bool
     {
-        return $commission->canManage(auth()->user());
+        return $commission->canManageArchive(auth()->user(), $this->teams->get($commission->value));
     }
 
     #[Computed]
     public function documents()
     {
         return Document::query()
-            ->with(['uploader', 'member'])
+            ->with(['uploader', 'member', 'team'])
+            ->readable(auth()->user())
+            ->when($this->correspondenceId, fn ($q) => $q->where('correspondence_id', $this->correspondenceId))
+            ->when($this->visibility !== '', fn ($q) => $q->where('visibility', $this->visibility))
+            ->when($this->year !== '', fn ($q) => $q->whereYear('document_date', ctype_digit($this->year) && strlen($this->year) === 4 ? (int) $this->year : 0))
             ->forCommission($this->commission)
             ->search($this->search)
             ->when($this->category !== '', fn (Builder $query) => $query->where('category', $this->category))
@@ -179,7 +220,8 @@ class Index extends Component
     #[Computed]
     public function categories(): array
     {
-        return Document::query()
+        return Document::query()->readable(auth()->user())
+            ->when($this->correspondenceId, fn ($q) => $q->where('correspondence_id', $this->correspondenceId))
             ->forCommission($this->commission)
             ->whereNotNull('category')
             ->distinct()
@@ -191,13 +233,11 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        $base = Document::query()->forCommission($this->commission);
+        $base = Document::query()->readable(auth()->user())->forCommission($this->commission)->when($this->correspondenceId, fn ($q) => $q->where('correspondence_id', $this->correspondenceId));
 
-        return [
-            'total' => (clone $base)->count(),
-            'octets' => (int) (clone $base)->sum('size'),
-            'commissions' => count($this->allowedCommissions),
-        ];
+        $row = (clone $base)->selectRaw("COUNT(*) as total, COALESCE(SUM(size),0) as octets, COALESCE(SUM(CASE WHEN visibility = 'private' THEN 1 ELSE 0 END),0) as prives, COALESCE(SUM(CASE WHEN visibility = 'published' THEN 1 ELSE 0 END),0) as partages")->first();
+
+        return ['total' => (int) $row->total, 'octets' => (int) $row->octets, 'prives' => (int) $row->prives, 'partages' => (int) $row->partages, 'commissions' => count($this->allowedCommissions)];
     }
 
     /**
@@ -210,9 +250,10 @@ class Index extends Component
     {
         $values = array_map(fn (Commission $c): string => $c->value, $this->allowedCommissions);
 
-        return Document::query()
+        return Document::query()->readable(auth()->user())
             ->selectRaw('commission, count(*) as total')
             ->whereIn('commission', $values)
+            ->when($this->correspondenceId, fn ($q) => $q->where('correspondence_id', $this->correspondenceId))
             ->groupBy('commission')
             ->pluck('total', 'commission')
             ->all();
@@ -234,6 +275,29 @@ class Index extends Component
         $this->assertAllowedCommission($value);
 
         abort_unless($this->canUpload($commission), 403, 'Dépôt de documents réservé aux responsables de la commission.');
+    }
+
+    #[Computed]
+    public function teams()
+    {
+        return CommissionTeam::all()->keyBy(fn ($team) => $team->commission->value);
+    }
+
+    #[Computed]
+    public function canConfigureTeam(): bool
+    {
+        $commission = Commission::tryFrom($this->commission);
+        if (! $commission?->hasPrivateArchive()) {
+            return false;
+        }
+
+        return auth()->user()?->isAdmin() || $this->teams->get($this->commission)?->leader_id === auth()->id();
+    }
+
+    public function share(int $id, bool $published): void
+    {
+        app(DocumentArchive::class)->share($id, $published);
+        $this->dispatch('toast', type: 'success', message: $published ? 'Document partagé avec les utilisateurs connectés.' : 'Document à nouveau privé.');
     }
 
     public function render(): View

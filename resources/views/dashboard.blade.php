@@ -10,20 +10,20 @@
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         @can('view-module', \App\Enums\UserRole::MODULE_MEMBERS)
             <x-stat-card label="Choristes actifs" :value="$kpis['choristes']" icon="users" color="blue"
-                :href="route('members.index')" />
+                :href="route('members.index', ['statut'=>'actif'])" />
         @endcan
 
         @can('view-module', \App\Enums\UserRole::MODULE_LITURGIQUE)
-            <x-stat-card label="Partitions au répertoire" :value="$kpis['partitions']" icon="book" color="purple" />
+            <x-stat-card label="Partitions au répertoire" :value="$kpis['partitions']" icon="book" color="purple" :href="route('works.index', ['repertoire'=>'oui']).'#resultats'" />
         @endcan
 
         @can('view-module', \App\Enums\UserRole::MODULE_COURRIERS)
-            <x-stat-card label="Courriers à traiter" :value="$kpis['courriers']" icon="mail" color="amber" />
+            <x-stat-card label="Courriers à traiter" :value="$kpis['courriers']" icon="mail" color="amber" :href="route('correspondences.index', ['vue'=>'ouverts']).'#resultats'" />
         @endcan
 
         @can('view-module', \App\Enums\UserRole::MODULE_COMPTABILITE)
             <x-stat-card label="Solde trésorerie" :value="number_format($kpis['solde'], 0, ',', ' ').' FCFA'"
-                icon="banknotes" color="green" />
+                icon="banknotes" color="green" :href="route('transactions.index', ['vue'=>'validees']).'#resultats'" />
         @endcan
     </div>
 

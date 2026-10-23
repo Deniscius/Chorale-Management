@@ -48,7 +48,7 @@ class AuditHardeningTest extends TestCase
         foreach (UserRole::cases() as $role) {
             $user = User::factory()->role($role)->create();
             foreach ($docs as $doc) {
-                $this->actingAs($user)->get(route('documents.download', $doc))->assertStatus(in_array($doc->commission, Commission::forRole($role), true) ? 200 : 403);
+                $this->actingAs($user)->get(route('documents.download', $doc))->assertStatus((! $doc->commission->hasPrivateArchive() && in_array($doc->commission, Commission::forRole($role), true)) ? 200 : 403);
             }
         }
     }
@@ -59,7 +59,7 @@ class AuditHardeningTest extends TestCase
         $doc = Document::factory()->create(['commission' => Commission::Direction]);
         $test = Livewire::actingAs($a)->test(Form::class, ['document' => $doc]);
         $a->update(['role' => UserRole::Secretaire]);
-        $test->set('commission', Commission::Secretariat->value)->call('save')->assertForbidden();
+        $test->set('commission', Commission::Secretariat->value)->assertForbidden();
         $this->assertSame(Commission::Direction, $doc->fresh()->commission);
     }
 

@@ -31,6 +31,9 @@ class Index extends Component
     #[Url(as: 'q', except: '')]
     public string $search = '';
 
+    #[Url(as: 'vue', except: '')]
+    public string $overview = '';
+
     #[Url(as: 'type', except: '')]
     public string $type = '';
 
@@ -63,14 +66,14 @@ class Index extends Component
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['search', 'type', 'status', 'channel', 'serviceId', 'year'], true)) {
+        if (in_array($property, ['overview', 'search', 'type', 'status', 'channel', 'serviceId', 'year'], true)) {
             $this->resetPage();
         }
     }
 
     public function resetFilters(): void
     {
-        $this->reset(['search', 'type', 'status', 'channel', 'serviceId', 'year']);
+        $this->reset(['search', 'type', 'status', 'channel', 'serviceId', 'year', 'overview']);
         $this->resetPage();
     }
 
@@ -204,6 +207,8 @@ class Index extends Component
         return Correspondence::query()
             ->with('service')
             ->with('assignedMember')
+            ->when($this->overview === 'ouverts', fn ($q) => $q->whereIn('status', CorrespondenceStatus::open()))
+            ->when($this->overview === 'confidentiels', fn ($q) => $q->where('confidentiality', 'confidentiel'))
             ->when($this->search !== '', fn (Builder $query) => $query->search($this->search))
             ->when($this->type !== '', fn (Builder $query) => $query->where('type', $this->type))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))

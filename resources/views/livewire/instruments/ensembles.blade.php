@@ -13,9 +13,9 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <x-stat-card label="Ensembles" :value="$this->stats['total']" icon="sparkles" color="slate" />
-        <x-stat-card label="Effectif cumulé" :value="$this->stats['effectif']" icon="users" color="purple" />
-        <x-stat-card label="Effectif moyen" :value="$this->stats['moyenne']" icon="chart" color="green" />
+        <x-stat-card label="Ensembles" :value="$this->stats['total']" icon="sparkles" color="slate" :href="route('instruments.ensembles', []).'#resultats'" />
+        <x-stat-card label="Effectif cumulé" :value="$this->stats['effectif']" icon="users" color="purple" :href="route('instruments.ensembles', []).'#resultats'" />
+        <x-stat-card label="Effectif moyen" :value="$this->stats['moyenne']" icon="chart" color="green" :href="route('instruments.ensembles', []).'#resultats'" />
     </div>
 
     <x-filter-bar class="mt-6">
@@ -33,7 +33,7 @@
     </x-filter-bar>
 
     <div class="mt-4">
-        <x-data-table :headers="[
+        <x-data-table id="resultats" :headers="[
             ['label' => 'Ensemble'],
             ['label' => 'Chef d\'ensemble'],
             ['label' => 'Effectif'],

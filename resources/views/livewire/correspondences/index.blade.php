@@ -2,6 +2,7 @@
     <x-page-header title="Registre des courriers" icon="mail"
         :subtitle="'Courriers entrants et sortants — '.$this->stats['total'].' courrier(s) enregistré(s).'">
         <x-slot name="actions">
+            <a href="{{ route('documents.index',['commission'=>'commission_secretariat']) }}" wire:navigate class="btn btn-secondary">Archives des courriers</a>
             @if ($this->canManage())
                 <button type="button" wire:click="create"
                     class="btn btn-primary">
@@ -13,13 +14,16 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Courriers" :value="$this->stats['total']" icon="mail" color="slate" />
+        <x-stat-card label="Courriers" :value="$this->stats['total']" icon="mail" color="slate" :href="route('correspondences.index', []).'#resultats'" />
         <x-stat-card label="Entrants" :value="$this->stats['entrants']" icon="inbox" color="sky"
-            :hint="$this->stats['sortants'].' sortant(s)'" />
-        <x-stat-card label="À traiter" :value="$this->stats['a_traiter']" icon="chart" color="amber" />
-        <x-stat-card label="Confidentiels" :value="$this->stats['confidentiels']" icon="folder" color="violet" />
+            :hint="$this->stats['sortants'].' sortant(s)'" :href="route('correspondences.index', ['type'=>'entrant']).'#resultats'" />
+        <x-stat-card label="À traiter" :value="$this->stats['a_traiter']" icon="chart" color="amber" :href="route('correspondences.index', ['vue'=>'ouverts']).'#resultats'" />
+        <x-stat-card label="Confidentiels" :value="$this->stats['confidentiels']" icon="folder" color="violet" :href="route('correspondences.index', ['vue'=>'confidentiels']).'#resultats'" />
     </div>
 
+    @if ($overview !== '')
+        <p class="my-3 text-sm text-slate-600">Sélection issue d’une carte de synthèse. <a class="underline" href="{{ url()->current() }}" wire:navigate>Tout afficher</a></p>
+    @endif
     <x-filter-bar class="mt-6">
         <div class="grid gap-3 md:grid-cols-6">
             <div class="md:col-span-2">
@@ -128,7 +132,7 @@
     </x-filter-bar>
 
     <div class="mt-4">
-        <x-data-table :headers="[
+        <x-data-table id="resultats" :headers="[
             ['label' => 'Référence'],
             ['label' => 'Date'],
             ['label' => 'Type'],
@@ -173,6 +177,7 @@
                         <x-enum-badge :enum="$correspondence->status" />
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-right">
+                        <a href="{{ route('correspondences.documents',$correspondence) }}" wire:navigate class="btn btn-soft btn-sm" aria-label="Pièces jointes du courrier {{ $correspondence->reference }}">Pièces jointes</a>
                         @if ($this->canManage())
                             <div class="flex items-center justify-end gap-1">
                                 @unless (in_array($correspondence->status->value, ['traite', 'clos', 'archive'], true))

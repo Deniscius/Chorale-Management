@@ -126,9 +126,14 @@
             </div>
 
             <div>
-                <x-input-label for="document_path" value="DocumentJoint" />
-                <x-text-input id="document_path" type="text" wire:model="document_path" class="mt-1 block w-full" />
-                <x-input-error :messages="$errors->get('document_path')" class="mt-1" />
+                @if (\App\Enums\Commission::Secretariat->canManageArchive(auth()->user()))
+                    <x-input-label for="attachment" value="Pièce jointe privée" />
+                    <input id="attachment" type="file" wire:model="attachment" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.webp" class="form-input" />
+                    <p class="text-xs text-slate-500">10 Mo maximum. Le partage se gère dans les archives du courrier.</p>
+                    <x-input-error :messages="$errors->get('attachment')" />
+                @else
+                    <p class="text-sm text-slate-500">Les pièces jointes sont gérées par le responsable du secrétariat et son associé.</p>
+                @endif
             </div>
 
             <div>
@@ -143,7 +148,7 @@
                 class="btn btn-secondary">
                 Annuler
             </button>
-            <button type="submit" wire:loading.attr="disabled" wire:target="save"
+            <button type="submit" wire:loading.attr="disabled" wire:target="save,attachment"
                 class="btn btn-primary">
                 <span wire:loading.remove wire:target="save">Enregistrer</span>
                 <span wire:loading wire:target="save">Enregistrement…</span>

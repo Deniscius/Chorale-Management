@@ -13,11 +13,11 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Activités" :value="$this->stats['total']" icon="chart" color="slate" />
-        <x-stat-card label="Planifiées" :value="$this->stats['planifiees']" icon="calendar" color="blue" />
-        <x-stat-card label="Terminées" :value="$this->stats['terminees']" icon="sparkles" color="green" />
+        <x-stat-card label="Activités" :value="$this->stats['total']" icon="chart" color="slate" :href="route('activities.index', []).'#resultats'" />
+        <x-stat-card label="Planifiées" :value="$this->stats['planifiees']" icon="calendar" color="blue" :href="route('activities.index', ['statut'=>'planifiee']).'#resultats'" />
+        <x-stat-card label="Terminées" :value="$this->stats['terminees']" icon="sparkles" color="green" :href="route('activities.index', ['statut'=>'terminee']).'#resultats'" />
         <x-stat-card label="Budget cumulé" :value="\App\Support\Money::compact($this->stats['budget'])" icon="banknotes" color="purple"
-            :hint="\App\Support\Money::compact($this->stats['depense']).' dépensés'" />
+            :hint="\App\Support\Money::compact($this->stats['depense']).' dépensés'" :href="route('activities.index', []).'#resultats'" />
     </div>
 
     <x-filter-bar class="mt-6">
@@ -80,7 +80,7 @@
     </x-filter-bar>
 
     <div class="mt-4">
-        <x-data-table :headers="[
+        <x-data-table id="resultats" :headers="[
             ['label' => 'Date'],
             ['label' => 'Activité'],
             ['label' => 'Type'],

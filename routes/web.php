@@ -64,6 +64,9 @@ Route::middleware('auth')->group(function () {
         ->middleware('module:'.UserRole::MODULE_MEMBERS)
         ->name('documents.index');
 
+    Route::get('/courriers/{correspondence}/pieces', DocumentsIndex::class)
+        ->middleware('module:'.UserRole::MODULE_MEMBERS)->name('correspondences.documents');
+
     Route::get('/documents/{document}/telecharger', DocumentDownloadController::class)
         ->name('documents.download');
 

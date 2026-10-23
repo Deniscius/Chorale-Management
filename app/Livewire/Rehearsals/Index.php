@@ -28,6 +28,9 @@ class Index extends Component
     #[Url(as: 'q', except: '')]
     public string $search = '';
 
+    #[Url(as: 'vue', except: '')]
+    public string $overview = '';
+
     #[Url(as: 'type', except: '')]
     public string $type = '';
 
@@ -56,14 +59,14 @@ class Index extends Component
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['search', 'type', 'status', 'period'], true)) {
+        if (in_array($property, ['overview', 'search', 'type', 'status', 'period'], true)) {
             $this->resetPage();
         }
     }
 
     public function resetFilters(): void
     {
-        $this->reset(['search', 'type', 'status', 'period']);
+        $this->reset(['search', 'type', 'status', 'period', 'overview']);
         $this->resetPage();
     }
 
@@ -107,6 +110,7 @@ class Index extends Component
         return Rehearsal::query()
             ->with('works')
             ->withCount('attendances')
+            ->when($this->overview === 'presences', fn ($q) => $q->whereHas('attendances', fn ($q) => $q->where('status', 'present')))
             ->when($this->search !== '', function (Builder $query) {
                 $like = '%'.$this->search.'%';
 

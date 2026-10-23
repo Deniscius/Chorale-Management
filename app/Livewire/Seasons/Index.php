@@ -24,6 +24,9 @@ class Index extends Component
     #[Url(as: 'q', except: '')]
     public string $search = '';
 
+    #[Url(as: 'vue', except: '')]
+    public string $overview = '';
+
     public bool $showForm = false;
 
     public ?int $editingId = null;
@@ -83,6 +86,7 @@ class Index extends Component
     {
         return LiturgicalSeason::query()
             ->withCount('works')
+            ->when($this->overview === 'encours', fn ($q) => $q->whereNotNull('starts_on')->whereDate('starts_on', '<=', today())->where(fn ($q) => $q->whereNull('ends_on')->orWhereDate('ends_on', '>=', today())))
             ->when($this->search !== '', fn (Builder $query) => $query->whereLike('name', '%'.$this->search.'%'))
             ->orderByRaw('CASE WHEN starts_on IS NULL THEN 1 ELSE 0 END')
             ->orderBy('starts_on')

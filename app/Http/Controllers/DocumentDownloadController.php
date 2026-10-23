@@ -19,7 +19,7 @@ class DocumentDownloadController extends Controller
     public function __invoke(Document $document): BinaryFileResponse|StreamedResponse
     {
         abort_unless(
-            $document->commission->canView(auth()->user()),
+            $document->canView(auth()->user()),
             403,
             'Document non accessible avec votre rôle.',
         );
@@ -32,10 +32,12 @@ class DocumentDownloadController extends Controller
         if (in_array($document->mime_type, ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'], true)) {
             return response()->file($path, [
                 'Content-Type' => $document->mime_type,
-                'Content-Disposition' => 'inline; filename="'.$document->original_name.'"',
-            ]);
+                'Cache-Control' => 'private, no-store',
+                'X-Content-Type-Options' => 'nosniff',
+
+            ])->setPrivate()->setContentDisposition('inline', $document->original_name);
         }
 
-        return response()->download($path, $document->original_name);
+        return response()->download($path, $document->original_name, ['Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff'])->setPrivate();
     }
 }

@@ -13,12 +13,15 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Séances planifiées" :value="$this->stats['total']" icon="calendar" color="slate" />
-        <x-stat-card label="À venir" :value="$this->stats['avenir']" icon="chart" color="blue" />
-        <x-stat-card label="Séances terminées" :value="$this->stats['terminees']" icon="sparkles" color="green" />
-        <x-stat-card label="Présences enregistrées" :value="$this->stats['presence']" icon="users" color="purple" />
+        <x-stat-card label="Séances planifiées" :value="$this->stats['total']" icon="calendar" color="slate" :href="route('rehearsals.index', []).'#resultats'" />
+        <x-stat-card label="À venir" :value="$this->stats['avenir']" icon="chart" color="blue" :href="route('rehearsals.index', ['periode'=>'avenir']).'#resultats'" />
+        <x-stat-card label="Séances terminées" :value="$this->stats['terminees']" icon="sparkles" color="green" :href="route('rehearsals.index', ['statut'=>'terminee']).'#resultats'" />
+        <x-stat-card label="Présences enregistrées" :value="$this->stats['presence']" icon="users" color="purple" :href="route('rehearsals.index', ['vue'=>'presences']).'#resultats'" />
     </div>
 
+    @if ($overview !== '')
+        <p class="mt-4 text-sm text-slate-600">Séances avec des présences enregistrées. <a href="{{ route('rehearsals.index') }}" wire:navigate class="underline">Tout afficher</a></p>
+    @endif
     <x-filter-bar class="mt-6">
         <div class="grid gap-3 md:grid-cols-4">
             <div>
@@ -78,7 +81,7 @@
     </x-filter-bar>
 
     <div class="mt-4">
-        <x-data-table :headers="[
+        <x-data-table id="resultats" :headers="[
             ['label' => 'Date'],
             ['label' => 'Type'],
             ['label' => 'Lieu & horaire'],

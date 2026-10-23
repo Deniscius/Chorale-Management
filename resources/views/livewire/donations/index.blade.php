@@ -14,16 +14,19 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Total des dons" :value="\App\Support\Money::compact($this->stats['total'])" icon="banknotes" color="green" />
-        <x-stat-card label="Nombre de dons" :value="$this->stats['nombre']" icon="sparkles" color="slate" />
-        <x-stat-card label="Don moyen" :value="\App\Support\Money::compact($this->stats['moyenne'])" icon="chart" color="blue" />
-        <x-stat-card label="Don le plus important" :value="\App\Support\Money::compact($this->stats['max'])" icon="folder" color="violet" />
+        <x-stat-card label="Total des dons" :value="\App\Support\Money::compact($this->stats['total'])" icon="banknotes" color="green" :href="route('donations.index', []).'#resultats'" />
+        <x-stat-card label="Nombre de dons" :value="$this->stats['nombre']" icon="sparkles" color="slate" :href="route('donations.index', []).'#resultats'" />
+        <x-stat-card label="Don moyen" :value="\App\Support\Money::compact($this->stats['moyenne'])" icon="chart" color="blue" :href="route('donations.index', []).'#resultats'" />
+        <x-stat-card label="Don le plus important" :value="\App\Support\Money::compact($this->stats['max'])" icon="folder" color="violet" :href="route('donations.index', ['vue'=>'montant']).'#resultats'" />
         <x-stat-card label="Nature principale"
             :value="$this->stats['type_dominant'] ? \App\Enums\DonationType::tryFrom($this->stats['type_dominant'])?->label() : '—'"
             :hint="$this->stats['type_dominant'] ? \App\Support\Money::compact($this->stats['type_dominant_montant']) : null"
-            icon="sparkles" color="amber" />
+            icon="sparkles" color="amber" :href="route('donations.index', ['nature'=>$this->stats['type_dominant']]).'#resultats'" />
     </div>
 
+    @if ($overview !== '')
+        <p class="my-3 text-sm text-slate-600">Sélection issue d’une carte de synthèse. <a class="underline" href="{{ url()->current() }}" wire:navigate>Tout afficher</a></p>
+    @endif
     <x-filter-bar class="mt-6">
         <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <div>
@@ -84,7 +87,7 @@
     </x-filter-bar>
 
     <div class="mt-4">
-        <x-data-table :headers="[
+        <x-data-table id="resultats" :headers="[
             ['label' => 'Date'],
             ['label' => 'Donateur'],
             ['label' => 'Nature'],

@@ -13,11 +13,14 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <x-stat-card label="Temps liturgiques" :value="$this->stats['total']" icon="calendar" color="slate" />
-        <x-stat-card label="Œuvres rattachées" :value="$this->stats['oeuvres']" icon="book" color="purple" />
-        <x-stat-card label="En cours aujourd'hui" :value="$this->stats['encours']" icon="sparkles" color="green" />
+        <x-stat-card label="Temps liturgiques" :value="$this->stats['total']" icon="calendar" color="slate" :href="route('seasons.index', []).'#resultats'" />
+        <x-stat-card label="Œuvres rattachées" :value="$this->stats['oeuvres']" icon="book" color="purple" :href="route('works.index', ['vue'=>'saisons']).'#resultats'" />
+        <x-stat-card label="En cours aujourd'hui" :value="$this->stats['encours']" icon="sparkles" color="green" :href="route('seasons.index', ['vue'=>'encours']).'#resultats'" />
     </div>
 
+    @if ($overview !== '')
+        <p class="my-3 text-sm text-slate-600">Sélection issue d’une carte de synthèse. <a class="underline" href="{{ url()->current() }}" wire:navigate>Tout afficher</a></p>
+    @endif
     <x-filter-bar class="mt-6">
         <div>
             <label for="search" class="sr-only">Rechercher</label>
@@ -33,7 +36,7 @@
     </x-filter-bar>
 
     <div class="mt-4">
-        <x-data-table :headers="[
+        <x-data-table id="resultats" :headers="[
             ['label' => 'Temps liturgique'],
             ['label' => 'Période'],
             ['label' => 'Œuvres'],

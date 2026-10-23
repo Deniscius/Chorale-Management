@@ -28,6 +28,9 @@ class Index extends Component
     #[Url(as: 'q', except: '')]
     public string $search = '';
 
+    #[Url(as: 'vue', except: '')]
+    public string $overview = '';
+
     #[Url(as: 'type', except: '')]
     public string $donorType = '';
 
@@ -48,14 +51,14 @@ class Index extends Component
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['search', 'donorType', 'donationType', 'year'], true)) {
+        if (in_array($property, ['overview', 'search', 'donorType', 'donationType', 'year'], true)) {
             $this->resetPage();
         }
     }
 
     public function resetFilters(): void
     {
-        $this->reset(['search', 'donorType', 'donationType', 'year']);
+        $this->reset(['search', 'donorType', 'donationType', 'year', 'overview']);
         $this->resetPage();
     }
 
@@ -96,6 +99,7 @@ class Index extends Component
     {
         return Donation::query()
             ->with('member')
+            ->when($this->overview === 'montant', fn ($q) => $q->orderByDesc('amount'))
             ->when($this->search !== '', function (Builder $query) {
                 $like = '%'.$this->search.'%';
 

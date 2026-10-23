@@ -7,7 +7,7 @@
     'loading' => true,
 ])
 
-<div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+<div {{ $attributes->merge(['class' => 'overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm scroll-mt-20']) }}>
     <div class="relative">
         @if ($loading)
             <div wire:loading class="absolute inset-x-0 top-0 z-20 h-0.5 animate-pulse bg-slate-900/70"

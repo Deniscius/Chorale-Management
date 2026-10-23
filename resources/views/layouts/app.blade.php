@@ -32,7 +32,7 @@
             @include('layouts.topbar')
 
             <main id="contenu" tabindex="-1"
-                class="mx-auto w-full max-w-[1600px] flex-1 animate-fade-in px-4 py-6 focus:outline-none sm:px-6 lg:px-8 lg:py-8">
+                class="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 focus:outline-none sm:px-6 lg:px-8 lg:py-8">
                 @isset($header)
                     <div class="mb-6">{{ $header }}</div>
                 @endisset

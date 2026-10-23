@@ -35,6 +35,7 @@ class EnsembleForm extends Component
     {
         $this->authorizeManage();
 
+        $ensemble = $ensemble?->exists ? $ensemble : null;
         $this->ensemble = $ensemble;
 
         if ($ensemble) {

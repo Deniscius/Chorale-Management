@@ -119,7 +119,7 @@ class Index extends Component
     #[Computed]
     public function editingDonation(): ?Donation
     {
-        return $this->editingId ? Donation::find($this->editingId) : null;
+        return $this->editingId ? Donation::findOrFail($this->editingId) : null;
     }
 
     #[Computed]

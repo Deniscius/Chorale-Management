@@ -4,54 +4,54 @@
 
         <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div class="lg:col-span-2">
-                <x-input-label for="memberId" value="Choriste" />
-                <select id="memberId" wire:model="memberId"
+                <x-input-label for="activities-participants-memberId" value="Choriste" />
+                <select id="activities-participants-memberId" aria-describedby="activities-participants-memberId-error" aria-invalid="{{ $errors->has('memberId') ? 'true' : 'false' }}" wire:model="memberId"
                     class="form-select mt-1">
                     <option value="">—</option>
                     @foreach ($this->availableMembers as $member)
                         <option value="{{ $member->id }}">{{ $member->full_name }}</option>
                     @endforeach
                 </select>
-                <x-input-error :messages="$errors->get('memberId')" class="mt-1" />
+                <x-input-error id="activities-participants-memberId-error" :messages="$errors->get('memberId')" class="mt-1" />
             </div>
 
             <div>
-                <x-input-label for="role" value="Rôle" />
-                <select id="role" wire:model="role"
+                <x-input-label for="activities-participants-role" value="Rôle" />
+                <select id="activities-participants-role" aria-describedby="activities-participants-role-error" aria-invalid="{{ $errors->has('role') ? 'true' : 'false' }}" wire:model="role"
                     class="form-select mt-1">
                     <option value="">—</option>
                     @foreach ($this->roleOptions as $value => $label)
                         <option value="{{ $value }}">{{ $label }}</option>
                     @endforeach
                 </select>
-                <x-input-error :messages="$errors->get('role')" class="mt-1" />
+                <x-input-error id="activities-participants-role-error" :messages="$errors->get('role')" class="mt-1" />
             </div>
 
             <div>
-                <x-input-label for="status" value="Statut" />
-                <select id="status" wire:model="status"
+                <x-input-label for="activities-participants-status" value="Statut" />
+                <select id="activities-participants-status" aria-describedby="activities-participants-status-error" aria-invalid="{{ $errors->has('status') ? 'true' : 'false' }}" wire:model="status"
                     class="form-select mt-1">
                     @foreach ($this->statusOptions as $value => $label)
                         <option value="{{ $value }}">{{ $label }}</option>
                     @endforeach
                 </select>
-                <x-input-error :messages="$errors->get('status')" class="mt-1" />
+                <x-input-error id="activities-participants-status-error" :messages="$errors->get('status')" class="mt-1" />
             </div>
 
             <div>
-                <x-input-label for="hours" value="Heures" />
-                <x-text-input id="hours" type="number" step="0.5" min="0" wire:model="hours" class="mt-1 block w-full" />
-                <x-input-error :messages="$errors->get('hours')" class="mt-1" />
+                <x-input-label for="activities-participants-hours" value="Heures" />
+                <x-text-input id="activities-participants-hours" type="number" step="0.5" min="0" name="hours" aria-describedby="activities-participants-hours-error" aria-invalid="{{ $errors->has('hours') ? 'true' : 'false' }}" wire:model="hours" class="mt-1 block w-full" />
+                <x-input-error id="activities-participants-hours-error" :messages="$errors->get('hours')" class="mt-1" />
             </div>
 
             <div class="lg:col-span-2">
-                <x-input-label for="notes" value="Notes" />
-                <x-text-input id="notes" type="text" wire:model="notes" class="mt-1 block w-full" />
-                <x-input-error :messages="$errors->get('notes')" class="mt-1" />
+                <x-input-label for="activities-participants-notes" value="Notes" />
+                <x-text-input id="activities-participants-notes" type="text" name="notes" aria-describedby="activities-participants-notes-error" aria-invalid="{{ $errors->has('notes') ? 'true' : 'false' }}" wire:model="notes" class="mt-1 block w-full" />
+                <x-input-error id="activities-participants-notes-error" :messages="$errors->get('notes')" class="mt-1" />
             </div>
 
             <div class="flex items-end lg:col-span-1">
-                <button type="submit"
+                <button type="submit" wire:loading.attr="disabled" wire:target="add"
                     class="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/30">
                     Ajouter
                 </button>

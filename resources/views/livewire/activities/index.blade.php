@@ -166,7 +166,7 @@
     @endif
 
     @if ($showParticipants && $this->participantsActivity)
-        <x-modal-panel title="Participants de l'activité"
+        <x-modal-panel close-event="close-participants" title="Participants de l'activité"
             :subtitle="$this->participantsActivity->title">
             <livewire:activities.participants :activity="$this->participantsActivity" />
         </x-modal-panel>

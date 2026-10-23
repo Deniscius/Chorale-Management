@@ -77,6 +77,7 @@ class Form extends Component
     {
         $this->authorizeManage();
 
+        $transaction = $transaction?->exists ? $transaction : null;
         $this->transaction = $transaction;
 
         if ($transaction) {

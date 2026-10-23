@@ -214,7 +214,7 @@ class Index extends Component
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->channel !== '', fn (Builder $query) => $query->where('channel', $this->channel))
             ->when($this->serviceId, fn (Builder $query) => $query->where('service_id', $this->serviceId))
-            ->when($this->year !== '', fn (Builder $query) => $query->whereYear('correspondence_date', $this->year))
+            ->when($this->year !== '', fn (Builder $query) => $query->whereYear('correspondence_date', (int) $this->year))
             ->orderByDesc('correspondence_date')
             ->orderByDesc('id')
             ->paginate(15);
@@ -223,7 +223,7 @@ class Index extends Component
     #[Computed]
     public function editingCorrespondence(): ?Correspondence
     {
-        return $this->editingId ? Correspondence::find($this->editingId) : null;
+        return $this->editingId ? Correspondence::findOrFail($this->editingId) : null;
     }
 
     #[Computed]

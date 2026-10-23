@@ -61,6 +61,7 @@ class MaintenanceForm extends Component
     {
         $this->authorizeManage();
 
+        $maintenance = $maintenance?->exists ? $maintenance : null;
         $this->maintenance = $maintenance;
 
         if ($maintenance) {

@@ -113,7 +113,7 @@ class Index extends Component
     #[Computed]
     public function editingPerformance(): ?Performance
     {
-        return $this->editingId ? Performance::with('works')->find($this->editingId) : null;
+        return $this->editingId ? Performance::with('works')->findOrFail($this->editingId) : null;
     }
 
     #[Computed]

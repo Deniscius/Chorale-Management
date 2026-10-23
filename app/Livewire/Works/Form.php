@@ -100,6 +100,7 @@ class Form extends Component
     {
         $this->authorizeManage();
 
+        $work = $work?->exists ? $work : null;
         $this->work = $work;
 
         if ($work) {

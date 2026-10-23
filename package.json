@@ -3,7 +3,8 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "test:ui": "node --test tests/js/*.test.js"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",

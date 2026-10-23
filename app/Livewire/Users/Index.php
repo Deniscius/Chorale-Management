@@ -107,7 +107,7 @@ class Index extends Component
     #[Computed]
     public function editingUser(): ?User
     {
-        return $this->editingId ? User::find($this->editingId) : null;
+        return $this->editingId ? User::findOrFail($this->editingId) : null;
     }
 
     #[Computed]

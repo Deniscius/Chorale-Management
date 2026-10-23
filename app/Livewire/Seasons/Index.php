@@ -97,7 +97,7 @@ class Index extends Component
     #[Computed]
     public function editingSeason(): ?LiturgicalSeason
     {
-        return $this->editingId ? LiturgicalSeason::find($this->editingId) : null;
+        return $this->editingId ? LiturgicalSeason::findOrFail($this->editingId) : null;
     }
 
     #[Computed]

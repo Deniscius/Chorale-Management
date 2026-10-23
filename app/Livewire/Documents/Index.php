@@ -214,7 +214,7 @@ class Index extends Component
     #[Computed]
     public function editingDocument(): ?Document
     {
-        return $this->editingId ? Document::find($this->editingId) : null;
+        return $this->editingId ? Document::findOrFail($this->editingId) : null;
     }
 
     #[Computed]

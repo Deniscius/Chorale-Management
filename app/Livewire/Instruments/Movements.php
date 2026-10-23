@@ -128,7 +128,7 @@ class Movements extends Component
     #[Computed]
     public function editingMovement(): ?InstrumentMovement
     {
-        return $this->editingId ? InstrumentMovement::find($this->editingId) : null;
+        return $this->editingId ? InstrumentMovement::findOrFail($this->editingId) : null;
     }
 
     #[Computed]

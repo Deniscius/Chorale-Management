@@ -50,6 +50,7 @@ class Form extends Component
     {
         abort_unless(auth()->user()?->can('manage-users'), 403, "Gestion des comptes utilisateurs réservée à l'administrateur.");
 
+        $user = $user?->exists ? $user : null;
         $this->user = $user;
 
         if ($user) {

@@ -139,7 +139,7 @@ class Index extends Component
     #[Computed]
     public function editingWork(): ?Work
     {
-        return $this->editingId ? Work::find($this->editingId) : null;
+        return $this->editingId ? Work::findOrFail($this->editingId) : null;
     }
 
     #[Computed]

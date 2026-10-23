@@ -80,6 +80,7 @@ class Form extends Component
     {
         $this->authorizeManage();
 
+        $member = $member?->exists ? $member : null;
         $this->member = $member;
 
         if ($member) {

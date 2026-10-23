@@ -158,7 +158,7 @@ class Index extends Component
     #[Computed]
     public function editingTransaction(): ?Transaction
     {
-        return $this->editingId ? Transaction::find($this->editingId) : null;
+        return $this->editingId ? Transaction::findOrFail($this->editingId) : null;
     }
 
     #[Computed]

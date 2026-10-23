@@ -104,7 +104,7 @@ class Index extends Component
     #[Computed]
     public function editingBudget(): ?Budget
     {
-        return $this->editingId ? Budget::find($this->editingId) : null;
+        return $this->editingId ? Budget::findOrFail($this->editingId) : null;
     }
 
     #[Computed]

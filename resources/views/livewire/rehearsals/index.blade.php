@@ -207,7 +207,7 @@
                         <button type="button" wire:click="$dispatch('close-form')" class="btn btn-secondary">
                             Fermer
                         </button>
-                        <button type="button" wire:click="saveReport" class="btn btn-primary">
+                        <button type="button" wire:click="saveReport" wire:loading.attr="disabled" wire:target="saveReport,generateReport" class="btn btn-primary">
                             Enregistrer
                         </button>
                     </div>

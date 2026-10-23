@@ -10,6 +10,7 @@ use App\Models\Activity;
 use App\Models\Member;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -51,7 +52,7 @@ class Participants extends Component
         $this->authorizeManage();
 
         $validated = $this->validate([
-            'memberId' => 'required|exists:members,id',
+            'memberId' => ['required', Rule::exists('members', 'id')->whereNull('deleted_at')],
             'role' => ['nullable', Rule::enum(ActivityRole::class)],
             'status' => ['required', Rule::enum(ParticipationStatus::class)],
             'hours' => 'nullable|numeric|min:0|max:1000',
@@ -60,18 +61,25 @@ class Participants extends Component
 
         $memberId = (int) $validated['memberId'];
 
-        if ($this->activity->participants()->where('members.id', $memberId)->exists()) {
+        $added = DB::transaction(function () use ($memberId, $validated) {
+            $activity = Activity::query()->lockForUpdate()->findOrFail($this->activity->id);
+            if ($activity->participants()->where('members.id', $memberId)->exists()) {
+                return false;
+            }
+            $activity->participants()->attach($memberId, [
+                'role' => $validated['role'] ?: null,
+                'status' => $validated['status'],
+                'hours' => (float) ($validated['hours'] ?: 0),
+                'notes' => $validated['notes'] ?: null,
+            ]);
+
+            return true;
+        });
+        if (! $added) {
             $this->dispatch('toast', type: 'error', message: 'Ce choriste participe déjà à l\'activité.');
 
             return;
         }
-
-        $this->activity->participants()->attach($memberId, [
-            'role' => $validated['role'] ?: null,
-            'status' => $validated['status'],
-            'hours' => (float) ($validated['hours'] ?: 0),
-            'notes' => $validated['notes'] ?: null,
-        ]);
 
         $this->reset(['memberId', 'role', 'status', 'hours', 'notes']);
         $this->status = 'invite';

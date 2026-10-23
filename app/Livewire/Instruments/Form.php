@@ -72,6 +72,7 @@ class Form extends Component
     {
         $this->authorizeManage();
 
+        $instrument = $instrument?->exists ? $instrument : null;
         $this->instrument = $instrument;
 
         if ($instrument) {

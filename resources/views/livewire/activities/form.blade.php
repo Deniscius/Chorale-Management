@@ -3,114 +3,114 @@
         <x-validation-summary />
         <div class="grid gap-4 sm:grid-cols-2">
             <div class="sm:col-span-2">
-                <x-input-label for="title" value="Intitulé" />
-                <x-text-input id="title" type="text" wire:model="title" class="mt-1 block w-full" required autofocus />
-                <x-input-error :messages="$errors->get('title')" class="mt-1" />
+                <x-input-label for="activities-form-title" value="Intitulé" />
+                <x-text-input id="activities-form-title" type="text" name="title" aria-describedby="activities-form-title-error" aria-invalid="{{ $errors->has('title') ? 'true' : 'false' }}" wire:model="title" class="mt-1 block w-full" required autofocus />
+                <x-input-error id="activities-form-title-error" :messages="$errors->get('title')" class="mt-1" />
             </div>
 
             <div>
-                <x-input-label for="type" value="Type d'activité" />
-                <select id="type" wire:model="type"
+                <x-input-label for="activities-form-type" value="Type d'activité" />
+                <select id="activities-form-type" aria-describedby="activities-form-type-error" aria-invalid="{{ $errors->has('type') ? 'true' : 'false' }}" wire:model="type"
                     class="form-select mt-1">
                     @foreach ($this->typeOptions as $value => $label)
                         <option value="{{ $value }}">{{ $label }}</option>
                     @endforeach
                 </select>
-                <x-input-error :messages="$errors->get('type')" class="mt-1" />
+                <x-input-error id="activities-form-type-error" :messages="$errors->get('type')" class="mt-1" />
             </div>
 
             <div>
-                <x-input-label for="status" value="Statut" />
-                <select id="status" wire:model="status"
+                <x-input-label for="activities-form-status" value="Statut" />
+                <select id="activities-form-status" aria-describedby="activities-form-status-error" aria-invalid="{{ $errors->has('status') ? 'true' : 'false' }}" wire:model="status"
                     class="form-select mt-1">
                     @foreach ($this->statusOptions as $value => $label)
                         <option value="{{ $value }}">{{ $label }}</option>
                     @endforeach
                 </select>
-                <x-input-error :messages="$errors->get('status')" class="mt-1" />
+                <x-input-error id="activities-form-status-error" :messages="$errors->get('status')" class="mt-1" />
             </div>
         </div>
 
         <div>
-            <x-input-label for="description" value="Description" />
-            <textarea id="description" wire:model="description" rows="3"
+            <x-input-label for="activities-form-description" value="Description" />
+            <textarea id="activities-form-description" aria-describedby="activities-form-description-error" aria-invalid="{{ $errors->has('description') ? 'true' : 'false' }}" wire:model="description" rows="3"
                 class="form-textarea mt-1"
                 placeholder="Objectifs, déroulé, informations pratiques…"></textarea>
-            <x-input-error :messages="$errors->get('description')" class="mt-1" />
+            <x-input-error id="activities-form-description-error" :messages="$errors->get('description')" class="mt-1" />
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
-                <x-input-label for="starts_at" value="Début" />
-                <x-text-input id="starts_at" type="datetime-local" wire:model="starts_at" class="mt-1 block w-full" required />
-                <x-input-error :messages="$errors->get('starts_at')" class="mt-1" />
+                <x-input-label for="activities-form-starts_at" value="Début" />
+                <x-text-input id="activities-form-starts_at" type="datetime-local" name="starts_at" aria-describedby="activities-form-starts_at-error" aria-invalid="{{ $errors->has('starts_at') ? 'true' : 'false' }}" wire:model="starts_at" class="mt-1 block w-full" required />
+                <x-input-error id="activities-form-starts_at-error" :messages="$errors->get('starts_at')" class="mt-1" />
             </div>
 
             <div>
-                <x-input-label for="ends_at" value="Fin" />
-                <x-text-input id="ends_at" type="datetime-local" wire:model="ends_at" class="mt-1 block w-full" />
-                <x-input-error :messages="$errors->get('ends_at')" class="mt-1" />
+                <x-input-label for="activities-form-ends_at" value="Fin" />
+                <x-text-input id="activities-form-ends_at" type="datetime-local" name="ends_at" aria-describedby="activities-form-ends_at-error" aria-invalid="{{ $errors->has('ends_at') ? 'true' : 'false' }}" wire:model="ends_at" class="mt-1 block w-full" />
+                <x-input-error id="activities-form-ends_at-error" :messages="$errors->get('ends_at')" class="mt-1" />
             </div>
         </div>
 
         <div class="grid gap-4 sm:grid-cols-3">
             <div>
-                <x-input-label for="venue" value="Lieu" />
-                <x-text-input id="venue" type="text" wire:model="venue" class="mt-1 block w-full" />
-                <x-input-error :messages="$errors->get('venue')" class="mt-1" />
+                <x-input-label for="activities-form-venue" value="Lieu" />
+                <x-text-input id="activities-form-venue" type="text" name="venue" aria-describedby="activities-form-venue-error" aria-invalid="{{ $errors->has('venue') ? 'true' : 'false' }}" wire:model="venue" class="mt-1 block w-full" />
+                <x-input-error id="activities-form-venue-error" :messages="$errors->get('venue')" class="mt-1" />
             </div>
 
             <div>
-                <x-input-label for="organizer_id" value="Organisateur" />
-                <select id="organizer_id" wire:model="organizer_id"
+                <x-input-label for="activities-form-organizer_id" value="Organisateur" />
+                <select id="activities-form-organizer_id" aria-describedby="activities-form-organizer_id-error" aria-invalid="{{ $errors->has('organizer_id') ? 'true' : 'false' }}" wire:model="organizer_id"
                     class="form-select mt-1">
                     <option value="">—</option>
                     @foreach ($this->organizers as $member)
                         <option value="{{ $member->id }}">{{ $member->full_name }}</option>
                     @endforeach
                 </select>
-                <x-input-error :messages="$errors->get('organizer_id')" class="mt-1" />
+                <x-input-error id="activities-form-organizer_id-error" :messages="$errors->get('organizer_id')" class="mt-1" />
             </div>
 
             <div>
-                <x-input-label for="choir_id" value="Chorale" />
-                <select id="choir_id" wire:model="choir_id"
+                <x-input-label for="activities-form-choir_id" value="Chorale" />
+                <select id="activities-form-choir_id" aria-describedby="activities-form-choir_id-error" aria-invalid="{{ $errors->has('choir_id') ? 'true' : 'false' }}" wire:model="choir_id"
                     class="form-select mt-1">
                     <option value="">—</option>
                     @foreach ($this->choirs as $choir)
                         <option value="{{ $choir->id }}">{{ $choir->name }}</option>
                     @endforeach
                 </select>
-                <x-input-error :messages="$errors->get('choir_id')" class="mt-1" />
+                <x-input-error id="activities-form-choir_id-error" :messages="$errors->get('choir_id')" class="mt-1" />
             </div>
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
-                <x-input-label for="budget_allocated" value="Budget alloué (FCFA)" />
-                <x-text-input id="budget_allocated" type="number" step="0.01" min="0" wire:model="budget_allocated"
+                <x-input-label for="activities-form-budget_allocated" value="Budget alloué (FCFA)" />
+                <x-text-input id="activities-form-budget_allocated" type="number" step="0.01" min="0" name="budget_allocated" aria-describedby="activities-form-budget_allocated-error" aria-invalid="{{ $errors->has('budget_allocated') ? 'true' : 'false' }}" wire:model="budget_allocated"
                     class="mt-1 block w-full" />
-                <x-input-error :messages="$errors->get('budget_allocated')" class="mt-1" />
+                <x-input-error id="activities-form-budget_allocated-error" :messages="$errors->get('budget_allocated')" class="mt-1" />
             </div>
 
             <div>
-                <x-input-label for="budget_spent" value="Budget engagé (FCFA)" />
-                <x-text-input id="budget_spent" type="number" step="0.01" min="0" wire:model="budget_spent"
+                <x-input-label for="activities-form-budget_spent" value="Budget engagé (FCFA)" />
+                <x-text-input id="activities-form-budget_spent" type="number" step="0.01" min="0" name="budget_spent" aria-describedby="activities-form-budget_spent-error" aria-invalid="{{ $errors->has('budget_spent') ? 'true' : 'false' }}" wire:model="budget_spent"
                     class="mt-1 block w-full" />
-                <x-input-error :messages="$errors->get('budget_spent')" class="mt-1" />
+                <x-input-error id="activities-form-budget_spent-error" :messages="$errors->get('budget_spent')" class="mt-1" />
             </div>
         </div>
 
         <div>
-            <x-input-label for="report" value="Rapport / compte rendu" />
-            <textarea id="report" wire:model="report" rows="3"
+            <x-input-label for="activities-form-report" value="Rapport / compte rendu" />
+            <textarea id="activities-form-report" aria-describedby="activities-form-report-error" aria-invalid="{{ $errors->has('report') ? 'true' : 'false' }}" wire:model="report" rows="3"
                 class="form-textarea mt-1"
                 placeholder="Bilan, participants, incidents…"></textarea>
-            <x-input-error :messages="$errors->get('report')" class="mt-1" />
+            <x-input-error id="activities-form-report-error" :messages="$errors->get('report')" class="mt-1" />
         </div>
 
         <label class="flex items-center gap-2">
-            <input type="checkbox" wire:model="is_public"
+            <input type="checkbox" aria-describedby="activities-form-is_public-error" aria-invalid="{{ $errors->has('is_public') ? 'true' : 'false' }}" wire:model="is_public"
                 class="rounded border-slate-300 text-slate-900 focus:ring-slate-500">
             <span class="text-sm text-slate-700">Activité publiée (visible par les choristes)</span>
         </label>

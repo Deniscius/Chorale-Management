@@ -114,7 +114,7 @@ class Maintenances extends Component
     #[Computed]
     public function editingMaintenance(): ?InstrumentMaintenance
     {
-        return $this->editingId ? InstrumentMaintenance::find($this->editingId) : null;
+        return $this->editingId ? InstrumentMaintenance::findOrFail($this->editingId) : null;
     }
 
     #[Computed]

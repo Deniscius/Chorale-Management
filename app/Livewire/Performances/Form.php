@@ -9,6 +9,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Performance;
 use App\Models\Work;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
@@ -51,7 +52,7 @@ class Form extends Component
      *
      * @var array<int, int>
      */
-    #[Validate('array')]
+    #[Validate('array|max:500')]
     public array $works = [];
 
     #[Validate('nullable|string|max:2000')]
@@ -62,6 +63,7 @@ class Form extends Component
         return [
             'type' => ['required', Rule::enum(PerformanceType::class)],
             'status' => ['required', Rule::enum(EventStatus::class)],
+            'works.*' => ['integer', 'distinct', Rule::exists('works', 'id')->whereNull('deleted_at')],
         ];
     }
 
@@ -69,6 +71,7 @@ class Form extends Component
     {
         $this->authorizeManage();
 
+        $performance = $performance?->exists ? $performance : null;
         $this->performance = $performance;
 
         if ($performance) {
@@ -107,16 +110,15 @@ class Form extends Component
             'notes' => $this->notes,
         ];
 
-        if ($this->performance) {
-            $this->performance->update($data);
-            $message = 'Célébration mise à jour.';
-        } else {
-            $this->performance = Performance::create($data + ['created_by' => auth()->id()]);
-            $message = 'Célébration enregistrée.';
-        }
+        $editing = $this->performance !== null;
+        $this->performance = DB::transaction(function () use ($data) {
+            $entry = $this->performance ? Performance::query()->lockForUpdate()->findOrFail($this->performance->id) : new Performance(['created_by' => auth()->id()]);
+            $entry->fill($data)->save();
+            $entry->works()->sync(collect($this->works)->map(fn ($id) => (int) $id)->all());
 
-        $ids = collect($this->works)->map(fn ($id) => (int) $id)->unique()->values();
-        $this->performance->works()->sync($ids->all());
+            return $entry;
+        });
+        $message = $editing ? 'Célébration mise à jour.' : 'Célébration enregistrée.';
 
         $this->dispatch('toast', type: 'success', message: $message);
         $this->dispatch('close-form');
@@ -126,9 +128,9 @@ class Form extends Component
     public function availableWorks()
     {
         return Work::query()
-            ->where('is_repertoire', true)
+            ->where(fn ($q) => $q->where('is_repertoire', true)->orWhereIn('id', $this->works))
             ->orderBy('title')
-            ->get();
+            ->get(['id', 'title', 'type', 'duration_minutes']);
     }
 
     #[Computed]

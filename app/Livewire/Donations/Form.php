@@ -66,6 +66,7 @@ class Form extends Component
     {
         $this->authorizeManage();
 
+        $donation = $donation?->exists ? $donation : null;
         $this->donation = $donation;
 
         if ($donation) {

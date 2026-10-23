@@ -42,6 +42,7 @@ class Form extends Component
     {
         $this->authorizeManage();
 
+        $season = $season?->exists ? $season : null;
         $this->season = $season;
 
         if ($season) {

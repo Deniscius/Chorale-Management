@@ -64,8 +64,8 @@ class History extends Component
                 $like = '%'.$this->search.'%';
 
                 $query->where(function (Builder $q) use ($like) {
-                    $q->where('recipient', 'like', $like)
-                        ->orWhere('subject', 'like', $like);
+                    $q->whereLike('recipient', $like)
+                        ->orWhereLike('subject', $like);
                 });
             })
             ->when($this->channel !== '', fn (Builder $query) => $query->where('channel', $this->channel))

@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Enums\DonorType;
+use App\Enums\TransactionStatus;
+use App\Enums\UserRole;
 use App\Models\Account;
 use App\Models\Budget;
 use App\Models\Choir;
@@ -9,6 +12,7 @@ use App\Models\Contribution;
 use App\Models\Donation;
 use App\Models\Member;
 use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class AccountingSeeder extends Seeder
@@ -63,15 +67,15 @@ class AccountingSeeder extends Seeder
         $transactions = Transaction::factory()->count(48)->make();
 
         foreach ($transactions as $transaction) {
-            $transaction->save([
+            $transaction->fill([
                 'choir_id' => $chorale->id,
                 'account_id' => $compteCaisse->id,
                 'budget_id' => $budgets->random()->id,
                 'member_id' => $transaction->type === 'recette' ? $membres->random()->id : null,
-                'created_by' => 1,
-                'validated_by' => $transaction->status === 'validee' ? 5 : null,
-                'validated_at' => $transaction->status === 'validee' ? now() : null,
-            ]);
+                'created_by' => User::where('role', UserRole::Admin->value)->value('id'),
+                'validated_by' => $transaction->status === TransactionStatus::Validee ? User::where('role', UserRole::Tresorier->value)->value('id') : null,
+                'validated_at' => $transaction->status === TransactionStatus::Validee ? now() : null,
+            ])->save();
         }
 
         // Cotisations des choristes
@@ -90,10 +94,10 @@ class AccountingSeeder extends Seeder
 
         // Dons
         foreach (Donation::factory()->count(14)->make() as $don) {
-            $don->save([
+            $don->fill([
                 'choir_id' => $chorale->id,
-                'member_id' => $don->donor_type === 'choriste' ? $membres->random()->id : null,
-            ]);
+                'member_id' => $don->donor_type === DonorType::Choriste ? $membres->random()->id : null,
+            ])->save();
         }
     }
 }

@@ -106,11 +106,11 @@ class Correspondence extends Model
         $like = '%'.$term.'%';
 
         return $query->where(function (Builder $q) use ($like) {
-            $q->where('reference', 'like', $like)
-                ->orWhere('subject', 'like', $like)
-                ->orWhere('sender_name', 'like', $like)
-                ->orWhere('sender_organization', 'like', $like)
-                ->orWhere('recipient_name', 'like', $like);
+            $q->whereLike('reference', $like)
+                ->orWhereLike('subject', $like)
+                ->orWhereLike('sender_name', $like)
+                ->orWhereLike('sender_organization', $like)
+                ->orWhereLike('recipient_name', $like);
         });
     }
 

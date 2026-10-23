@@ -83,7 +83,7 @@ class Index extends Component
     {
         return LiturgicalSeason::query()
             ->withCount('works')
-            ->when($this->search !== '', fn (Builder $query) => $query->where('name', 'like', '%'.$this->search.'%'))
+            ->when($this->search !== '', fn (Builder $query) => $query->whereLike('name', '%'.$this->search.'%'))
             ->orderByRaw('CASE WHEN starts_on IS NULL THEN 1 ELSE 0 END')
             ->orderBy('starts_on')
             ->orderBy('name')

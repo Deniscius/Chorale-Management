@@ -2,9 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Transaction;
-use Illuminate\Support\Str;
-
 /**
  * Génération des références des écritures comptables.
  *
@@ -16,14 +13,6 @@ class TransactionReferenceGenerator
 
     public function next(?int $year = null): string
     {
-        $year ??= now()->year;
-
-        $last = Transaction::where('reference', 'like', self::PREFIX.'/'.$year.'/%')
-            ->orderByDesc('reference')
-            ->value('reference');
-
-        $sequence = $last ? ((int) Str::afterLast($last, '/')) + 1 : 1;
-
-        return sprintf('%s/%d/%04d', self::PREFIX, $year, $sequence);
+        return app(ReferenceSequence::class)->next('transactions', self::PREFIX, $year ?? now()->year);
     }
 }

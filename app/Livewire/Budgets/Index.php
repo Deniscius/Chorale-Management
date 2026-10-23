@@ -91,7 +91,7 @@ class Index extends Component
         return Budget::query()
             ->with('choir')
             ->withCount('transactions')
-            ->when($this->search !== '', fn (Builder $query) => $query->where('category', 'like', '%'.$this->search.'%'))
+            ->when($this->search !== '', fn (Builder $query) => $query->whereLike('category', '%'.$this->search.'%'))
             ->when($this->year !== '', fn (Builder $query) => $query->where('year', (int) $this->year))
             ->when($this->category !== '', fn (Builder $query) => $query->where('category', $this->category))
             ->orderByDesc('year')

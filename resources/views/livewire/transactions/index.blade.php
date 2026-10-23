@@ -1,4 +1,5 @@
 <div>
+    <x-validation-summary />
     <x-page-header title="Recettes & dépenses" icon="banknotes"
         :subtitle="'Journal des opérations de la chorale — '.$this->stats['total'].' écriture(s).'">
         <x-slot name="actions">
@@ -151,8 +152,12 @@
                                         <x-icon name="sparkles" class="h-4 w-4" />
                                     </button>
                                 @endif
+                                @if (! $transaction->isLocked())
                                 <x-row-actions edit="edit" :id="$transaction->id" remove="delete"
                                     :confirm="'Supprimer l\'écriture '.$transaction->reference.' ?'" />
+                                @else
+                                    <span class="text-xs text-slate-500">Écriture protégée</span>
+                                @endif
                             </div>
                         @endif
                     </td>

@@ -131,7 +131,7 @@
 
     <div class="shrink-0 border-t border-slate-800/80 p-4">
         <p class="text-xs text-slate-500">
-            Application interne — Laravel {{ app()->version() }}
+            Gestion de la chorale
         </p>
     </div>
 </aside>

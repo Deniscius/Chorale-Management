@@ -45,7 +45,7 @@ class Form extends Component
     protected function rules(): array
     {
         return [
-            'category' => ['required', Rule::enum(BudgetCategory::class)],
+            'category' => ['required', Rule::enum(BudgetCategory::class), Rule::unique('budgets', 'category')->where('year', $this->year)->where('choir_id', $this->choir_id ?: null)->ignore($this->budget)],
         ];
     }
 

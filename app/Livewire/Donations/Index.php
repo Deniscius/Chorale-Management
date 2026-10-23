@@ -8,6 +8,8 @@ use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Donation;
 use App\Models\Member;
+use App\Services\ReceiptLedger;
+use App\Support\CalendarYears;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -84,7 +86,7 @@ class Index extends Component
     {
         $this->authorizeManage();
 
-        Donation::findOrFail($donationId)->delete();
+        app(ReceiptLedger::class)->deleteDonation($donationId);
 
         $this->dispatch('toast', type: 'success', message: 'Don supprimé.');
     }
@@ -98,8 +100,8 @@ class Index extends Component
                 $like = '%'.$this->search.'%';
 
                 $query->where(function (Builder $q) use ($like) {
-                    $q->where('donor_name', 'like', $like)
-                        ->orWhere('purpose', 'like', $like);
+                    $q->whereLike('donor_name', $like)
+                        ->orWhereLike('purpose', $like);
                 });
             })
             ->when($this->donorType !== '', fn (Builder $query) => $query->where('donor_type', $this->donorType))
@@ -140,13 +142,7 @@ class Index extends Component
     #[Computed]
     public function years(): array
     {
-        return Donation::query()
-            ->selectRaw('DISTINCT strftime("%Y", donated_on) as annee')
-            ->orderByDesc('annee')
-            ->pluck('annee')
-            ->filter()
-            ->values()
-            ->all();
+        return CalendarYears::for(new Donation, 'donated_on');
     }
 
     #[Computed]

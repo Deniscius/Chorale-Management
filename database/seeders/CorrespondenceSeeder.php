@@ -3,14 +3,15 @@
 namespace Database\Seeders;
 
 use App\Enums\CorrespondenceStatus;
-use App\Enums\CorrespondenceType;
+use App\Enums\UserRole;
 use App\Models\Choir;
 use App\Models\Correspondence;
 use App\Models\CorrespondenceEvent;
 use App\Models\CorrespondenceService;
 use App\Models\Member;
-use App\Services\CorrespondenceReferenceGenerator;
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class CorrespondenceSeeder extends Seeder
 {
@@ -24,9 +25,9 @@ class CorrespondenceSeeder extends Seeder
             'Commission des instruments' => 'Matériel, prêts et maintenance.',
             'Trésorerie' => 'Demandes de subvention, offrandes et pièces justificatives.',
             'Secrétariat général' => 'Convocations, comptes rendus et archives.',
-        ])->map(function (string $description, string $name) use ($chorale) {
+        ])->map(function (string $description, string $name) {
             return CorrespondenceService::updateOrCreate(
-                ['slug' => \Illuminate\Support\Str::slug($name)],
+                ['slug' => Str::slug($name)],
                 [
                     'name' => $name,
                     'description' => $description,
@@ -39,16 +40,16 @@ class CorrespondenceSeeder extends Seeder
         $courriers = Correspondence::factory()->count(38)->make();
 
         foreach ($courriers as $courrier) {
-            $courrier->save([
+            $courrier->fill([
                 'service_id' => $services->random()->id,
                 'assigned_to' => $membres->random()->id,
-                'created_by' => 1,
-            ]);
+                'created_by' => User::where('role', UserRole::Admin->value)->value('id'),
+            ])->save();
 
             // Historique de traitement
             CorrespondenceEvent::create([
                 'correspondence_id' => $courrier->id,
-                'user_id' => 1,
+                'user_id' => User::where('role', UserRole::Admin->value)->value('id'),
                 'action' => 'Enregistrement du courrier',
                 'note' => 'Courrier enregistré dans le registre.',
             ]);
@@ -56,7 +57,7 @@ class CorrespondenceSeeder extends Seeder
             if ($courrier->status !== CorrespondenceStatus::Recu) {
                 CorrespondenceEvent::create([
                     'correspondence_id' => $courrier->id,
-                    'user_id' => 1,
+                    'user_id' => User::where('role', UserRole::Admin->value)->value('id'),
                     'action' => 'Affectation',
                     'note' => 'Courrier transmis au service concerné.',
                 ]);
@@ -65,7 +66,7 @@ class CorrespondenceSeeder extends Seeder
             if (in_array($courrier->status, [CorrespondenceStatus::Clos, CorrespondenceStatus::Archive], true)) {
                 CorrespondenceEvent::create([
                     'correspondence_id' => $courrier->id,
-                    'user_id' => 1,
+                    'user_id' => User::where('role', UserRole::Admin->value)->value('id'),
                     'action' => 'Clôture',
                     'note' => 'Traitement achevé, courrier archivé.',
                 ]);

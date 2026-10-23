@@ -101,9 +101,9 @@ class Document extends Model
         $like = '%'.$term.'%';
 
         return $query->where(function (Builder $q) use ($like) {
-            $q->where('title', 'like', $like)
-                ->orWhere('description', 'like', $like)
-                ->orWhere('original_name', 'like', $like);
+            $q->whereLike('title', $like)
+                ->orWhereLike('description', $like)
+                ->orWhereLike('original_name', $like);
         });
     }
 }

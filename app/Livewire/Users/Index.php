@@ -88,9 +88,9 @@ class Index extends Component
                 $needle = '%'.$this->search.'%';
 
                 $query->where(function (Builder $q) use ($needle) {
-                    $q->where('name', 'like', $needle)
-                        ->orWhere('username', 'like', $needle)
-                        ->orWhere('email', 'like', $needle);
+                    $q->whereLike('name', $needle)
+                        ->orWhereLike('username', $needle)
+                        ->orWhereLike('email', $needle);
                 });
             })
             ->when($this->role !== '', fn (Builder $query) => $query->where('role', $this->role))

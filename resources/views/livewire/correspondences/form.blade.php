@@ -1,5 +1,6 @@
 <div>
     <form wire:submit="save" class="space-y-5">
+        <x-validation-summary />
         <div class="grid gap-4 sm:grid-cols-4">
             <div>
                 <x-input-label for="type" value="Nature" />
@@ -142,7 +143,7 @@
                 class="btn btn-secondary">
                 Annuler
             </button>
-            <button type="submit"
+            <button type="submit" wire:loading.attr="disabled" wire:target="save"
                 class="btn btn-primary">
                 <span wire:loading.remove wire:target="save">Enregistrer</span>
                 <span wire:loading wire:target="save">Enregistrement…</span>

@@ -2,14 +2,17 @@
 
 namespace Database\Seeders;
 
+use App\Enums\UserRole;
 use App\Models\Choir;
 use App\Models\LiturgicalSeason;
 use App\Models\Member;
 use App\Models\Performance;
 use App\Models\Rehearsal;
 use App\Models\RehearsalAttendance;
+use App\Models\User;
 use App\Models\Work;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class LiturgicalSeeder extends Seeder
 {
@@ -35,7 +38,7 @@ class LiturgicalSeeder extends Seeder
             $jourFin = (int) substr($fin, 3, 2);
 
             return LiturgicalSeason::updateOrCreate(
-                ['slug' => \Illuminate\Support\Str::slug($nom)],
+                ['slug' => Str::slug($nom)],
                 [
                     'name' => $nom,
                     'starts_on' => sprintf('%d-%02d-%02d', $annee, $moisDebut, $jourDebut),
@@ -53,11 +56,11 @@ class LiturgicalSeeder extends Seeder
         foreach ($toutes as $index => $oeuvre) {
             $saison = $saisons->random();
 
-            $oeuvre->save([
+            $oeuvre->fill([
                 'choir_id' => $chorale->id,
                 'season_id' => $saison->id,
                 'is_repertoire' => $index < 20,
-            ]);
+            ])->save();
 
             $oeuvres->push($oeuvre);
         }
@@ -73,7 +76,7 @@ class LiturgicalSeeder extends Seeder
         foreach ($repetitions as $repetition) {
             $repetition->update([
                 'choir_id' => $chorale->id,
-                'created_by' => 1,
+                'created_by' => User::where('role', UserRole::Admin->value)->value('id'),
             ]);
 
             // Programme de la répétition
@@ -116,7 +119,7 @@ class LiturgicalSeeder extends Seeder
         // Célébrations et concerts
         $celebrations = Performance::factory()->count(10)->create([
             'choir_id' => $chorale->id,
-            'created_by' => 1,
+            'created_by' => User::where('role', UserRole::Admin->value)->value('id'),
         ]);
 
         foreach ($celebrations as $celebration) {

@@ -4,10 +4,12 @@ namespace App\Livewire\Donations;
 
 use App\Enums\DonationType;
 use App\Enums\DonorType;
+use App\Enums\PaymentMethod;
 use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Donation;
 use App\Models\Member;
+use App\Services\ReceiptLedger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -46,9 +48,13 @@ class Form extends Component
     #[Validate('nullable|string|max:2000')]
     public ?string $notes = null;
 
+    #[Validate]
+    public string $payment_method = 'especes';
+
     protected function rules(): array
     {
         return [
+            'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
             'donor_type' => ['required', Rule::enum(DonorType::class)],
             'donation_type' => ['required', Rule::enum(DonationType::class)],
         ];
@@ -62,6 +68,7 @@ class Form extends Component
 
         if ($donation) {
             $this->fill([
+                'payment_method' => $donation->transaction?->payment_method?->value ?? 'especes',
                 'donor_type' => $donation->donor_type->value,
                 'donation_type' => $donation->donation_type?->value ?? 'offrande_messe',
                 'donor_name' => $donation->donor_name,
@@ -83,6 +90,7 @@ class Form extends Component
         $this->validate();
 
         $data = [
+            'payment_method' => $this->payment_method,
             'donor_type' => $this->donor_type,
             'donation_type' => $this->donation_type,
             'donor_name' => $this->donor_type === DonorType::Anonyme->value ? null : ($this->donor_name ?: null),
@@ -94,10 +102,10 @@ class Form extends Component
         ];
 
         if ($this->donation) {
-            $this->donation->update($data);
+            $this->donation = app(ReceiptLedger::class)->saveDonation($this->donation, $data);
             $message = 'Don mis à jour.';
         } else {
-            $this->donation = Donation::create($data);
+            $this->donation = app(ReceiptLedger::class)->saveDonation(null, $data);
             $message = 'Don enregistré.';
         }
 

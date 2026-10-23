@@ -1,3 +1,5 @@
+> Migration PostgreSQL, démarrage sur une base neuve et règles comptables : [guide détaillé](docs/POSTGRESQL.md).
+
 # Gestion Chorale
 
 Application interne de gestion pour une chorale paroissiale. Elle centralise les
@@ -35,7 +37,7 @@ d'accès par rôle (RBAC) et une interface entièrement en français.
 | Composants d'interface | Livewire 4 (pages entières et formulaires) |
 | Styles | Tailwind CSS 3 (design system centralisé) |
 | Authentification | Laravel Breeze (sessions) |
-| Base de données | SQLite en développement, MySQL en production |
+| Base de données | PostgreSQL par défaut, SQLite pour les tests rapides |
 | File d'attente / cache / sessions | `database` (aucun service externe requis) |
 
 Aucune dépendance JavaScript lourde : Alpine.js est fourni par Livewire pour les
@@ -101,7 +103,7 @@ peut jamais modifier un module qu'il ne peut pas consulter (vérifié par un tes
 
 ### Prérequis
 
-- PHP **8.2+** avec les extensions `pdo_sqlite` (ou `pdo_mysql`), `mbstring`, `openssl`
+- PHP **8.2+** avec les extensions `pdo_pgsql` (ou `pdo_sqlite`), `mbstring`, `openssl`
 - Composer 2
 - Node.js **18+** et npm
 
@@ -114,6 +116,7 @@ npm install
 
 # 2. Configuration
 cp .env.example .env
+# Renseigner PostgreSQL et créer la base : voir docs/POSTGRESQL.md
 php artisan key:generate
 
 # 3. Base de données et jeu de démonstration
@@ -394,8 +397,10 @@ APP_DEBUG=false
 APP_URL=https://chorale.votre-domaine.ci
 APP_LOCALE=fr
 
-DB_CONNECTION=mysql
+DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_SSLMODE=prefer
 DB_DATABASE=chorale
 DB_USERNAME=chorale
 DB_PASSWORD=••••••

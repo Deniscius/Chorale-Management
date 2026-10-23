@@ -1,5 +1,7 @@
 <div>
     <form wire:submit="save" class="space-y-5">
+        <x-validation-summary />
+        <p class="text-sm text-slate-500">Un don financier prépare une recette en brouillon, à valider par le trésorier. Un don en nature ne modifie pas la trésorerie.</p>
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
                 <x-input-label for="donation_type" value="Nature du don" />
@@ -75,12 +77,21 @@
             <x-input-error :messages="$errors->get('notes')" class="mt-1" />
         </div>
 
+        <div>
+            <x-input-label for="payment_method" value="Mode de règlement" />
+            <select id="payment_method" wire:model="payment_method" class="form-select mt-1">
+                @foreach (\App\Enums\PaymentMethod::options() as $value => $label)
+                    <option value="{{ $value }}">{{ $label }}</option>
+                @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('payment_method')" class="mt-1" />
+        </div>
         <div class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">
             <button type="button" wire:click="$dispatch('close-form')"
                 class="btn btn-secondary">
                 Annuler
             </button>
-            <button type="submit"
+            <button type="submit" wire:loading.attr="disabled" wire:target="save"
                 class="btn btn-primary">
                 <span wire:loading.remove wire:target="save">Enregistrer</span>
                 <span wire:loading wire:target="save">Enregistrement…</span>

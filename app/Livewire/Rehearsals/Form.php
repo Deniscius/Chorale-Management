@@ -68,8 +68,8 @@ class Form extends Component
         if ($rehearsal) {
             $this->fill([
                 'date' => $rehearsal->date->format('Y-m-d'),
-                'starts_at' => $rehearsal->starts_at,
-                'ends_at' => $rehearsal->ends_at,
+                'starts_at' => $rehearsal->starts_at ? substr($rehearsal->starts_at, 0, 5) : null,
+                'ends_at' => $rehearsal->ends_at ? substr($rehearsal->ends_at, 0, 5) : null,
                 'venue' => $rehearsal->venue,
                 'type' => $rehearsal->type->value,
                 'status' => $rehearsal->status->value,

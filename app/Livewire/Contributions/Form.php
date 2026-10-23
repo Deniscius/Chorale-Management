@@ -3,10 +3,12 @@
 namespace App\Livewire\Contributions;
 
 use App\Enums\ContributionStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Contribution;
 use App\Models\Member;
+use App\Services\ReceiptLedger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -27,13 +29,13 @@ class Form extends Component
     #[Validate('required|integer|min:2000|max:2100')]
     public string $year = '';
 
-    #[Validate('required|integer|min:1|max:12')]
+    #[Validate]
     public string $month = '1';
 
     #[Validate('required|numeric|min:0')]
     public ?string $due_amount = null;
 
-    #[Validate('nullable|numeric|min:0')]
+    #[Validate('nullable|numeric|min:0|lte:due_amount')]
     public ?string $paid_amount = null;
 
     #[Validate('nullable|date')]
@@ -45,10 +47,15 @@ class Form extends Component
     #[Validate('nullable|string|max:1000')]
     public ?string $notes = null;
 
+    #[Validate]
+    public string $payment_method = 'especes';
+
     protected function rules(): array
     {
         return [
+            'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
             'status' => ['required', Rule::enum(ContributionStatus::class)],
+            'month' => ['required', 'integer', 'min:1', 'max:12', Rule::unique('contributions', 'month')->where('member_id', $this->member_id)->where('year', $this->year)->ignore($this->contribution)],
         ];
     }
 
@@ -60,6 +67,7 @@ class Form extends Component
 
         if ($contribution) {
             $this->fill([
+                'payment_method' => $contribution->receipts()->where('status', 'brouillon')->value('payment_method') ?? 'especes',
                 'member_id' => $contribution->member_id,
                 'year' => (string) $contribution->year,
                 'month' => (string) $contribution->month,
@@ -83,6 +91,7 @@ class Form extends Component
         $this->validate();
 
         $data = [
+            'payment_method' => $this->payment_method,
             'member_id' => (int) $this->member_id,
             'year' => (int) $this->year,
             'month' => (int) $this->month,
@@ -94,10 +103,10 @@ class Form extends Component
         ];
 
         if ($this->contribution) {
-            $this->contribution->update($data);
+            $this->contribution = app(ReceiptLedger::class)->saveContribution($this->contribution, $data);
             $message = 'Cotisation mise à jour.';
         } else {
-            $this->contribution = Contribution::create($data);
+            $this->contribution = app(ReceiptLedger::class)->saveContribution(null, $data);
             $message = 'Cotisation enregistrée.';
         }
 

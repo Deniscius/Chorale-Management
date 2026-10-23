@@ -12,6 +12,7 @@ use App\Models\Reminder;
 use App\Services\Sms\SmsSender;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 
@@ -153,7 +154,7 @@ class ReminderDispatcher
         }
 
         try {
-            $reminder = Reminder::create([
+            $reminder = DB::transaction(fn () => Reminder::create([
                 'rehearsal_id' => $rehearsal->getKey(),
                 'member_id' => $member->getKey(),
                 'channel' => $channel,
@@ -161,7 +162,7 @@ class ReminderDispatcher
                 'subject' => $subject,
                 'body' => $body,
                 'status' => ReminderStatus::EnAttente,
-            ]);
+            ]));
         } catch (UniqueConstraintViolationException) {
             $reminder = Reminder::query()
                 ->where('rehearsal_id', $rehearsal->getKey())

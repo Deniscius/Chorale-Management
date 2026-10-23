@@ -12,6 +12,7 @@ use App\Models\Activity;
 use App\Models\Budget;
 use App\Models\Member;
 use App\Models\Transaction;
+use App\Services\TransactionWriter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -118,20 +119,8 @@ class Form extends Component
             'notes' => $this->notes,
         ];
 
-        if ($this->transaction) {
-            $this->transaction->update($data);
-            $message = 'Opération mise à jour.';
-        } else {
-            $this->transaction = Transaction::create($data + ['created_by' => auth()->id()]);
-            $message = 'Opération enregistrée ('.$this->transaction->reference.').';
-        }
-
-        if ($this->transaction->status === TransactionStatus::Validee && ! $this->transaction->validated_at) {
-            $this->transaction->update([
-                'validated_by' => auth()->id(),
-                'validated_at' => now(),
-            ]);
-        }
+        $this->transaction = app(TransactionWriter::class)->save($this->transaction, $data);
+        $message = 'Opération enregistrée ('.$this->transaction->reference.').';
 
         $this->dispatch('toast', type: 'success', message: $message);
         $this->dispatch('close-form');

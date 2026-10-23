@@ -128,7 +128,7 @@ class Form extends Component
     public function availableWorks()
     {
         return Work::query()
-            ->where(fn ($q) => $q->where('is_repertoire', true)->orWhereIn('id', $this->works))
+            ->where(fn ($q) => $q->where('is_repertoire', true)->orWhereIntegerInRaw('id', $this->works))
             ->orderBy('title')
             ->get(['id', 'title', 'type', 'duration_minutes']);
     }

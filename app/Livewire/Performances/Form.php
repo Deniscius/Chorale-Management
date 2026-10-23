@@ -9,6 +9,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Performance;
 use App\Models\Work;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -24,7 +25,7 @@ class Form extends Component
     #[Validate('required|string|max:255')]
     public string $title = '';
 
-    #[Validate('required')]
+    #[Validate]
     public string $type = 'messe';
 
     #[Validate('required|date')]
@@ -36,7 +37,7 @@ class Form extends Component
     #[Validate('nullable|string|max:255')]
     public ?string $audience = null;
 
-    #[Validate('required')]
+    #[Validate]
     public string $status = 'planifiee';
 
     #[Validate('nullable|numeric|min:0')]
@@ -55,6 +56,14 @@ class Form extends Component
 
     #[Validate('nullable|string|max:2000')]
     public ?string $notes = null;
+
+    protected function rules(): array
+    {
+        return [
+            'type' => ['required', Rule::enum(PerformanceType::class)],
+            'status' => ['required', Rule::enum(EventStatus::class)],
+        ];
+    }
 
     public function mount(?Performance $performance = null): void
     {

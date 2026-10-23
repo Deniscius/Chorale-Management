@@ -9,6 +9,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Donation;
 use App\Models\Member;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -21,10 +22,10 @@ class Form extends Component
 
     public ?Donation $donation = null;
 
-    #[Validate('required')]
+    #[Validate]
     public string $donor_type = 'paroissien';
 
-    #[Validate('required')]
+    #[Validate]
     public string $donation_type = 'offrande_messe';
 
     #[Validate('nullable|string|max:255')]
@@ -44,6 +45,14 @@ class Form extends Component
 
     #[Validate('nullable|string|max:2000')]
     public ?string $notes = null;
+
+    protected function rules(): array
+    {
+        return [
+            'donor_type' => ['required', Rule::enum(DonorType::class)],
+            'donation_type' => ['required', Rule::enum(DonationType::class)],
+        ];
+    }
 
     public function mount(?Donation $donation = null): void
     {

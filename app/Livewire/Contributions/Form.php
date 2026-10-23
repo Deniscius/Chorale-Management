@@ -8,6 +8,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Contribution;
 use App\Models\Member;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -38,11 +39,18 @@ class Form extends Component
     #[Validate('nullable|date')]
     public ?string $paid_on = null;
 
-    #[Validate('required')]
+    #[Validate]
     public string $status = 'due';
 
     #[Validate('nullable|string|max:1000')]
     public ?string $notes = null;
+
+    protected function rules(): array
+    {
+        return [
+            'status' => ['required', Rule::enum(ContributionStatus::class)],
+        ];
+    }
 
     public function mount(?Contribution $contribution = null): void
     {

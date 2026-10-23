@@ -9,6 +9,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Choir;
 use App\Models\Member;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -27,7 +28,7 @@ class Form extends Component
     #[Validate('required|string|max:100')]
     public string $last_name = '';
 
-    #[Validate('nullable|string|max:255|email')]
+    #[Validate]
     public ?string $email = null;
 
     #[Validate('nullable|string|max:30')]
@@ -42,13 +43,13 @@ class Form extends Component
     #[Validate('nullable|date|before:today')]
     public ?string $birth_date = null;
 
-    #[Validate('nullable')]
+    #[Validate]
     public ?string $voice = null;
 
     #[Validate('nullable')]
     public ?string $part = null;
 
-    #[Validate('nullable')]
+    #[Validate]
     public ?string $status = 'actif';
 
     #[Validate('nullable|exists:choirs,id')]
@@ -65,6 +66,15 @@ class Form extends Component
 
     #[Validate('nullable|string|max:1000')]
     public ?string $notes = null;
+
+    protected function rules(): array
+    {
+        return [
+            'email' => ['nullable', 'string', 'email', 'max:255', Rule::unique('members', 'email')->ignore($this->member)],
+            'voice' => ['nullable', Rule::enum(Voice::class)],
+            'status' => ['required', Rule::enum(MemberStatus::class)],
+        ];
+    }
 
     public function mount(?Member $member = null): void
     {

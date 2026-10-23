@@ -10,6 +10,7 @@ use App\Models\Instrument;
 use App\Models\InstrumentMovement;
 use App\Models\Member;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -25,7 +26,7 @@ class MovementForm extends Component
     #[Validate('required|exists:instruments,id')]
     public ?string $instrument_id = null;
 
-    #[Validate('required')]
+    #[Validate]
     public string $type = 'sortie';
 
     #[Validate('required|date')]
@@ -46,11 +47,19 @@ class MovementForm extends Component
     #[Validate('nullable|date|after_or_equal:moved_on')]
     public ?string $actual_return_on = null;
 
-    #[Validate('nullable')]
+    #[Validate]
     public ?string $condition_on_return = null;
 
     #[Validate('nullable|string|max:2000')]
     public ?string $notes = null;
+
+    protected function rules(): array
+    {
+        return [
+            'type' => ['required', Rule::enum(MovementType::class)],
+            'condition_on_return' => ['nullable', Rule::enum(InstrumentCondition::class)],
+        ];
+    }
 
     public function mount(?InstrumentMovement $movement = null): void
     {
@@ -103,35 +112,8 @@ class MovementForm extends Component
             $message = 'Mouvement enregistré.';
         }
 
-        $this->syncInstrumentState();
-
         $this->dispatch('toast', type: 'success', message: $message);
         $this->dispatch('close-form');
-    }
-
-    /**
-     * Aligne l'instrument sur le mouvement le plus récent (sorti / rendu).
-     */
-    private function syncInstrumentState(): void
-    {
-        $instrument = Instrument::find($this->instrument_id);
-
-        if (! $instrument) {
-            return;
-        }
-
-        $last = InstrumentMovement::where('instrument_id', $instrument->id)
-            ->orderByDesc('moved_on')
-            ->orderByDesc('id')
-            ->first();
-
-        if (! $last) {
-            return;
-        }
-
-        $out = in_array($last->type->value, ['sortie', 'pret'], true) && blank($last->actual_return_on);
-
-        $instrument->update(['is_borrowed' => $out]);
     }
 
     #[Computed]

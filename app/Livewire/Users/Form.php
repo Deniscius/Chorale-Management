@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\Member;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -20,13 +21,13 @@ class Form extends Component
     #[Validate('required|string|max:50|regex:/^[a-z0-9][a-z0-9._-]*$/')]
     public string $username = '';
 
-    #[Validate('required|email|max:255')]
+    #[Validate]
     public string $email = '';
 
-    #[Validate('required')]
+    #[Validate]
     public string $role = 'choriste';
 
-    #[Validate('nullable|exists:members,id')]
+    #[Validate]
     public ?int $member_id = null;
 
     #[Validate('nullable|min:8|confirmed')]
@@ -34,6 +35,15 @@ class Form extends Component
 
     #[Validate('nullable')]
     public ?string $password_confirmation = null;
+
+    protected function rules(): array
+    {
+        return [
+            'role' => ['required', Rule::enum(UserRole::class)],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->user)],
+            'member_id' => ['nullable', 'exists:members,id', Rule::unique('users', 'member_id')->ignore($this->user)],
+        ];
+    }
 
     public function mount(?User $user = null): void
     {

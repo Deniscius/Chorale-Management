@@ -9,6 +9,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Instrument;
 use App\Models\Member;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -24,7 +25,7 @@ class Form extends Component
     #[Validate('required|string|max:255')]
     public string $name = '';
 
-    #[Validate('required')]
+    #[Validate]
     public string $category = 'orgue';
 
     #[Validate('nullable|string|max:100')]
@@ -33,7 +34,7 @@ class Form extends Component
     #[Validate('nullable|integer|min:1|max:999')]
     public string $quantity = '1';
 
-    #[Validate('required')]
+    #[Validate]
     public string $condition = 'bon';
 
     #[Validate('nullable|date')]
@@ -56,6 +57,14 @@ class Form extends Component
 
     #[Validate('nullable|string|max:2000')]
     public ?string $notes = null;
+
+    protected function rules(): array
+    {
+        return [
+            'category' => ['required', Rule::enum(InstrumentCategory::class)],
+            'condition' => ['required', Rule::enum(InstrumentCondition::class)],
+        ];
+    }
 
     public function mount(?Instrument $instrument = null): void
     {

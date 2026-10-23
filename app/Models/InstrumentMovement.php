@@ -39,6 +39,33 @@ class InstrumentMovement extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::saved(function (self $movement): void {
+            $movement->syncInstrumentAvailability((int) $movement->instrument_id);
+
+            if ($movement->wasChanged('instrument_id')) {
+                $movement->syncInstrumentAvailability((int) $movement->getRawOriginal('instrument_id'));
+            }
+        });
+
+        static::deleted(function (self $movement): void {
+            $movement->syncInstrumentAvailability((int) $movement->instrument_id);
+        });
+    }
+
+    private function syncInstrumentAvailability(int $instrumentId): void
+    {
+        $last = self::query()->where('instrument_id', $instrumentId)
+            ->orderByDesc('moved_on')->orderByDesc('id')->first();
+
+        $borrowed = $last !== null
+            && in_array($last->type, [MovementType::Sortie, MovementType::Pret], true)
+            && $last->actual_return_on === null;
+
+        Instrument::query()->whereKey($instrumentId)->update(['is_borrowed' => $borrowed]);
+    }
+
     public function instrument(): BelongsTo
     {
         return $this->belongsTo(Instrument::class);

@@ -9,6 +9,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Rehearsal;
 use App\Models\Work;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -33,10 +34,10 @@ class Form extends Component
     #[Validate('nullable|string|max:255')]
     public ?string $venue = null;
 
-    #[Validate('required')]
+    #[Validate]
     public string $type = 'repetition';
 
-    #[Validate('required')]
+    #[Validate]
     public string $status = 'planifiee';
 
     /**
@@ -49,6 +50,14 @@ class Form extends Component
 
     #[Validate('nullable|string|max:2000')]
     public ?string $notes = null;
+
+    protected function rules(): array
+    {
+        return [
+            'type' => ['required', Rule::enum(RehearsalType::class)],
+            'status' => ['required', Rule::enum(EventStatus::class)],
+        ];
+    }
 
     public function mount(?Rehearsal $rehearsal = null): void
     {

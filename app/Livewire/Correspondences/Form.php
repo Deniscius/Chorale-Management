@@ -12,6 +12,7 @@ use App\Models\Correspondence;
 use App\Models\CorrespondenceService;
 use App\Models\Member;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -24,7 +25,7 @@ class Form extends Component
 
     public ?Correspondence $correspondence = null;
 
-    #[Validate('required')]
+    #[Validate]
     public string $type = 'entrant';
 
     #[Validate('required|date')]
@@ -54,13 +55,13 @@ class Form extends Component
     #[Validate('nullable|string|max:5000')]
     public ?string $body = null;
 
-    #[Validate('required')]
+    #[Validate]
     public string $channel = 'courrier';
 
-    #[Validate('required')]
+    #[Validate]
     public string $confidentiality = 'normal';
 
-    #[Validate('required')]
+    #[Validate]
     public string $status = 'recu';
 
     #[Validate('nullable|exists:members,id')]
@@ -71,6 +72,16 @@ class Form extends Component
 
     #[Validate('nullable|string|max:2000')]
     public ?string $notes = null;
+
+    protected function rules(): array
+    {
+        return [
+            'type' => ['required', Rule::enum(CorrespondenceType::class)],
+            'channel' => ['required', Rule::enum(CorrespondenceChannel::class)],
+            'confidentiality' => ['required', Rule::enum(Confidentiality::class)],
+            'status' => ['required', Rule::enum(CorrespondenceStatus::class)],
+        ];
+    }
 
     public function mount(?Correspondence $correspondence = null): void
     {

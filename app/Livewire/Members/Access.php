@@ -56,7 +56,8 @@ class Access extends Component
 
         // Règles déclarées sur les propriétés (identifiant, e-mail, mot de passe).
         $this->validate(array_merge($this->getRules(), [
-            'role' => ['required', Rule::in(array_keys(UserRole::options()))],
+            'role' => ['required', Rule::enum(UserRole::class)],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->member->user)],
         ]));
 
         $this->member->loadMissing('user');

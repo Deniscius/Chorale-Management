@@ -41,6 +41,7 @@ class ReminderDispatcher
         $days = max(0, (int) config('chorale.reminders.days_before', 2));
 
         return Rehearsal::query()
+            ->with('works')
             ->whereDate('date', today()->addDays($days))
             ->whereIn('status', ['planifiee', 'reportee'])
             ->orderBy('date')
@@ -75,6 +76,8 @@ class ReminderDispatcher
      */
     public function dispatchForRehearsal(Rehearsal $rehearsal, bool $dryRun = false): array
     {
+        $rehearsal->loadMissing('works');
+
         $result = ['sent' => 0, 'skipped' => 0, 'failed' => 0];
 
         $members = Member::query()
@@ -82,8 +85,8 @@ class ReminderDispatcher
             ->where(function ($query) {
                 $query->where('notify_email', true)->orWhere('notify_sms', true);
             })
-            ->orderBy('last_name')
-            ->get();
+            ->orderBy('id')
+            ->lazyById(200);
 
         foreach ($members as $member) {
             foreach ($this->channelsFor($member) as $channel) {
@@ -160,8 +163,27 @@ class ReminderDispatcher
                 'status' => ReminderStatus::EnAttente,
             ]);
         } catch (UniqueConstraintViolationException) {
-            // Une autre exécution concurrente a déjà pris ce rappel en charge.
-            return 'skipped';
+            $reminder = Reminder::query()
+                ->where('rehearsal_id', $rehearsal->getKey())
+                ->where('member_id', $member->getKey())
+                ->where('channel', $channel->value)
+                ->firstOrFail();
+
+            // Une seule exécution peut reprendre une ligne en échec.
+            $claimed = Reminder::query()->whereKey($reminder->getKey())
+                ->where('status', ReminderStatus::Echec->value)
+                ->update([
+                    'status' => ReminderStatus::EnAttente->value,
+                    'recipient' => $recipient,
+                    'subject' => $subject,
+                    'body' => $body,
+                    'error' => null,
+                    'sent_at' => null,
+                ]);
+
+            if (! $claimed) {
+                return 'skipped';
+            }
         }
 
         try {

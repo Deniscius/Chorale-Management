@@ -339,7 +339,7 @@ un jeton Bearer : la plupart des agrégateurs peuvent être branchés ainsi
 L'IA est **facultative et désactivée par défaut** : l'application est complète
 sans elle. Quand elle est active, un bouton **Compte rendu** apparaît sur les
 répétitions pour les rôles autorisés : l'assistant rédige une proposition à
-partir du lieu, du programme, des effectifs et des notes de séance. Le texte est
+partir du lieu, du programme et des effectifs, sans les notes libres. Le texte est
 toujours présenté comme un brouillon — le responsable le relit, le corrige, puis
 l'enregistre.
 

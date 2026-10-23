@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\EventStatus;
 use App\Enums\MemberStatus;
 use App\Enums\ReminderChannel;
 use App\Enums\ReminderStatus;
@@ -10,6 +11,7 @@ use App\Mail\RehearsalReminder;
 use App\Models\Member;
 use App\Models\Rehearsal;
 use App\Models\Reminder;
+use App\Services\Sms\DeliveryRejected;
 use App\Services\Sms\SmsSender;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -115,7 +117,7 @@ final class ReminderDispatcher
                 return null;
             }
             $entry->load(['member', 'rehearsal.works']);
-            $allowed = $entry->member?->status === MemberStatus::Actif && ($entry->channel === ReminderChannel::Mail ? $entry->member?->canReceiveEmail() : $entry->member?->canReceiveSms());
+            $allowed = config('chorale.reminders.enabled') && $entry->rehearsal?->status !== EventStatus::Annulee && $entry->member?->status === MemberStatus::Actif && ($entry->channel === ReminderChannel::Mail ? $entry->member?->canReceiveEmail() : $entry->member?->canReceiveSms());
             $recipient = $entry->channel === ReminderChannel::Mail ? $entry->member?->email : $entry->member?->phone;
             if (! $allowed || ! $entry->rehearsal || $recipient !== $entry->recipient) {
                 $entry->update(['status' => ReminderStatus::Ignore, 'error' => 'Destinataire ou préférences modifiés avant envoi.']);
@@ -133,16 +135,20 @@ final class ReminderDispatcher
             if ($entry->channel === ReminderChannel::Mail) {
                 Mail::to($entry->recipient)->send(new RehearsalReminder($entry->rehearsal, $entry->member, $entry->body));
             } else {
-                $this->sms->send($entry->recipient, $entry->body);
+                if (! $this->sms->send($entry->recipient, $entry->body)) {
+                    throw new DeliveryRejected('Le fournisseur a refusé le SMS.');
+                }
             }
-            $this->finish($id, $token, ['status' => 'envoye', 'sent_at' => now(), 'error' => null]);
-
-            return 'sent';
         } catch (Throwable $e) {
-            $this->finish($id, $token, ['status' => 'echec', 'sending_at' => null, 'error' => mb_substr($e->getMessage(), 0, 2000)]);
+            $this->finish($id, $token, ['status' => $e instanceof DeliveryRejected ? 'echec' : 'incertain', 'sending_at' => null, 'error' => mb_substr($e->getMessage(), 0, 2000)]);
 
             return 'failed';
         }
+        // Persist success outside the transport catch. A SQL failure after an
+        // accepted send must not become a retryable delivery failure.
+        $this->finish($id, $token, ['status' => 'envoye', 'sent_at' => now(), 'error' => null]);
+
+        return 'sent';
     }
 
     private function finish(int $id, string $token, array $data): void

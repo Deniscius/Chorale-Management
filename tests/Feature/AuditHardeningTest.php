@@ -22,6 +22,7 @@ use App\Services\AccountWriter;
 use App\Services\InstrumentLoans;
 use App\Services\ReceiptLedger;
 use App\Services\ReminderDispatcher;
+use App\Services\Sms\SmsSender;
 use App\Services\TransactionWriter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
@@ -229,5 +230,69 @@ class AuditHardeningTest extends TestCase
         $ledger->saveContribution($c, ['paid_amount' => 1500, 'paid_on' => '2026-10-23', 'notes' => 'Note modifiée']);
         $this->assertSame('2026-01-10', $c->fresh()->paid_on->format('Y-m-d'));
         $this->assertSame(1, $c->receipts()->count());
+    }
+
+    public function test_global_disable_and_cancellation_stop_queued_delivery(): void
+    {
+        Bus::fake([SendReminder::class]);
+        Mail::fake();
+        config()->set('chorale.reminders.queued', true);
+        [$r] = $this->fixture();
+        $d = app(ReminderDispatcher::class);
+        $d->dispatchForRehearsal($r);
+        $entry = Reminder::firstOrFail();
+        config()->set('chorale.reminders.enabled', false);
+        $this->assertSame('skipped', $d->deliver($entry->id, $entry->lease_token));
+        $this->assertSame('ignore', $entry->fresh()->status->value);
+        config()->set('chorale.reminders.enabled', true);
+        $entry->update(['status' => 'en_attente', 'sending_at' => null]);
+        $r->update(['status' => 'annulee']);
+        $this->assertSame('skipped', $d->deliver($entry->id, $entry->lease_token));
+        Mail::assertNothingSent();
+    }
+
+    public function test_uncertain_transport_error_is_not_automatically_retried(): void
+    {
+        [$r, $member] = $this->fixture();
+        $member->update(['notify_email' => false, 'notify_sms' => true, 'phone' => '+22800000000']);
+        config()->set('chorale.reminders.sms_enabled', true);
+        $sender = new class implements SmsSender
+        {
+            public int $calls = 0;
+
+            public function send(string $to, string $message): bool
+            {
+                $this->calls++;
+                throw new \RuntimeException('Timeout after possible delivery');
+            }
+        };
+        $d = new ReminderDispatcher($sender);
+        $this->assertSame(1, $d->dispatchForRehearsal($r)['failed']);
+        $entry = Reminder::firstOrFail();
+        $this->assertSame('incertain', $entry->status->value);
+        $d->dispatchForRehearsal($r);
+        $d->deliver($entry->id, $entry->lease_token, true);
+        $this->assertSame(1, $sender->calls);
+    }
+
+    public function test_explicit_delivery_refusal_can_be_retried(): void
+    {
+        [$r, $member] = $this->fixture();
+        $member->update(['notify_email' => false, 'notify_sms' => true, 'phone' => '+22800000000']);
+        config()->set('chorale.reminders.sms_enabled', true);
+        $sender = new class implements SmsSender
+        {
+            public bool $accepted = false;
+
+            public function send(string $to, string $message): bool
+            {
+                return $this->accepted;
+            }
+        };
+        $d = new ReminderDispatcher($sender);
+        $this->assertSame(1, $d->dispatchForRehearsal($r)['failed']);
+        $this->assertSame('echec', Reminder::first()->status->value);
+        $sender->accepted = true;
+        $this->assertSame(1, $d->dispatchForRehearsal($r)['sent']);
     }
 }

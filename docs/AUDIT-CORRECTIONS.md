@@ -40,3 +40,5 @@ Les notes libres ne sont plus envoyées à l’IA. Le lieu et les titres des œu
 Les tests de régression attendent désormais les comportements corrigés, contrairement aux sondes de l’audit qui reproduisaient les défauts. La CI teste SQLite et PostgreSQL, compile les assets et contrôle les audits Composer/npm. Les tests réinitialisent leur base : utiliser exclusivement une base dédiée.
 
 La recette visuelle doit couvrir bureau, petites largeurs et clavier virtuel sur appareils réels. La protection contre la perte de saisie couvre les boutons de fermeture, Échap et la fermeture de page ; une sauvegarde réussie referme sans confirmation supplémentaire.
+
+Une désactivation globale et une annulation de répétition bloquent aussi les jobs déjà en file. Les erreurs de transport dont le résultat est incertain passent « À vérifier » ; les refus explicites (SMS refusé ou HTTP 4xx) passent en échec et restent reprenables. Une erreur SQL après acceptation par le fournisseur ne déclenche pas de nouvel envoi automatique.

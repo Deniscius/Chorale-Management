@@ -1,19 +1,23 @@
 import http from 'k6/http';
 import { check, sleep, fail } from 'k6';
-import { Trend, Rate } from 'k6/metrics';
+import { Trend, Rate, Counter } from 'k6/metrics';
+import execution from 'k6/execution';
+import { stressStages, stressPhaseAt } from './stress-plan.js';
 
 const base = (__ENV.BASE_URL || 'http://127.0.0.1:8002').replace(/\/$/, '');
 if (!/^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(base)) throw new Error('Localhost HTTP target required.');
 const profile = __ENV.PROFILE || 'smoke';
-if (!['smoke', 'load', 'privacy'].includes(profile)) throw new Error('Unknown PROFILE');
+if (!['smoke', 'load', 'privacy', 'stress'].includes(profile)) throw new Error('Unknown PROFILE');
 const password = __ENV.K6_PASSWORD;
 if (!password) throw new Error('K6_PASSWORD is required.');
 const routes = ['/dashboard','/membres','/oeuvres','/repetitions','/celebrations','/temps-liturgiques','/rappels','/instruments','/instruments/mouvements','/instruments/maintenance','/instruments/ensembles','/courriers','/activites','/transactions','/budgets','/cotisations','/dons','/documents?commission=commission_liturgique','/utilisateurs','/administration/journal'];
 const pages = new Trend('page_duration', true);
 const security = new Rate('privacy_checks');
+const pageRequests = new Counter('page_requests');
+const phaseName = () => profile === 'stress' ? stressPhaseAt(execution.instance.currentTestRunDuration) : profile;
 let authenticated = false;
 function abort(message) { check(false, {'scenario prerequisites available':()=>false}); fail(message); }
-function params(name, jar, expected=200) { return {jar, redirects:0, timeout:'15s', tags:{name}, responseCallback:http.expectedStatuses(expected)}; }
+function params(name, jar, expected=200) { return {jar, redirects:0, timeout:'15s', tags:{name,phase:phaseName()}, responseCallback:http.expectedStatuses(expected)}; }
 function login(username, jar=http.cookieJar()) {
     const page=http.get(base+'/login', params('auth.form',jar));
     const token=page.html().find('input[name="_token"]').attr('value');
@@ -24,10 +28,13 @@ function login(username, jar=http.cookieJar()) {
     if (!check(dashboard,{'authenticated dashboard':r=>r.status===200 && r.body.includes('Aller au contenu principal')})) abort('Authenticated session missing');
 }
 function page(path, jar=http.cookieJar()) {
-    const response=http.get(base+path,params('page '+path,jar));
+    const phase = phaseName();
+    const request = params('page '+path,jar); request.tags.phase = phase;
+    const response=http.get(base+path,request);
     if(response.status!==200) console.warn('page failure '+response.status+' '+path);
-    pages.add(response.timings.duration,{route:path});
-    check(response,{'page accessible':r=>r.status===200 && r.body.includes('Aller au contenu principal')},{route:path});
+    pages.add(response.timings.duration,{route:path,phase});
+    pageRequests.add(1,{phase});
+    check(response,{'page accessible':r=>r.status===200 && r.body.includes('Aller au contenu principal')},{route:path,phase});
     return response;
 }
 function livewire(response, method, jar=http.cookieJar()) {
@@ -46,7 +53,17 @@ function livewire(response, method, jar=http.cookieJar()) {
 const thresholds={'http_req_failed':['rate<0.01'],checks:['rate==1']};
 if(profile!=='privacy') {thresholds.page_duration=['p(95)<1500'];thresholds.http_req_duration=['p(95)<2000']; for(const route of routes) thresholds['page_duration{route:'+route+'}']=['p(95)<1500'];}
 if(profile==='privacy') thresholds.privacy_checks=['rate==1'];
-export const options={noCookiesReset:true,thresholds,scenarios:profile==='load'?{browse:{executor:'ramping-vus',startVUs:1,stages:[{duration:'15s',target:1},{duration:'20s',target:5},{duration:'25s',target:10},{duration:'10s',target:0}],gracefulRampDown:'10s',gracefulStop:'10s'}}:{verify:{executor:'shared-iterations',vus:1,iterations:1,maxDuration:'120s'}},summaryTrendStats:['avg','med','p(90)','p(95)','max']};
+if (profile === 'stress') {
+    thresholds.http_req_failed.push({threshold:'rate<0.05',abortOnFail:true,delayAbortEval:'60s'});
+    thresholds.http_req_duration.push({threshold:'p(99)<10000',abortOnFail:true,delayAbortEval:'90s'});
+    for (const stage of stressStages.filter(x => x.hold)) {
+        thresholds['page_duration{phase:'+stage.name+'}']=['p(95)<1500'];
+        thresholds['http_req_failed{phase:'+stage.name+'}']=['rate<0.01'];
+        thresholds['page_requests{phase:'+stage.name+'}']=['count>0'];
+        thresholds['http_reqs{phase:'+stage.name+'}']=['count>0'];
+    }
+}
+export const options={noCookiesReset:true,thresholds,scenarios:profile==='stress'?{browse:{executor:'ramping-vus',startVUs:0,stages:stressStages.map(x=>({duration:x.seconds+'s',target:x.target})),gracefulRampDown:'15s',gracefulStop:'15s'}}:profile==='load'?{browse:{executor:'ramping-vus',startVUs:1,stages:[{duration:'15s',target:1},{duration:'20s',target:5},{duration:'25s',target:10},{duration:'10s',target:0}],gracefulRampDown:'10s',gracefulStop:'10s'}}:{verify:{executor:'shared-iterations',vus:1,iterations:1,maxDuration:'120s'}},summaryTrendStats:['avg','med','p(90)','p(95)','max']};
 export default function () {
     if(profile==='privacy') {
         const privateL=__ENV.LIT_PRIVATE_ID, privateS=__ENV.MAIL_PRIVATE_ID, shared=__ENV.SHARED_ID;

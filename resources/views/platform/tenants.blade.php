@@ -1,0 +1,10 @@
+<x-platform-layout title="Chorales clientes">
+    <h1 class="text-2xl font-semibold">Chorales clientes</h1>
+    <form method="GET" class="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4">
+        <div class="min-w-0 flex-1"><x-input-label for="q" value="Rechercher une chorale" /><x-text-input id="q" name="q" :value="$filters['q'] ?? ''" maxlength="120" class="mt-1 w-full" /></div>
+        <div><x-input-label for="status" value="Statut" /><select id="status" name="status" class="mt-1 rounded-md border-slate-300 text-sm">@foreach(['' => 'Tous', 'trial' => 'En essai', 'paid' => 'Accès payants', 'expired' => 'Expirés', 'suspended' => 'Suspendus'] as $value => $label)<option value="{{ $value }}" @selected(($filters['status'] ?? '') === $value)>{{ $label }}</option>@endforeach</select></div>
+        <x-primary-button>Filtrer</x-primary-button><a href="{{ route('platform.tenants') }}" class="px-2 py-2 text-sm text-slate-600 underline">Réinitialiser</a>
+    </form>
+    <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white"><table class="w-full text-left text-sm"><thead class="bg-slate-100 text-slate-600"><tr><th class="p-4">Chorale</th><th class="p-4">Statut</th><th class="p-4">Fin de l’essai</th><th class="p-4">Accès payant jusqu’au</th><th class="p-4">Gestion</th></tr></thead><tbody class="divide-y divide-slate-100">@forelse($tenants as $tenant)<tr><td class="p-4 font-medium">{{ $tenant->name }}</td><td class="p-4">{{ $tenant->accessLabel() }}</td><td class="p-4 whitespace-nowrap">{{ $tenant->trial_ends_at?->format('d/m/Y H:i') }}</td><td class="p-4">{{ $tenant->paid_perpetual ? 'Permanent' : ($tenant->paid_until?->format('d/m/Y H:i') ?? '—') }}</td><td class="p-4"><a href="{{ route('platform.tenants.show', $tenant) }}" class="font-semibold text-indigo-700 underline">Ouvrir</a></td></tr>@empty<tr><td colspan="5" class="p-6 text-center text-slate-500">Aucune chorale ne correspond à ces critères.</td></tr>@endforelse</tbody></table></div>
+    {{ $tenants->links() }}
+</x-platform-layout>

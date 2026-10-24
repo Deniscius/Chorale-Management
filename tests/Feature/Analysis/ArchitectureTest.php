@@ -38,6 +38,8 @@ class ArchitectureTest extends TestCase
         'chorale.logo',
         'spaces.create',
         'spaces.store',
+        'platform.login',
+        'platform.login.store',
     ];
 
     /**
@@ -62,7 +64,7 @@ class ArchitectureTest extends TestCase
                 continue;
             }
 
-            if (! in_array('auth', $route->middleware(), true)) {
+            if (! in_array('auth', $route->middleware(), true) && ! in_array('platform.auth', $route->middleware(), true)) {
                 $protegees[] = sprintf('%s (%s)', $nom, $route->uri());
             }
         }

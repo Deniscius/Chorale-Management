@@ -103,14 +103,13 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        return [
-            'total' => LiturgicalSeason::count(),
-            'oeuvres' => Work::whereNotNull('season_id')->count(),
-            'encours' => LiturgicalSeason::whereNotNull('starts_on')
-                ->whereDate('starts_on', '<=', today())
-                ->where(fn (Builder $q) => $q->whereNull('ends_on')->orWhereDate('ends_on', '>=', today()))
-                ->count(),
-        ];
+        $date = today()->toDateString();
+        $row = LiturgicalSeason::query()->selectRaw(
+            'COUNT(*) AS total, COALESCE(SUM(CASE WHEN starts_on IS NOT NULL AND DATE(starts_on) <= ? AND (ends_on IS NULL OR DATE(ends_on) >= ?) THEN 1 ELSE 0 END), 0) AS encours',
+            [$date, $date]
+        )->toBase()->first();
+
+        return ['total' => (int) $row->total, 'oeuvres' => Work::whereNotNull('season_id')->count(), 'encours' => (int) $row->encours];
     }
 
     public function render(): View

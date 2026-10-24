@@ -138,15 +138,12 @@ class Maintenances extends Component
     #[Computed]
     public function stats(): array
     {
-        return [
-            'total' => InstrumentMaintenance::count(),
-            'planifiees' => InstrumentMaintenance::whereIn('status', [
-                MaintenanceStatus::Planifiee->value,
-                MaintenanceStatus::EnCours->value,
-            ])->count(),
-            'terminees' => InstrumentMaintenance::where('status', MaintenanceStatus::Terminee->value)->count(),
-            'cout' => (float) InstrumentMaintenance::sum('cost'),
-        ];
+        $row = InstrumentMaintenance::query()->selectRaw(
+            'COUNT(*) AS total, COALESCE(SUM(CASE WHEN status IN (?, ?) THEN 1 ELSE 0 END), 0) AS planifiees, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS terminees, COALESCE(SUM(cost), 0) AS cout',
+            [MaintenanceStatus::Planifiee->value, MaintenanceStatus::EnCours->value, MaintenanceStatus::Terminee->value]
+        )->toBase()->first();
+
+        return ['total' => (int) $row->total, 'planifiees' => (int) $row->planifiees, 'terminees' => (int) $row->terminees, 'cout' => (float) $row->cout];
     }
 
     public function render(): View

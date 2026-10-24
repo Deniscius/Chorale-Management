@@ -163,11 +163,16 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
+        $row = Work::query()->selectRaw(
+            'COUNT(*) AS total, COALESCE(SUM(CASE WHEN is_repertoire = ? THEN 1 ELSE 0 END), 0) AS repertoire, COALESCE(SUM(duration_minutes), 0) AS duree',
+            [true]
+        )->toBase()->first();
+
         return [
-            'total' => Work::count(),
-            'repertoire' => Work::where('is_repertoire', true)->count(),
+            'total' => (int) $row->total,
+            'repertoire' => (int) $row->repertoire,
             'partitions' => Document::query()->readable(auth()->user())->where('commission', 'commission_liturgique')->where('category', 'Partition')->count(),
-            'duree' => (int) Work::sum('duration_minutes'),
+            'duree' => (int) $row->duree,
         ];
     }
 

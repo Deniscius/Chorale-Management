@@ -133,14 +133,16 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        $allocated = (float) Budget::sum('allocated_amount');
-        $committed = (float) Budget::sum('committed_amount');
-        $realized = (float) Budget::sum('opening_realized_amount') + (float) Transaction::validated()->where('type', 'depense')->whereHas('budget')->sum('amount');
+        $row = Budget::query()->selectRaw(
+            'COUNT(*) AS total, COALESCE(SUM(allocated_amount), 0) AS alloue, COALESCE(SUM(committed_amount), 0) AS engage, COALESCE(SUM(opening_realized_amount), 0) AS ouverture'
+        )->toBase()->first();
+        $allocated = (float) $row->alloue;
+        $realized = (float) $row->ouverture + (float) Transaction::validated()->where('type', 'depense')->whereHas('budget')->sum('amount');
 
         return [
-            'total' => Budget::count(),
+            'total' => (int) $row->total,
             'alloue' => $allocated,
-            'engage' => $committed,
+            'engage' => (float) $row->engage,
             'realise' => $realized,
             'disponible' => $allocated - $realized,
             'taux' => $allocated > 0 ? round($realized / $allocated * 100, 1) : 0.0,

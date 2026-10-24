@@ -162,18 +162,12 @@ class Movements extends Component
     #[Computed]
     public function stats(): array
     {
-        $enCours = InstrumentMovement::whereNull('actual_return_on')->count();
-        $enRetard = InstrumentMovement::whereNull('actual_return_on')
-            ->whereNotNull('expected_return_on')
-            ->whereDate('expected_return_on', '<', today())
-            ->count();
+        $row = InstrumentMovement::query()->selectRaw(
+            'COUNT(*) AS total, COALESCE(SUM(CASE WHEN actual_return_on IS NULL THEN 1 ELSE 0 END), 0) AS en_cours, COALESCE(SUM(CASE WHEN actual_return_on IS NULL AND expected_return_on IS NOT NULL AND DATE(expected_return_on) < ? THEN 1 ELSE 0 END), 0) AS en_retard, COALESCE(SUM(CASE WHEN actual_return_on IS NOT NULL THEN 1 ELSE 0 END), 0) AS clotures',
+            [today()->toDateString()]
+        )->toBase()->first();
 
-        return [
-            'total' => InstrumentMovement::count(),
-            'en_cours' => $enCours,
-            'en_retard' => $enRetard,
-            'clotures' => InstrumentMovement::whereNotNull('actual_return_on')->count(),
-        ];
+        return ['total' => (int) $row->total, 'en_cours' => (int) $row->en_cours, 'en_retard' => (int) $row->en_retard, 'clotures' => (int) $row->clotures];
     }
 
     public function render(): View

@@ -153,14 +153,17 @@ class Index extends Component
     #[Computed]
     public function stats()
     {
+        $row = Member::query()->selectRaw(
+            'COUNT(*) AS total, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS actif, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS invite',
+            [MemberStatus::Actif->value, MemberStatus::Invite->value]
+        )->toBase()->first();
+
         return [
-            'total' => Member::count(),
-            'actif' => Member::where('status', MemberStatus::Actif->value)->count(),
-            'invite' => Member::where('status', MemberStatus::Invite->value)->count(),
+            'total' => (int) $row->total,
+            'actif' => (int) $row->actif,
+            'invite' => (int) $row->invite,
             'par_voix' => Member::where('status', MemberStatus::Actif->value)
-                ->selectRaw('voice, count(*) as total')
-                ->groupBy('voice')
-                ->pluck('total', 'voice'),
+                ->selectRaw('voice, count(*) as total')->groupBy('voice')->pluck('total', 'voice'),
         ];
     }
 

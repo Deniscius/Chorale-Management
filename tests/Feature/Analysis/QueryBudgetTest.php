@@ -46,23 +46,23 @@ class QueryBudgetTest extends TestCase
     {
         return [
             'tableau de bord' => ['/dashboard', 20],
-            'membres' => ['/membres', 12],
-            'oeuvres' => ['/oeuvres', 12],
+            'membres' => ['/membres', 10],
+            'oeuvres' => ['/oeuvres', 10],
             'repetitions' => ['/repetitions', 10],
             'celebrations' => ['/celebrations', 9],
-            'temps liturgiques' => ['/temps-liturgiques', 12],
+            'temps liturgiques' => ['/temps-liturgiques', 11],
             'instruments' => ['/instruments', 8],
-            'mouvements' => ['/instruments/mouvements', 13],
-            'maintenance' => ['/instruments/maintenance', 12],
+            'mouvements' => ['/instruments/mouvements', 10],
+            'maintenance' => ['/instruments/maintenance', 9],
             'ensembles' => ['/instruments/ensembles', 12],
             'courriers' => ['/courriers', 9],
             'activites' => ['/activites', 7],
             'transactions' => ['/transactions', 9],
-            'budgets' => ['/budgets', 12],
+            'budgets' => ['/budgets', 9],
             'cotisations' => ['/cotisations', 9],
             'dons' => ['/dons', 10],
             'archives' => ['/documents', 12],
-            'utilisateurs' => ['/utilisateurs', 12],
+            'utilisateurs' => ['/utilisateurs', 9],
         ];
     }
 

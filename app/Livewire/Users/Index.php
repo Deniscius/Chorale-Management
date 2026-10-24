@@ -133,18 +133,19 @@ class Index extends Component
             UserRole::cases(),
             fn (UserRole $role): bool => str_starts_with($role->value, 'commission_')
         ));
+        $roles = array_map(fn (UserRole $role): string => $role->value, $rolesCommission);
+        $placeholders = implode(', ', array_fill(0, count($roles), '?'));
+        $row = User::query()->selectRaw(
+            'COUNT(*) AS total, COALESCE(SUM(CASE WHEN role = ? THEN 1 ELSE 0 END), 0) AS admins, COALESCE(SUM(CASE WHEN role IN ('.$placeholders.') THEN 1 ELSE 0 END), 0) AS commissions, COALESCE(SUM(CASE WHEN member_id IS NOT NULL THEN 1 ELSE 0 END), 0) AS liens',
+            [UserRole::Admin->value, ...$roles]
+        )->toBase()->first();
 
         return [
-            'total' => User::count(),
-            'admins' => User::where('role', UserRole::Admin->value)->count(),
-            'commissions' => User::whereIn('role', array_map(
-                fn (UserRole $role): string => $role->value,
-                $rolesCommission
-            ))->count(),
-            'liens' => User::whereNotNull('member_id')->count(),
-            'commissions_libelles' => collect($rolesCommission)
-                ->map(fn (UserRole $role): string => strtolower($role->label()))
-                ->implode(', '),
+            'total' => (int) $row->total,
+            'admins' => (int) $row->admins,
+            'commissions' => (int) $row->commissions,
+            'liens' => (int) $row->liens,
+            'commissions_libelles' => collect($rolesCommission)->map(fn (UserRole $role): string => strtolower($role->label()))->implode(', '),
         ];
     }
 

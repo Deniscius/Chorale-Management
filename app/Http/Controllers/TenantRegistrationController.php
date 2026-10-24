@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Services\TenantRegistration;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +21,10 @@ final class TenantRegistrationController extends Controller
     public function store(Request $request, TenantRegistration $registration)
     {
         abort_unless(config('tenancy.enabled') && config('tenancy.registration'), 404);
+        // Honeypot: reject automated submissions before creating any data.
+        if ($request->filled('website')) {
+            throw ValidationException::withMessages(['organization' => 'L’inscription n’a pas pu être validée. Réessayez.']);
+        }
         $request->merge(['email' => mb_strtolower(trim((string) $request->input('email'))), 'username' => mb_strtolower(trim((string) $request->input('username')))]);
         $data = $request->validate([
             'organization' => ['required', 'string', 'max:120'],
@@ -38,8 +41,7 @@ final class TenantRegistrationController extends Controller
         }
         Auth::login($user);
         $request->session()->regenerate();
-        event(new Registered($user));
 
-        return redirect()->route('verification.notice');
+        return redirect()->route('dashboard');
     }
 }

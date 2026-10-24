@@ -2,9 +2,13 @@
     <x-slot name="title">Créer mon espace</x-slot>
     <span class="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">3 jours pour découvrir</span>
     <h2 class="mt-4 text-2xl font-semibold text-slate-900">Un espace pour votre chorale</h2>
-    <p class="mt-2 text-sm leading-6 text-slate-600">Testez l’application pendant 72 heures. Vos données restent dans votre espace. Aucun paiement automatique à la fin de l’essai.</p>
+    <p class="mt-2 text-sm leading-6 text-slate-600">Testez l’application pendant 72 heures, avec un accès immédiat sans confirmation par e-mail. Vos données restent dans votre espace. Aucun paiement automatique à la fin de l’essai.</p>
     <form method="POST" action="{{ route('spaces.store') }}" class="mt-6 space-y-4">
         @csrf
+        <div hidden aria-hidden="true">
+            <label for="website">Laisser ce champ vide</label>
+            <input id="website" name="website" type="text" value="" tabindex="-1" autocomplete="off">
+        </div>
         <div>
             <x-input-label for="organization" value="Nom de votre chorale" />
             <x-text-input id="organization" name="organization" :value="old('organization')" class="mt-1 block w-full" required maxlength="120" autocomplete="organization" autofocus />

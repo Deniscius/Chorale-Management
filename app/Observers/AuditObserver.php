@@ -54,6 +54,6 @@ final class AuditObserver
         if ($action === 'updated' && $after === []) {
             return;
         }
-        AuditEvent::create(['actor_id' => ! config('tenancy.enabled') || (int) auth()->user()?->tenant_id === app(TenantContext::class)->id() ? auth()->id() : null, 'subject_type' => $model->getMorphClass(), 'subject_id' => $model->getKey(), 'action' => $action, 'changes' => ['before' => $before, 'after' => $after], 'created_at' => now()]);
+        AuditEvent::create(['actor_id' => ! TenantContext::isolated() || (int) auth()->user()?->tenant_id === app(TenantContext::class)->id() ? auth()->id() : null, 'subject_type' => $model->getMorphClass(), 'subject_id' => $model->getKey(), 'action' => $action, 'changes' => ['before' => $before, 'after' => $after], 'created_at' => now()]);
     }
 }

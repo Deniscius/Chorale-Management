@@ -20,7 +20,7 @@ Schedule::command(SendRehearsalReminders::class)
     ->when(fn () => (bool) config('chorale.reminders.enabled'));
 
 Schedule::call(function () {
-    if (! config('tenancy.enabled')) {
+    if (! TenantContext::isolated()) {
         return app(ReminderDispatcher::class)->recoverStale();
     }
     foreach (Tenant::cursor() as $tenant) {

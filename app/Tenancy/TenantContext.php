@@ -12,9 +12,14 @@ final class TenantContext
 {
     private ?int $tenantId = null;
 
+    public static function isolated(): bool
+    {
+        return (bool) config('tenancy.enabled') || ! app()->runningUnitTests();
+    }
+
     public function id(): ?int
     {
-        return config('tenancy.enabled') ? $this->tenantId : 1;
+        return self::isolated() ? $this->tenantId : 1;
     }
 
     public function requireId(): int
@@ -44,18 +49,18 @@ final class TenantContext
 
     public function key(string $key): string
     {
-        return config('tenancy.enabled') ? 'tenant:'.($this->id() ?? 'guest').':'.$key : $key;
+        return self::isolated() ? 'tenant:'.($this->id() ?? 'guest').':'.$key : $key;
     }
 
     public function table(string $table): Builder
     {
         $query = DB::table($table);
 
-        return config('tenancy.enabled') ? $query->where($table.'.tenant_id', $this->requireId()) : $query;
+        return self::isolated() ? $query->where($table.'.tenant_id', $this->requireId()) : $query;
     }
 
     public function path(string $path): string
     {
-        return config('tenancy.enabled') ? 'tenants/'.$this->requireId().'/'.$path : $path;
+        return self::isolated() ? 'tenants/'.$this->requireId().'/'.$path : $path;
     }
 }

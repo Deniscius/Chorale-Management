@@ -10,7 +10,7 @@ final class TenantScope implements Scope
 {
     public function apply(Builder $builder, Model $model): void
     {
-        if (config('tenancy.enabled')) {
+        if (TenantContext::isolated()) {
             $id = app(TenantContext::class)->id();
             $id === null ? $builder->whereRaw('1 = 0') : $builder->where($model->qualifyColumn('tenant_id'), $id);
         }

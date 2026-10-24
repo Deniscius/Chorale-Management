@@ -4,6 +4,7 @@ namespace App\Livewire\Settings;
 
 use App\Models\Setting;
 use App\Services\ChoraleIdentity;
+use App\Tenancy\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Validate;
@@ -119,7 +120,7 @@ class Chorale extends Component
             Storage::disk('local')->delete($previous);
         }
 
-        $path = $this->logo->store('chorale', 'local');
+        $path = $this->logo->store(app(TenantContext::class)->path('chorale'), 'local');
 
         Setting::set(ChoraleIdentity::KEY_LOGO_PATH, $path);
 

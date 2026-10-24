@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ContributionStatus;
 use App\Support\Months;
+use App\Tenancy\BelongsToTenant;
 use Database\Factories\ContributionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Contribution extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<ContributionFactory> */
     use HasFactory;
 

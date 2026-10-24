@@ -3,7 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Models\Rehearsal;
+use App\Models\Tenant;
 use App\Services\ReminderDispatcher;
+use App\Tenancy\TenantContext;
 use Illuminate\Console\Command;
 use Throwable;
 
@@ -18,11 +20,33 @@ class SendRehearsalReminders extends Command
 {
     protected $signature = 'chorale:send-reminders
         {--dry-run : Afficher les rappels sans rien envoyer}
+        {--tenant= : Espace client à traiter (tous les espaces actifs par défaut)}
         {--rehearsal= : Ne traiter que la répétition indiquée (identifiant)}';
 
     protected $description = 'Envoie les rappels de répétition par e-mail et par SMS';
 
     public function handle(ReminderDispatcher $dispatcher): int
+    {
+        if (! config('tenancy.enabled')) {
+            return $this->handleOne($dispatcher);
+        }
+        if ($this->option('rehearsal') && ! $this->option('tenant')) {
+            $this->error('Précisez --tenant pour une répétition ciblée.');
+
+            return self::INVALID;
+        }
+        $tenants = Tenant::query()->when($this->option('tenant'), fn ($q) => $q->whereKey($this->option('tenant')))->cursor();
+        $exit = self::SUCCESS;
+        foreach ($tenants as $tenant) {
+            if ($tenant->hasAccess()) {
+                $exit = max($exit, app(TenantContext::class)->run($tenant->id, fn () => $this->handleOne($dispatcher)));
+            }
+        }
+
+        return $exit;
+    }
+
+    private function handleOne(ReminderDispatcher $dispatcher): int
     {
         if (! config('chorale.reminders.enabled')) {
             $this->components->warn('Les rappels sont désactivés (REMINDERS_ENABLED=false).');

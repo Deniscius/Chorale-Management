@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Commission;
 use App\Enums\UserRole;
+use App\Tenancy\BelongsToTenant;
 use Database\Factories\DocumentFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,6 +21,8 @@ use Illuminate\Support\Facades\Storage;
  */
 class Document extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<DocumentFactory> */
     use HasFactory, SoftDeletes;
 

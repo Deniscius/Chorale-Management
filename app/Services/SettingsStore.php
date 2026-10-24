@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Setting;
+use App\Tenancy\TenantContext;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -31,7 +32,7 @@ class SettingsStore
     public function all(): array
     {
         return $this->memo ??= Cache::remember(
-            Setting::CACHE_KEY,
+            app(TenantContext::class)->key(Setting::CACHE_KEY),
             Setting::CACHE_TTL,
             fn (): array => Setting::query()->pluck('value', 'key')->all(),
         );
@@ -58,7 +59,7 @@ class SettingsStore
      */
     public function flush(): void
     {
-        Cache::forget(Setting::CACHE_KEY);
+        Cache::forget(app(TenantContext::class)->key(Setting::CACHE_KEY));
 
         $this->memo = null;
     }

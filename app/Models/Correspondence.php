@@ -7,6 +7,7 @@ use App\Enums\CorrespondenceChannel;
 use App\Enums\CorrespondenceStatus;
 use App\Enums\CorrespondenceType;
 use App\Services\CorrespondenceReferenceGenerator;
+use App\Tenancy\BelongsToTenant;
 use Database\Factories\CorrespondenceFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,6 +18,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Correspondence extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<CorrespondenceFactory> */
     use HasFactory, SoftDeletes;
 

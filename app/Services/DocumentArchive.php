@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\Commission;
 use App\Models\Choir;
 use App\Models\Document;
+use App\Tenancy\TenantContext;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -43,7 +44,7 @@ final class DocumentArchive
         $stored = null;
         try {
             if ($file) {
-                $stored = $file->store('documents/'.$data['commission'], 'local');
+                $stored = $file->store(app(TenantContext::class)->path('documents/'.$data['commission']), 'local');
                 if (! $stored) {
                     throw new \RuntimeException('Le fichier n’a pas pu être enregistré.');
                 }

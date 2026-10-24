@@ -51,10 +51,15 @@
         </div>
     </form>
 
+    @if(config('tenancy.enabled') && config('tenancy.registration'))
+        <p class="mt-6 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-900">Votre chorale découvre l’application ? <a href="{{ route('spaces.create') }}" class="font-semibold underline">Créer un espace et tester 3 jours</a></p>
+    @endif
+    @if(!config('tenancy.enabled') && app()->environment('local'))
     <p class="mt-6 rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-500">
         <strong class="font-semibold text-slate-700">Accès démo :</strong>
         <code class="text-slate-700">admin</code> · <code class="text-slate-700">directeur</code> ·
         <code class="text-slate-700">liturgique</code> · <code class="text-slate-700">tresorerie</code><br>
         Mot de passe : <code class="text-slate-700">password</code>
     </p>
+    @endif
 </x-guest-layout>

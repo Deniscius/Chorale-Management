@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Services\SettingsStore;
+use App\Tenancy\BelongsToTenant;
+use App\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -14,6 +16,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Setting extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
         'key',
         'value',
@@ -84,6 +88,7 @@ class Setting extends Model
 
         foreach ($values as $key => $value) {
             $rows[] = [
+                'tenant_id' => app(TenantContext::class)->requireId(),
                 'key' => $key,
                 'value' => $value === null ? null : (string) $value,
                 'created_at' => $now,
@@ -91,7 +96,7 @@ class Setting extends Model
             ];
         }
 
-        static::upsert($rows, ['key'], ['value', 'updated_at']);
+        static::upsert($rows, ['tenant_id', 'key'], ['value', 'updated_at']);
 
         app(SettingsStore::class)->flush();
     }

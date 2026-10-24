@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\InstrumentCondition;
 use App\Enums\MovementType;
+use App\Tenancy\BelongsToTenant;
 use Database\Factories\InstrumentMovementFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InstrumentMovement extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<InstrumentMovementFactory> */
     use HasFactory;
 

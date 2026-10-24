@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use App\Models\User;
+use App\Tenancy\TenantScope;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -74,7 +75,7 @@ class LoginRequest extends FormRequest
     {
         $identifier = trim((string) $this->string(self::IDENTIFIER_FIELD));
 
-        return User::query()
+        return User::withoutGlobalScope(TenantScope::class)
             ->where('username', $identifier)
             ->orWhere('email', $identifier)
             ->first();

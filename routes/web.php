@@ -1,10 +1,12 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ChoraleLogoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentDownloadController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TenantRegistrationController;
 use App\Livewire\Activities\Index as ActivitiesIndex;
 use App\Livewire\Audit\Index;
 use App\Livewire\Budgets\Index as BudgetsIndex;
@@ -29,12 +31,19 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
 
+Route::middleware('guest')->group(function () {
+    Route::get('/creer-un-espace', [TenantRegistrationController::class, 'create'])->name('spaces.create');
+    Route::post('/creer-un-espace', [TenantRegistrationController::class, 'store'])->middleware('throttle:3,60')->name('spaces.store');
+});
+
 // Logo de la chorale : affiché sur les pages publiques (connexion).
 Route::get('/chorale/logo', ChoraleLogoController::class)
     ->middleware(['web'])
     ->name('chorale.logo');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/abonnement', [BillingController::class, 'show'])->name('billing.show');
+    Route::post('/abonnement/activer', [BillingController::class, 'activate'])->middleware('throttle:5,1')->name('billing.activate');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     // La chorale

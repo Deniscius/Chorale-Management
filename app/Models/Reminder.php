@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ReminderChannel;
 use App\Enums\ReminderStatus;
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Reminder extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
         'rehearsal_id',
         'member_id',

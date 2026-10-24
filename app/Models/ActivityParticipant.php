@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Enums\ParticipationStatus;
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ActivityParticipant extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
 
     protected $fillable = [

@@ -11,6 +11,7 @@ use App\Models\Donation;
 use App\Models\Reminder;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Model;
 
 final class AuditObserver
@@ -53,6 +54,6 @@ final class AuditObserver
         if ($action === 'updated' && $after === []) {
             return;
         }
-        AuditEvent::create(['actor_id' => auth()->id(), 'subject_type' => $model->getMorphClass(), 'subject_id' => $model->getKey(), 'action' => $action, 'changes' => ['before' => $before, 'after' => $after], 'created_at' => now()]);
+        AuditEvent::create(['actor_id' => ! config('tenancy.enabled') || (int) auth()->user()?->tenant_id === app(TenantContext::class)->id() ? auth()->id() : null, 'subject_type' => $model->getMorphClass(), 'subject_id' => $model->getKey(), 'action' => $action, 'changes' => ['before' => $before, 'after' => $after], 'created_at' => now()]);
     }
 }

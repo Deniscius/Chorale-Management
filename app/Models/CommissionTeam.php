@@ -4,10 +4,13 @@ namespace App\Models;
 
 use App\Enums\Commission;
 use App\Enums\UserRole;
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 final class CommissionTeam extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = ['commission', 'leader_id', 'associate_id'];
 
     protected function casts(): array

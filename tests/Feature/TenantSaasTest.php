@@ -53,16 +53,49 @@ class TenantSaasTest extends TestCase
     public function test_signup_creates_an_isolated_space_and_one_fixed_trial(): void
     {
         $this->get('/creer-un-espace')->assertOk()->assertSee('72 heures');
-        $this->post('/creer-un-espace', ['organization' => 'Nouvelle chorale', 'name' => 'Responsable', 'username' => 'nouvelle', 'email' => 'new@example.test', 'password' => 'ChoraleSecret2026', 'password_confirmation' => 'ChoraleSecret2026', 'terms' => '1'])->assertRedirect(route('verification.notice'));
+        $this->post('/creer-un-espace', ['organization' => 'Nouvelle chorale', 'name' => 'Responsable', 'username' => 'nouvelle', 'email' => 'new@example.test', 'password' => 'ChoraleSecret2026', 'password_confirmation' => 'ChoraleSecret2026', 'terms' => '1', 'website' => ''])->assertRedirect(route('dashboard'));
         $user = auth()->user();
         $tenant = Tenant::findOrFail($user->tenant_id);
         $this->assertSame(72 * 3600, (int) $tenant->trial_started_at->diffInSeconds($tenant->trial_ends_at));
         $this->assertSame(1, DB::table('users')->where('tenant_id', $tenant->id)->count());
         $this->assertSame(2, DB::table('commission_teams')->where('tenant_id', $tenant->id)->count());
-        Notification::assertSentTo($user, VerifyEmail::class);
+        $this->assertAuthenticatedAs($user);
+        $this->assertFalse($user->hasVerifiedEmail());
+        Notification::assertNothingSent();
+        $this->get('/dashboard')->assertOk();
+        $this->get('/membres')->assertOk();
         $expiry = $tenant->trial_ends_at->toISOString();
         app(TenantContext::class)->run($tenant->id, fn () => User::factory()->create());
         $this->assertSame($expiry, $tenant->fresh()->trial_ends_at->toISOString());
+    }
+
+    public function test_signup_honeypot_rejects_bots_without_creating_a_space(): void
+    {
+        $before = Tenant::count();
+        $users = DB::table('users')->count();
+        $this->post('/creer-un-espace', ['organization' => 'Robot', 'name' => 'Robot', 'username' => 'robot', 'email' => 'robot@example.test', 'password' => 'ChoraleSecret2026', 'password_confirmation' => 'ChoraleSecret2026', 'terms' => '1', 'website' => 'https://spam.example'])->assertSessionHasErrors('organization');
+        $this->assertGuest();
+        $this->assertSame($before, Tenant::count());
+        $this->assertSame($users, DB::table('users')->count());
+        Notification::assertNothingSent();
+    }
+
+    public function test_signup_attempts_remain_rate_limited_without_email_verification(): void
+    {
+        for ($i = 0; $i < 3; $i++) {
+            $this->post('/creer-un-espace', [])->assertSessionHasErrors();
+        }
+        $this->post('/creer-un-espace', [])->assertStatus(429);
+    }
+
+    public function test_unverified_trial_user_can_request_verification_later_for_payment(): void
+    {
+        [$tenant, $admin] = $this->space();
+        app(TenantContext::class)->run($tenant->id, fn () => $admin->forceFill(['email_verified_at' => null])->save());
+        $this->actingAs($admin)->get('/verify-email')->assertOk()->assertSee('Votre essai est accessible sans confirmation');
+        Notification::assertNothingSent();
+        $this->post('/email/verification-notification')->assertSessionHas('status', 'verification-link-sent');
+        Notification::assertSentTo($admin, VerifyEmail::class);
     }
 
     public function test_administrators_only_see_their_own_members_and_branding(): void

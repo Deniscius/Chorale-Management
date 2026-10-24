@@ -3,8 +3,8 @@
 
     <h2 class="text-lg font-semibold text-slate-900">Vérifiez votre adresse e-mail</h2>
     <p class="mt-1 text-sm text-slate-500">
-        Merci pour votre inscription ! Avant de commencer, veuillez confirmer votre adresse e-mail en cliquant sur le lien
-        qui vient de vous être envoyé. Si vous ne l'avez pas reçu, nous pouvons vous en renvoyer un.
+        Votre essai est accessible sans confirmation par e-mail. Cette vérification est nécessaire uniquement pour
+        activer une licence payante. Demandez un lien, puis ouvrez-le depuis votre boîte mail.
     </p>
 
     @if (session('status') == 'verification-link-sent')
@@ -18,7 +18,7 @@
             @csrf
 
             <x-primary-button class="bg-slate-900 hover:bg-slate-700 focus:bg-slate-700">
-                Renvoyer l'e-mail de vérification
+                Envoyer le lien de vérification
             </x-primary-button>
         </form>
 
@@ -30,4 +30,5 @@
             </button>
         </form>
     </div>
+    <a href="{{ route('dashboard') }}" class="mt-5 block text-center text-sm font-semibold text-slate-900 underline">Retourner à mon espace</a>
 </x-guest-layout>

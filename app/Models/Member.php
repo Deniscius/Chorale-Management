@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\MemberStatus;
 use App\Enums\UserRole;
 use App\Enums\Voice;
+use App\Tenancy\BelongsToTenant;
 use Database\Factories\MemberFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +17,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Member extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<MemberFactory> */
     use HasFactory, SoftDeletes;
 

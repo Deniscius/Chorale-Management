@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\InstrumentCategory;
 use App\Enums\InstrumentCondition;
+use App\Tenancy\BelongsToTenant;
 use Database\Factories\InstrumentFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,6 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Instrument extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<InstrumentFactory> */
     use HasFactory, SoftDeletes;
 

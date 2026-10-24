@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Difficulty;
 use App\Enums\WorkType;
+use App\Tenancy\BelongsToTenant;
 use Database\Factories\WorkFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Work extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<WorkFactory> */
     use HasFactory, SoftDeletes;
 

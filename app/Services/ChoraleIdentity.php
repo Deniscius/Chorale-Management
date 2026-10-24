@@ -81,6 +81,11 @@ class ChoraleIdentity
      */
     public function logoPath(): ?string
     {
+        $tenant = request()->attributes->get('tenant');
+        if (config('tenancy.enabled') && $tenant instanceof \App\Models\Tenant && ! $tenant->hasAccess()) {
+            return null;
+        }
+
         return $this->remember('logo_path', function (): ?string {
             $path = Setting::get(self::KEY_LOGO_PATH) ?: null;
 

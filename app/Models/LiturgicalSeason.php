@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Database\Factories\LiturgicalSeasonFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LiturgicalSeason extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<LiturgicalSeasonFactory> */
     use HasFactory;
 

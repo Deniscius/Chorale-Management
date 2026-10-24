@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Tenancy\TenantContext;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -50,7 +51,7 @@ final class AccountWriter
 
     private function lock(): void
     {
-        DB::table('operation_locks')->where('key', 'accounts')->lockForUpdate()->first();
+        app(TenantContext::class)->table('operation_locks')->where('key', 'accounts')->lockForUpdate()->first();
     }
 
     private function assertAnotherAdmin(User $user): void

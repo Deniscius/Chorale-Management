@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\EventStatus;
 use App\Enums\PerformanceType;
+use App\Tenancy\BelongsToTenant;
 use Database\Factories\PerformanceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Performance extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<PerformanceFactory> */
     use HasFactory;
 

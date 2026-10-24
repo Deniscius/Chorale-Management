@@ -36,6 +36,8 @@ class ArchitectureTest extends TestCase
         'password.reset',
         'password.store',
         'chorale.logo',
+        'spaces.create',
+        'spaces.store',
     ];
 
     /**

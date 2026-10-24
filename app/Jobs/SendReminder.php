@@ -2,7 +2,10 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Middleware\TenantJob;
+use App\Models\Tenant;
 use App\Services\ReminderDispatcher;
+use App\Tenancy\TenantContext;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Middleware\RateLimited;
@@ -17,11 +20,16 @@ final class SendReminder implements ShouldQueue
 
     public int $timeout = 60;
 
-    public function __construct(public int $reminderId, public string $leaseToken, public string $channel) {}
+    public ?int $tenantId = null;
+
+    public function __construct(public int $reminderId, public string $leaseToken, public string $channel)
+    {
+        $this->tenantId = app(TenantContext::class)->id();
+    }
 
     public function middleware(): array
     {
-        return [new RateLimited('reminder-'.$this->channel)];
+        return [new TenantJob, new RateLimited('reminder-'.$this->channel)];
     }
 
     public function backoff(): array
@@ -36,6 +44,9 @@ final class SendReminder implements ShouldQueue
 
     public function handle(ReminderDispatcher $dispatcher): void
     {
+        if (config('tenancy.enabled') && ($this->tenantId === null || app(TenantContext::class)->id() !== $this->tenantId || ! Tenant::find($this->tenantId)?->hasAccess())) {
+            return;
+        }
         if ($dispatcher->deliver($this->reminderId, $this->leaseToken, true) === 'failed') {
             throw new \RuntimeException('Échec d’envoi du rappel ; consulter le journal.');
         }

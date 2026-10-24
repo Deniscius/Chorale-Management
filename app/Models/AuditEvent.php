@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class AuditEvent extends Model
 {
+    use BelongsToTenant;
+
     public $timestamps = false;
 
     protected $guarded = [];

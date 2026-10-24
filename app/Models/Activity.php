@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ActivityStatus;
 use App\Enums\ActivityType;
+use App\Tenancy\BelongsToTenant;
 use Database\Factories\ActivityFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Activity extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<ActivityFactory> */
     use HasFactory;
 

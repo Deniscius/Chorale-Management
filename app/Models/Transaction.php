@@ -6,6 +6,7 @@ use App\Enums\PaymentMethod;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Services\TransactionReferenceGenerator;
+use App\Tenancy\BelongsToTenant;
 use Database\Factories\TransactionFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Transaction extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<TransactionFactory> */
     use HasFactory;
 

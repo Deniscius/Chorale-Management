@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Database\Factories\CorrespondenceServiceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CorrespondenceService extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<CorrespondenceServiceFactory> */
     use HasFactory;
 

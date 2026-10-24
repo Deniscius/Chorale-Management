@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\CorrespondenceStatus;
 use App\Enums\MemberStatus;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
@@ -14,6 +13,7 @@ use App\Models\Performance;
 use App\Models\Rehearsal;
 use App\Models\Transaction;
 use App\Models\Work;
+use App\Tenancy\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Cache;
 
@@ -29,10 +29,12 @@ class DashboardController extends Controller
      */
     public function __invoke(): View
     {
+        $tenantId = app(TenantContext::class)->requireId();
+
         return view('dashboard', Cache::flexible(
-            'dashboard.overview.v1',
+            app(TenantContext::class)->key('dashboard.overview.v1'),
             [30, 120],
-            fn (): array => $this->overview(),
+            fn (): array => app(TenantContext::class)->run($tenantId, fn () => $this->overview()),
         ));
     }
 

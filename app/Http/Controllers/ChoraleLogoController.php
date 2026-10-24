@@ -25,7 +25,7 @@ class ChoraleLogoController extends Controller
         abort_if($path === null, 404, "Aucun logo de chorale n'est défini.");
 
         return response()->file(Storage::disk('local')->path($path), [
-            'Cache-Control' => 'public, max-age=31536000, immutable',
+            'Cache-Control' => config('tenancy.enabled') ? 'private, no-store' : 'public, max-age=31536000, immutable',
             'ETag' => '"'.$identity->logoVersion().'"',
         ]);
     }

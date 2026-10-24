@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Database\Factories\ChoirFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Choir extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<ChoirFactory> */
     use HasFactory, SoftDeletes;
 

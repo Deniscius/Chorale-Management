@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ParticipationStatus;
+use App\Tenancy\BelongsToTenant;
 use Database\Factories\RehearsalAttendanceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RehearsalAttendance extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<RehearsalAttendanceFactory> */
     use HasFactory;
 

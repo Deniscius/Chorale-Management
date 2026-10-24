@@ -8,9 +8,9 @@ use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Rehearsal;
 use App\Services\ChoraleAssistant;
+use App\Tenancy\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
@@ -152,7 +152,7 @@ class Index extends Component
             [today()->toDateString(), EventStatus::Terminee->value]
         )->toBase()->first();
 
-        return ['total' => (int) $row->total, 'avenir' => (int) $row->avenir, 'terminees' => (int) $row->terminees, 'presence' => (int) DB::table('rehearsal_attendances')->where('status', 'present')->count()];
+        return ['total' => (int) $row->total, 'avenir' => (int) $row->avenir, 'terminees' => (int) $row->terminees, 'presence' => (int) app(TenantContext::class)->table('rehearsal_attendances')->where('status', 'present')->count()];
     }
 
     /**

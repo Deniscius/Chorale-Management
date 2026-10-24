@@ -23,8 +23,12 @@ use App\Services\SettingsStore;
 use App\Services\Sms\HttpSmsSender;
 use App\Services\Sms\LogSmsSender;
 use App\Services\Sms\SmsSender;
+use App\Tenancy\TenantContext;
+use App\Tenancy\TenantPresenceVerifier;
+use App\Tenancy\TenantUserProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
@@ -38,6 +42,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->scoped(TenantContext::class);
+        $this->app->extend('validation.presence', fn ($verifier, $app) => new TenantPresenceVerifier($app['db']));
         // Passerelle SMS : l'implémentation dépend de l'environnement.
         $this->app->bind(
             SmsSender::class,
@@ -73,9 +79,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Auth::provider('tenant-eloquent', fn ($app, $config) => new TenantUserProvider($app['hash'], $config['model']));
         foreach (['mail', 'sms'] as $channel) {
             RateLimiter::for('reminder-'.$channel,
-                fn () => Limit::perMinute(60)->by('reminder-'.$channel));
+                fn () => Limit::perMinute(60)->by(app(TenantContext::class)->key('reminder-'.$channel)));
         }
 
         // Livewire fournit Alpine : on l'injecte sur toutes les pages (même sans

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\EventStatus;
 use App\Enums\RehearsalType;
+use App\Tenancy\BelongsToTenant;
 use Database\Factories\RehearsalFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Rehearsal extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<RehearsalFactory> */
     use HasFactory;
 

@@ -4,12 +4,14 @@ namespace App\Models;
 
 use App\Enums\DonationType;
 use App\Enums\DonorType;
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Donation extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
 
     protected $fillable = [

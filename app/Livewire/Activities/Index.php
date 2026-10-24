@@ -225,14 +225,12 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        return [
-            'total' => Activity::count(),
-            'planifiees' => Activity::where('status', ActivityStatus::Planifiee->value)->count(),
-            'terminees' => Activity::where('status', ActivityStatus::Terminee->value)->count(),
-            'a_venir' => Activity::where('starts_at', '>=', now()->startOfDay())->count(),
-            'budget' => (float) Activity::sum('budget_allocated'),
-            'depense' => (float) Activity::sum('budget_spent'),
-        ];
+        $row = Activity::query()->selectRaw(
+            'COUNT(*) AS total, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS planifiees, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS terminees, COALESCE(SUM(CASE WHEN starts_at >= ? THEN 1 ELSE 0 END), 0) AS a_venir, COALESCE(SUM(budget_allocated), 0) AS budget, COALESCE(SUM(budget_spent), 0) AS depense',
+            [ActivityStatus::Planifiee->value, ActivityStatus::Terminee->value, now()->startOfDay()]
+        )->toBase()->first();
+
+        return ['total' => (int) $row->total, 'planifiees' => (int) $row->planifiees, 'terminees' => (int) $row->terminees, 'a_venir' => (int) $row->a_venir, 'budget' => (float) $row->budget, 'depense' => (float) $row->depense];
     }
 
     public function render(): View

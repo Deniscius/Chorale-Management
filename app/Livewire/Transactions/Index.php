@@ -227,23 +227,14 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        $recettes = (float) Transaction::query()
-            ->validated()
-            ->where('type', TransactionType::Recette->value)
-            ->sum('amount');
+        $row = Transaction::query()->selectRaw(
+            'COUNT(*) AS total, COALESCE(SUM(CASE WHEN status IN (?, ?) AND type = ? THEN amount ELSE 0 END), 0) AS recettes, COALESCE(SUM(CASE WHEN status IN (?, ?) AND type = ? THEN amount ELSE 0 END), 0) AS depenses, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS brouillons',
+            [TransactionStatus::Validee->value, TransactionStatus::Cloturee->value, TransactionType::Recette->value, TransactionStatus::Validee->value, TransactionStatus::Cloturee->value, TransactionType::Depense->value, TransactionStatus::Brouillon->value]
+        )->toBase()->first();
+        $recettes = (float) $row->recettes;
+        $depenses = (float) $row->depenses;
 
-        $depenses = (float) Transaction::query()
-            ->validated()
-            ->where('type', TransactionType::Depense->value)
-            ->sum('amount');
-
-        return [
-            'recettes' => $recettes,
-            'depenses' => $depenses,
-            'solde' => $recettes - $depenses,
-            'brouillons' => Transaction::where('status', TransactionStatus::Brouillon->value)->count(),
-            'total' => Transaction::count(),
-        ];
+        return ['recettes' => $recettes, 'depenses' => $depenses, 'solde' => $recettes - $depenses, 'brouillons' => (int) $row->brouillons, 'total' => (int) $row->total];
     }
 
     public function render(): View

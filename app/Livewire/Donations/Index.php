@@ -152,24 +152,12 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        $total = (float) Donation::sum('amount');
-        $count = Donation::count();
+        $row = Donation::query()->selectRaw('COUNT(*) AS nombre, COALESCE(SUM(amount), 0) AS total, COALESCE(MAX(amount), 0) AS maximum')->toBase()->first();
+        $total = (float) $row->total;
+        $count = (int) $row->nombre;
+        $parType = Donation::query()->whereNotNull('donation_type')->selectRaw('donation_type, COUNT(*) as nombre, SUM(amount) as total')->groupBy('donation_type')->orderByDesc('total')->first();
 
-        $parType = Donation::query()
-            ->whereNotNull('donation_type')
-            ->selectRaw('donation_type, COUNT(*) as nombre, SUM(amount) as total')
-            ->groupBy('donation_type')
-            ->orderByDesc('total')
-            ->first();
-
-        return [
-            'total' => $total,
-            'nombre' => $count,
-            'moyenne' => $count > 0 ? $total / $count : 0,
-            'max' => (float) Donation::max('amount'),
-            'type_dominant' => $parType?->donation_type?->value,
-            'type_dominant_montant' => $parType ? (float) $parType->total : 0.0,
-        ];
+        return ['total' => $total, 'nombre' => $count, 'moyenne' => $count > 0 ? $total / $count : 0, 'max' => (float) $row->maximum, 'type_dominant' => $parType?->donation_type?->value, 'type_dominant_montant' => $parType ? (float) $parType->total : 0.0];
     }
 
     public function render(): View

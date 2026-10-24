@@ -269,13 +269,14 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        return [
-            'total' => Correspondence::count(),
-            'entrants' => Correspondence::where('type', CorrespondenceType::Entrant->value)->count(),
-            'sortants' => Correspondence::where('type', CorrespondenceType::Sortant->value)->count(),
-            'a_traiter' => Correspondence::whereIn('status', CorrespondenceStatus::open())->count(),
-            'confidentiels' => Correspondence::where('confidentiality', 'confidentiel')->count(),
-        ];
+        $open = CorrespondenceStatus::open();
+        $placeholders = implode(',', array_fill(0, count($open), '?'));
+        $row = Correspondence::query()->selectRaw(
+            "COUNT(*) AS total, COALESCE(SUM(CASE WHEN type = ? THEN 1 ELSE 0 END), 0) AS entrants, COALESCE(SUM(CASE WHEN type = ? THEN 1 ELSE 0 END), 0) AS sortants, COALESCE(SUM(CASE WHEN status IN ($placeholders) THEN 1 ELSE 0 END), 0) AS a_traiter, COALESCE(SUM(CASE WHEN confidentiality = ? THEN 1 ELSE 0 END), 0) AS confidentiels",
+            [CorrespondenceType::Entrant->value, CorrespondenceType::Sortant->value, ...$open, 'confidentiel']
+        )->toBase()->first();
+
+        return ['total' => (int) $row->total, 'entrants' => (int) $row->entrants, 'sortants' => (int) $row->sortants, 'a_traiter' => (int) $row->a_traiter, 'confidentiels' => (int) $row->confidentiels];
     }
 
     public function render(): View

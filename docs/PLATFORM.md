@@ -1,5 +1,11 @@
 # Portail propriétaire
 
+## Interface et navigation
+
+Le portail dispose de sa propre feuille de styles et d’un module JavaScript léger, chargés uniquement par sa coque. La navigation latérale devient une navigation compacte sur les petits écrans. Les tableaux restent défilants dans leur région, les statuts conservent un libellé en plus de la couleur et les répartitions utilisent les nombres réels, sans données fictives. Les cartes du tableau de bord ouvrent les listes filtrées.
+
+Les formulaires fonctionnent sans JavaScript. Avec JavaScript, le mot de passe peut être affiché temporairement, les jours supplémentaires sont demandés uniquement pour une prolongation et un double envoi est bloqué côté interface. Les contrôles serveur restent obligatoires. Le retour par l’historique du navigateur rétablit les boutons d’envoi. La récupération de compte reste disponible par le terminal serveur sécurisé, pas par un lien public.
+
 ## Accès
 
 Le portail `/plateforme` est distinct des écrans des chorales. Ses comptes sont stockés dans `platform_admins` et utilisent le guard de session `platform`. Un administrateur de chorale ne peut pas s’attribuer ces droits. Aucun formulaire d’inscription publique et aucun compte par défaut ne sont créés. L’essai et la suspension d’une chorale ne bloquent pas le propriétaire, même s’il possède aussi une session de chorale dans le même navigateur.

@@ -1,34 +1,39 @@
-@props(['title' => 'Pilotage de la plateforme'])
+@props(['title' => 'Pilotage de la plateforme', 'guest' => false])
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="robots" content="noindex, nofollow">
+    <meta name="robots" content="noindex, nofollow"><meta name="theme-color" content="#13271f">
     <title>{{ $title }} · Gestion Chorale</title>
-    @vite(['resources/css/app.css'])
+    @vite(['resources/css/app.css', 'resources/css/platform.css', 'resources/js/platform.js'])
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+<body class="platform-body">
     <a href="#contenu" class="sr-only focus:not-sr-only">Aller au contenu</a>
-    <header class="border-b border-slate-200 bg-white">
-        <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-5">
-            <div><p class="text-xs font-bold uppercase tracking-widest text-indigo-700">Gestion Chorale · Propriétaire</p><p class="mt-1 text-lg font-semibold">Pilotage de la plateforme</p></div>
-            @if(Auth::guard('platform')->check())
-                <div class="flex items-center gap-4 text-sm"><span>{{ Auth::guard('platform')->user()->name }}</span><form method="POST" action="{{ route('platform.logout') }}">@csrf<button class="rounded-lg border border-slate-300 px-3 py-2 hover:bg-slate-50">Déconnexion</button></form></div>
-            @endif
-        </div>
-        @if(Auth::guard('platform')->check())
-            <nav aria-label="Administration de la plateforme" class="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-5 pb-3 text-sm">
-                @foreach(['dashboard' => 'Vue d’ensemble', 'tenants' => 'Chorales', 'health' => 'Supervision', 'audit' => 'Journal'] as $key => $label)
-                    <a href="{{ route('platform.'.$key) }}" @if(request()->routeIs('platform.'.$key, 'platform.'.$key.'.*')) aria-current="page" @endif class="whitespace-nowrap rounded-lg px-4 py-2 {{ request()->routeIs('platform.'.$key, 'platform.'.$key.'.*') ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100' }}">{{ $label }}</a>
+    @if($guest)
+        {{ $slot }}
+    @else
+    <div class="p-shell">
+        <aside class="p-sidebar">
+            <a class="p-brand" href="{{ route('platform.dashboard') }}"><span class="p-brand-mark"><x-icon name="music" /></span><span>Gestion Chorale<small>Espace propriétaire</small></span></a>
+            <p class="p-nav-label">Votre plateforme</p>
+            <nav class="p-nav" aria-label="Administration de la plateforme">
+                @foreach(['dashboard' => ['Vue d’ensemble', 'chart'], 'tenants' => ['Chorales', 'users'], 'health' => ['Supervision', 'cube'], 'audit' => ['Journal', 'clock']] as $key => [$label, $icon])
+                    <a href="{{ route('platform.'.$key) }}" @if(request()->routeIs('platform.'.$key, 'platform.'.$key.'.*')) aria-current="page" @endif><x-icon :name="$icon" /><span>{{ $label }}</span></a>
                 @endforeach
             </nav>
-        @endif
-    </header>
-    <main id="contenu" class="mx-auto max-w-7xl space-y-6 px-5 py-8">
-        @if(session('status'))<p role="status" class="rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">{{ session('status') }}</p>@endif
-        @if($errors->any())<div role="alert" class="rounded-xl bg-red-50 p-4 text-sm text-red-800"><ul class="list-inside list-disc">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
-        {{ $slot }}
-    </main>
-    <footer class="mx-auto max-w-7xl px-5 pb-6 text-xs text-slate-500">Accès propriétaire · Les données métier privées restent protégées.</footer>
+            <div class="p-sidebar-note"><x-icon name="lock" class="w-5 h-5" /><p>Un espace de pilotage réservé au propriétaire de l’application.</p></div>
+            @if(Auth::guard('platform')->check())<div class="p-sidebar-profile"><span class="p-avatar">{{ mb_strtoupper(mb_substr(Auth::guard('platform')->user()->name, 0, 1)) }}</span><div><strong>{{ Auth::guard('platform')->user()->name }}</strong><small>Propriétaire de la plateforme</small></div></div>@endif
+        </aside>
+        <div class="p-workspace">
+            <header class="p-topbar"><p class="p-breadcrumb">Administration <span>/</span> <strong>{{ $title }}</strong></p><div class="p-topbar-right"><span class="p-session"><x-icon name="lock" />Session protégée</span><form method="POST" action="{{ route('platform.logout') }}">@csrf<button class="p-btn" type="submit"><x-icon name="logout" />Déconnexion</button></form></div></header>
+            <main id="contenu" class="p-main">
+                @if(session('status'))<p role="status" class="p-alert"><x-icon name="check-circle" />{{ session('status') }}</p>@endif
+                @if($errors->any())<div role="alert" class="p-alert p-alert-error"><x-icon name="warning" /><div><strong>Vérifiez les informations saisies.</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div></div>@endif
+                {{ $slot }}
+            </main>
+            <footer class="p-footer">Gestion Chorale · Espace propriétaire <span aria-hidden="true">/</span> {{ now()->format('Y') }}</footer>
+        </div>
+    </div>
+    @endif
 </body>
 </html>

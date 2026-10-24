@@ -6,11 +6,14 @@ use App\Services\ReminderDispatcher;
 use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+Schedule::call(fn () => DB::table('platform_usage_daily')->where('day', '<', today()->subDays(90)->toDateString())->delete())->dailyAt('03:30')->name('platform:prune-usage')->withoutOverlapping();
 
 // Rappels de répétition : chaque matin, à l'heure configurée.
 Schedule::command(SendRehearsalReminders::class)

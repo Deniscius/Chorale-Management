@@ -31,6 +31,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
 
+require __DIR__.'/platform.php';
+
 Route::middleware('guest')->group(function () {
     Route::get('/creer-un-espace', [TenantRegistrationController::class, 'create'])->name('spaces.create');
     Route::post('/creer-un-espace', [TenantRegistrationController::class, 'store'])->middleware('throttle:3,60')->name('spaces.store');

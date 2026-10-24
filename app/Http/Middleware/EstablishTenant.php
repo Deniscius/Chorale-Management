@@ -11,6 +11,15 @@ final class EstablishTenant
 {
     public function handle(Request $request, Closure $next): mixed
     {
+        if ($request->routeIs('platform.*')) {
+            // Platform authentication never establishes a client's data context.
+            app(TenantContext::class)->set(null);
+            try {
+                return $next($request);
+            } finally {
+                app(TenantContext::class)->set(null);
+            }
+        }
         if (! config('tenancy.enabled')) {
             abort_unless(app()->runningUnitTests(), 503, 'Le mode multi-tenant doit être activé avant la mise en service.');
 

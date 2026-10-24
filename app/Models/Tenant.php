@@ -17,4 +17,15 @@ final class Tenant extends Model
     {
         return $this->suspended_at === null && ($this->trial_ends_at?->isFuture() || $this->paid_perpetual || $this->paid_until?->isFuture());
     }
+
+    public function accessLabel(): string
+    {
+        return match (true) {
+            $this->suspended_at !== null => 'Suspendu',
+            $this->paid_perpetual => 'Accès permanent',
+            $this->paid_until?->isFuture() => 'Accès payant',
+            $this->trial_ends_at?->isFuture() => 'En essai',
+            default => 'Expiré',
+        };
+    }
 }

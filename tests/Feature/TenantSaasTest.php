@@ -219,6 +219,17 @@ class TenantSaasTest extends TestCase
             $called = true;
         });
         $this->assertFalse($called);
+        config(['tenancy.enabled' => false]);
+        $this->app['env'] = 'production';
+        try {
+            (new TenantJob)->handle($job, function () use (&$called) {
+                $called = true;
+            });
+            $this->assertFalse($called);
+        } finally {
+            $this->app['env'] = 'testing';
+            config(['tenancy.enabled' => true]);
+        }
     }
 
     public function test_reference_sequences_and_settings_are_independent(): void
@@ -303,9 +314,12 @@ class TenantSaasTest extends TestCase
 
     public function test_disabling_tenancy_outside_tests_fails_closed(): void
     {
+        $this->space();
         config(['tenancy.enabled' => false]);
         $this->app['env'] = 'production';
         try {
+            $this->assertNull(app(TenantContext::class)->id());
+            $this->assertSame(0, User::count());
             $this->get('/login')->assertStatus(503);
         } finally {
             $this->app['env'] = 'testing';

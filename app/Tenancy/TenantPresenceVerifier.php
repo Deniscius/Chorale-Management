@@ -8,7 +8,7 @@ final class TenantPresenceVerifier extends DatabasePresenceVerifier
 {
     private function conditions($table, $column, array $extra): array
     {
-        if (config('tenancy.enabled') && in_array($table, config('tenant-tables.tables'), true)
+        if (TenantContext::isolated() && in_array($table, config('tenant-tables.tables'), true)
             && ! ($table === 'users' && in_array($column, ['email', 'username'], true))) {
             $extra['tenant_id'] = (string) app(TenantContext::class)->requireId();
         }

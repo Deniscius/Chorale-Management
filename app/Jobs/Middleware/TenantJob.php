@@ -10,7 +10,7 @@ final class TenantJob
 {
     public function handle(object $job, Closure $next): mixed
     {
-        if (! config('tenancy.enabled')) {
+        if (! TenantContext::isolated()) {
             return $next($job);
         }
         $tenant = isset($job->tenantId) ? Tenant::find($job->tenantId) : null;

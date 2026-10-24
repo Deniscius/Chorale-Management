@@ -20,7 +20,7 @@ trait BelongsToTenant
                 abort_unless((int) $model->getAttribute('tenant_id') === $id, 404);
             }
             $model->setAttribute('tenant_id', $id);
-            if (config('tenancy.enabled')) {
+            if (TenantContext::isolated()) {
                 foreach (config('tenant-tables.relations.'.$model->getTable(), []) as $column => $parent) {
                     if ($model->getAttribute($column) !== null && (! $model->exists || $model->isDirty($column))) {
                         if (! app(TenantContext::class)->table($parent)->where('id', $model->getAttribute($column))->exists()) {

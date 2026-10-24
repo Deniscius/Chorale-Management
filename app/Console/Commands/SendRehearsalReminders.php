@@ -27,7 +27,7 @@ class SendRehearsalReminders extends Command
 
     public function handle(ReminderDispatcher $dispatcher): int
     {
-        if (! config('tenancy.enabled')) {
+        if (! TenantContext::isolated()) {
             return $this->handleOne($dispatcher);
         }
         if ($this->option('rehearsal') && ! $this->option('tenant')) {

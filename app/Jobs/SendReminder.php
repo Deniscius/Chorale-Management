@@ -44,7 +44,7 @@ final class SendReminder implements ShouldQueue
 
     public function handle(ReminderDispatcher $dispatcher): void
     {
-        if (config('tenancy.enabled') && ($this->tenantId === null || app(TenantContext::class)->id() !== $this->tenantId || ! Tenant::find($this->tenantId)?->hasAccess())) {
+        if (TenantContext::isolated() && ($this->tenantId === null || app(TenantContext::class)->id() !== $this->tenantId || ! Tenant::find($this->tenantId)?->hasAccess())) {
             return;
         }
         if ($dispatcher->deliver($this->reminderId, $this->leaseToken, true) === 'failed') {

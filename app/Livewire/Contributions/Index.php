@@ -166,19 +166,14 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        $du = (float) Contribution::sum('due_amount');
-        $encaisse = (float) Contribution::sum('paid_amount');
+        $row = Contribution::query()->selectRaw(
+            'COUNT(*) AS total, COALESCE(SUM(due_amount), 0) AS du, COALESCE(SUM(paid_amount), 0) AS encaisse, COALESCE(SUM(CASE WHEN status IN (?, ?) THEN 1 ELSE 0 END), 0) AS impayees',
+            [ContributionStatus::Due->value, ContributionStatus::Retard->value]
+        )->toBase()->first();
+        $du = (float) $row->du;
+        $encaisse = (float) $row->encaisse;
 
-        return [
-            'total' => Contribution::count(),
-            'du' => $du,
-            'encaisse' => $encaisse,
-            'reste' => $du - $encaisse,
-            'impayees' => Contribution::whereIn('status', [
-                ContributionStatus::Due->value,
-                ContributionStatus::Retard->value,
-            ])->count(),
-        ];
+        return ['total' => (int) $row->total, 'du' => $du, 'encaisse' => $encaisse, 'reste' => $du - $encaisse, 'impayees' => (int) $row->impayees];
     }
 
     public function render(): View

@@ -145,13 +145,12 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        return [
-            'total' => Instrument::count(),
-            'quantite' => (int) Instrument::sum('quantity'),
-            'valeur' => (float) Instrument::sum('current_value'),
-            'horsservice' => Instrument::where('condition', InstrumentCondition::HorsService->value)->count(),
-            'sortis' => Instrument::where('is_borrowed', true)->count(),
-        ];
+        $row = Instrument::query()->selectRaw(
+            'COUNT(*) AS total, COALESCE(SUM(quantity), 0) AS quantite, COALESCE(SUM(current_value), 0) AS valeur, COALESCE(SUM(CASE WHEN "condition" = ? THEN 1 ELSE 0 END), 0) AS horsservice, COALESCE(SUM(CASE WHEN is_borrowed = ? THEN 1 ELSE 0 END), 0) AS sortis',
+            [InstrumentCondition::HorsService->value, true]
+        )->toBase()->first();
+
+        return ['total' => (int) $row->total, 'quantite' => (int) $row->quantite, 'valeur' => (float) $row->valeur, 'horsservice' => (int) $row->horsservice, 'sortis' => (int) $row->sortis];
     }
 
     public function render(): View

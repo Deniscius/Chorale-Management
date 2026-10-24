@@ -23,7 +23,6 @@ use App\Services\SettingsStore;
 use App\Services\Sms\HttpSmsSender;
 use App\Services\Sms\LogSmsSender;
 use App\Services\Sms\SmsSender;
-use App\View\Composers\ChoraleIdentityComposer;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
@@ -116,6 +115,6 @@ class AppServiceProvider extends ServiceProvider
 
         // Identité de la chorale partagée avec toutes les vues (l'instance
         // singleton mémorise les lectures : aucune requête supplémentaire).
-        View::composer('*', ChoraleIdentityComposer::class);
+        View::share('chorale', $this->app->make(ChoraleIdentity::class));
     }
 }

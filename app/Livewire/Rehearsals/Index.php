@@ -147,12 +147,12 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        return [
-            'total' => Rehearsal::count(),
-            'avenir' => Rehearsal::whereDate('date', '>=', today())->count(),
-            'terminees' => Rehearsal::where('status', EventStatus::Terminee->value)->count(),
-            'presence' => (int) DB::table('rehearsal_attendances')->where('status', 'present')->count(),
-        ];
+        $row = Rehearsal::query()->selectRaw(
+            'COUNT(*) AS total, COALESCE(SUM(CASE WHEN date >= ? THEN 1 ELSE 0 END), 0) AS avenir, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS terminees',
+            [today()->toDateString(), EventStatus::Terminee->value]
+        )->toBase()->first();
+
+        return ['total' => (int) $row->total, 'avenir' => (int) $row->avenir, 'terminees' => (int) $row->terminees, 'presence' => (int) DB::table('rehearsal_attendances')->where('status', 'present')->count()];
     }
 
     /**

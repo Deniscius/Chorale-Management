@@ -131,14 +131,11 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        $upcoming = Performance::where('scheduled_at', '>=', now())->count();
+        $row = Performance::query()->selectRaw(
+            'COUNT(*) AS total, COALESCE(SUM(CASE WHEN scheduled_at >= ? THEN 1 ELSE 0 END), 0) AS avenir, COALESCE(SUM(budget), 0) AS budget, COALESCE(SUM(revenue), 0) AS recettes', [now()]
+        )->toBase()->first();
 
-        return [
-            'total' => Performance::count(),
-            'avenir' => $upcoming,
-            'budget' => (float) Performance::sum('budget'),
-            'recettes' => (float) Performance::sum('revenue'),
-        ];
+        return ['total' => (int) $row->total, 'avenir' => (int) $row->avenir, 'budget' => (float) $row->budget, 'recettes' => (float) $row->recettes];
     }
 
     public function render(): View

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\InstrumentUnit;
 use App\Services\ChoraleIdentity;
 use Illuminate\Http\Request;
+use Illuminate\Support\HtmlString;
 use Illuminate\Validation\ValidationException;
 use Picqer\Barcode\Renderers\SvgRenderer;
 use Picqer\Barcode\Types\TypeCode128;
@@ -24,7 +25,8 @@ final class InstrumentLabelsController extends Controller
             $barcode = $generator->getBarcode($unit->inventory_code);
             $svg = $renderer->render($barcode, $barcode->getWidth() * 2, 48);
 
-            return ['unit' => $unit, 'svg' => str_replace('<svg ', '<svg preserveAspectRatio="none" ', $svg)];
+            // Only the barcode library's SVG for our immutable inventory code is trusted HTML.
+            return ['unit' => $unit, 'svg' => new HtmlString(str_replace('<svg ', '<svg preserveAspectRatio="none" ', $svg))];
         });
         $slots = collect(array_fill(0, (int) $data['start'] - 1, null))->concat($labels);
 

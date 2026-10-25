@@ -102,7 +102,8 @@ class Index extends Component
                 $query->where(function (Builder $q) use ($like) {
                     $q->whereLike('name', $like)
                         ->orWhereLike('serial_number', $like)
-                        ->orWhereLike('location', $like);
+                        ->orWhereLike('location', $like)
+                        ->orWhereHas('units', fn ($q) => $q->whereLike('inventory_code', $like));
                 });
             })
             ->when($this->category !== '', fn (Builder $query) => $query->where('category', $this->category))

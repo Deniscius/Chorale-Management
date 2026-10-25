@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Tenant;
+use App\Services\InstrumentIdentity;
 use App\Services\TenantDefaults;
 use App\Tenancy\TenantContext;
 use Illuminate\Database\Seeder;
@@ -15,7 +16,10 @@ final class ProductionSeeder extends Seeder
         // Only existing customer spaces: never create customers or credentials.
         Tenant::whereIn('id', DB::table('users')->select('tenant_id')->distinct())
             ->orderBy('id')->eachById(function (Tenant $tenant) {
-                app(TenantContext::class)->run($tenant->id, fn () => app(TenantDefaults::class)->ensure());
+                app(TenantContext::class)->run($tenant->id, function () {
+                    app(TenantDefaults::class)->ensure();
+                    app(InstrumentIdentity::class)->synchronizeTenant();
+                });
             });
     }
 }

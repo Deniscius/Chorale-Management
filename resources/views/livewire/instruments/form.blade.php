@@ -30,7 +30,7 @@
             <div>
                 <x-input-label for="instruments-form-quantity" value="Quantité" />
                 <x-text-input id="instruments-form-quantity" type="number" name="quantity" aria-describedby="instruments-form-quantity-error" aria-invalid="{{ $errors->has('quantity') ? 'true' : 'false' }}" wire:model="quantity" class="mt-1 block w-full" min="1" />
-                <x-input-error id="instruments-form-quantity-error" :messages="$errors->get('quantity')" class="mt-1" />
+                <p class="mt-1 text-xs text-slate-500">Chaque pièce recevra son propre identifiant et son étiquette. Pour réduire une quantité déjà identifiée, retirez les exemplaires depuis Articles et étiquettes.</p><x-input-error id="instruments-form-quantity-error" :messages="$errors->get('quantity')" class="mt-1" />
             </div>
 
             <div>

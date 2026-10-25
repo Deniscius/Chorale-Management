@@ -1,7 +1,7 @@
 <div>
     <x-page-header title="Inventaire des instruments" icon="cube"
         :subtitle="'Parc instrumental de la chorale — '.$this->stats['total'].' référence(s) pour '.$this->stats['quantite'].' pièce(s).'">
-        <x-slot name="actions">
+        <x-slot name="actions"><a href="{{ route('instruments.units') }}" class="btn btn-secondary">Articles et étiquettes A4</a>
             @if ($this->canManage())
                 <button type="button" wire:click="create"
                     class="btn btn-primary">
@@ -117,7 +117,7 @@
                     <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
                         <x-money :value="$instrument->current_value" />
                     </td>
-                    <td class="whitespace-nowrap px-4 py-3 text-right">
+                    <td class="whitespace-nowrap px-4 py-3 text-right"><a href="{{ route('instruments.units', ['reference' => $instrument->id]) }}" class="mb-2 inline-block text-xs font-medium text-sky-700 underline">Articles / codes-barres</a>
                         @if ($this->canManage())
                             <x-row-actions edit="edit" :id="$instrument->id" remove="delete"
                                 :confirm="'Retirer « '.$instrument->name.' » de l\'inventaire ?'" />

@@ -8,6 +8,7 @@ use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Instrument;
 use App\Models\Member;
+use App\Services\InstrumentIdentity;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -33,7 +34,7 @@ class Form extends Component
     #[Validate('nullable|string|max:100')]
     public ?string $serial_number = null;
 
-    #[Validate('nullable|integer|min:1|max:999')]
+    #[Validate('required|integer|min:1|max:999')]
     public string $quantity = '1';
 
     #[Validate]
@@ -122,6 +123,7 @@ class Form extends Component
             $entry->fill($data);
             $entry->is_borrowed = $out > 0;
             $entry->save();
+            app(InstrumentIdentity::class)->synchronize($entry->id);
 
             return $entry;
         }, 3);

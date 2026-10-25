@@ -29,6 +29,7 @@
         [
             'label' => 'Commission des instruments',
             'items' => [
+                ['route' => 'instruments.units', 'label' => 'Articles et étiquettes', 'icon' => 'archive', 'module' => UserRole::MODULE_INSTRUMENTS],
                 ['route' => 'instruments.index', 'label' => 'Inventaire', 'icon' => 'cube', 'module' => UserRole::MODULE_INSTRUMENTS],
                 ['route' => 'instruments.movements', 'label' => 'Mouvements', 'icon' => 'folder', 'module' => UserRole::MODULE_INSTRUMENTS],
                 ['route' => 'instruments.maintenances', 'label' => 'Maintenance', 'icon' => 'wrench', 'module' => UserRole::MODULE_INSTRUMENTS],

@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Services\ChoraleIdentity;
+use App\Services\PrivateFiles;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Sert le logo de la chorale stocké sur le disque privé.
@@ -18,13 +19,13 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  */
 class ChoraleLogoController extends Controller
 {
-    public function __invoke(ChoraleIdentity $identity): Response|BinaryFileResponse
+    public function __invoke(ChoraleIdentity $identity): Response|BinaryFileResponse|StreamedResponse
     {
         $path = $identity->logoPath();
 
         abort_if($path === null, 404, "Aucun logo de chorale n'est défini.");
 
-        return response()->file(Storage::disk('local')->path($path), [
+        return app(PrivateFiles::class)->response($path, basename($path), true, null, [
             'Cache-Control' => config('tenancy.enabled') ? 'private, no-store' : 'public, max-age=31536000, immutable',
             'ETag' => '"'.$identity->logoVersion().'"',
         ]);

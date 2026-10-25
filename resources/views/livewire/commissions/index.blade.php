@@ -24,8 +24,11 @@
                 <p class="mt-2 line-clamp-3 break-words text-sm text-slate-600">{{ $commission->mission }}</p>
                 <p class="mt-4 text-sm text-slate-500">{{ $commission->starts_on->format('d/m/Y') }} → {{ $commission->ends_on?->format('d/m/Y') ?? 'Sans échéance' }}</p>
                 <p class="mt-1 text-sm font-medium">{{ $commission->members_count }} choriste(s)</p>
+                <p class="mt-2 text-sm text-slate-600">Responsable : <span class="font-medium">{{ $commission->leader?->name ?? 'À désigner' }}</span></p>
+                @if($commission->module_key)<p class="mt-1 text-xs text-slate-500">{{ \App\Models\ChoirCommission::moduleLabels()[$commission->module_key] ?? '' }}</p>@endif
                 <div class="mt-auto flex flex-wrap gap-2 border-t border-slate-100 pt-4 mt-4">
-                    <button type="button" wire:click="view({{ $commission->id }})" class="btn btn-secondary">Voir l’équipe</button>
+                    <button type="button" wire:click="view({{ $commission->id }})" class="btn btn-secondary">Ouvrir la commission</button>
+                    @if(auth()->user()->isAdmin())<button type="button" wire:click="delegate({{ $commission->id }})" class="btn btn-secondary">Déléguer le responsable</button>@endif
                     @can('manage-commissions')<button type="button" wire:click="edit({{ $commission->id }})" class="btn btn-secondary">Modifier</button><button type="button" wire:click="toggleArchive({{ $commission->id }})" wire:confirm="{{ $commission->archived_at ? 'Réouvrir cette commission ? Son statut dépendra de ses dates.' : 'Archiver cette commission ? Sa mission et ses membres seront conservés.' }}" class="text-sm font-medium text-slate-600 underline" wire:loading.attr="disabled">{{ $commission->archived_at ? 'Réouvrir' : 'Archiver' }}</button>@endcan
                 </div>
             </article>
@@ -59,9 +62,17 @@
                 <div class="sticky bottom-0 flex flex-wrap justify-end gap-3 border-t bg-white pt-4"><button type="button" x-on:click="requestClose()" class="btn btn-secondary">Annuler</button><button type="submit" wire:loading.attr="disabled" class="btn btn-primary"><span wire:loading.remove wire:target="save">Enregistrer la commission</span><span wire:loading wire:target="save">Enregistrement…</span></button></div>
             </form>
         </x-modal-panel>
+    @elseif($responsibilityId)
+        <x-modal-panel title="Responsable et accès" subtitle="Délégation administrative, sans modification du rôle du compte." close-event="close-responsibilities" size="lg">
+            <livewire:commissions.responsibilities :commission-id="$responsibilityId" :key="'responsibility-'.$responsibilityId" />
+        </x-modal-panel>
     @elseif($detail)
         <x-modal-panel :title="$detail->name" subtitle="Mission et composition de l’équipe" size="lg">
-            <div class="space-y-5"><p class="whitespace-pre-line break-words text-slate-700">{{ $detail->mission }}</p><p class="text-sm text-slate-500">Du {{ $detail->starts_on->format('d/m/Y') }} {{ $detail->ends_on ? 'au '.$detail->ends_on->format('d/m/Y') : '· Sans échéance' }} · {{ \App\Models\ChoirCommission::statuses()[$detail->status] }}</p><h3 class="font-semibold">Choristes affectés ({{ $detail->members->count() }})</h3><ul class="grid gap-2 sm:grid-cols-2">@forelse($detail->members as $member)<li class="rounded-lg bg-slate-50 p-3 text-sm">{{ $member->full_name }}</li>@empty<li class="text-sm text-slate-500">L’équipe sera constituée par la directrice.</li>@endforelse</ul></div>
+            <div class="space-y-5">
+                @if($detail->module_key && $detail->status === 'active' && auth()->user()->canAccessModule($detail->module_key))
+                    <section class="rounded-xl bg-sky-50 p-4"><h3 class="font-semibold text-sky-950">Fonctionnalités de la commission</h3><p class="mt-1 text-sm text-sky-900">{{ auth()->user()->canManageModule($detail->module_key) ? 'Vous pouvez consulter et gérer ce module.' : 'Vous disposez d’un accès en consultation.' }}</p><div class="mt-3 flex flex-wrap gap-2">@foreach($detail->featureLinks() as $route => $label)<a href="{{ route($route) }}" class="btn btn-secondary">{{ $label }}</a>@endforeach</div></section>
+                @elseif($detail->module_key)<p class="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">L’accès aux fonctionnalités dépend de votre affectation et des dates de mission.</p>@endif
+                <p class="whitespace-pre-line break-words text-slate-700">{{ $detail->mission }}</p><p class="text-sm text-slate-500">Du {{ $detail->starts_on->format('d/m/Y') }} {{ $detail->ends_on ? 'au '.$detail->ends_on->format('d/m/Y') : '· Sans échéance' }} · {{ \App\Models\ChoirCommission::statuses()[$detail->status] }}</p><h3 class="font-semibold">Choristes affectés ({{ $detail->members->count() }})</h3><ul class="grid gap-2 sm:grid-cols-2">@forelse($detail->members as $member)<li class="rounded-lg bg-slate-50 p-3 text-sm">{{ $member->full_name }}</li>@empty<li class="text-sm text-slate-500">L’équipe sera constituée par la directrice.</li>@endforelse</ul></div>
         </x-modal-panel>
     @endif
 </div>

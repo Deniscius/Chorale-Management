@@ -93,12 +93,19 @@ enum Commission: string
 
     public function canView(?User $user): bool
     {
-        return $user !== null && in_array($this, self::forRole($user->role), true);
+        return $user !== null && ($this === self::Direction
+            ? in_array($user->role, [UserRole::Admin, UserRole::Directeur], true)
+            : $user->canAccessModule($this->module()));
     }
 
     public function canManage(?User $user): bool
     {
         return $this->canView($user) && $user->canManageModule($this->module());
+    }
+
+    public static function forUser(User $user): array
+    {
+        return array_values(array_filter(self::cases(), fn (self $commission) => $commission->canView($user)));
     }
 
     public static function forRole(UserRole $role): array

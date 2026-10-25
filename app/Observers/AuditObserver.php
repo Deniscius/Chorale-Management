@@ -22,7 +22,7 @@ final class AuditObserver
     private function fields(Model $model): array
     {
         return match ($model::class) {
-            ChoirCommission::class => ['name', 'kind', 'mission', 'starts_on', 'ends_on', 'archived_at'],
+            ChoirCommission::class => ['name', 'kind', 'mission', 'starts_on', 'ends_on', 'archived_at', 'module_key', 'leader_id', 'associate_id'],
             User::class => ['role', 'member_id'],
             FinancialType::class => ['kind', 'label', 'default_amount', 'is_active', 'base_type'],
             MemberInvitation::class => ['role', 'member_id', 'expires_at', 'accepted_at'],

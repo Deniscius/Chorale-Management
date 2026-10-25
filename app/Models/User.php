@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\UserRole;
+use App\Services\CommissionAccess;
 use App\Tenancy\BelongsToTenant;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -88,9 +89,18 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * L'utilisateur peut-il accéder au module fonctionnel donné ?
      */
+    public function accessibleModules(): array
+    {
+        if (in_array($this->role, [UserRole::Admin, UserRole::Directeur], true)) {
+            return $this->role->modules();
+        }
+
+        return array_values(array_unique([...$this->role->modules(), ...app(CommissionAccess::class)->modules($this)]));
+    }
+
     public function canAccessModule(string $module): bool
     {
-        return $this->role->canAccessModule($module);
+        return $this->role->canAccessModule($module) || in_array($module, app(CommissionAccess::class)->modules($this), true);
     }
 
     /**
@@ -98,6 +108,6 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function canManageModule(string $module): bool
     {
-        return $this->role->canManageModule($module);
+        return $this->role->canManageModule($module) || in_array($module, app(CommissionAccess::class)->modules($this, true), true);
     }
 }

@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Choir;
 use App\Models\Setting;
 use App\Models\Tenant;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Identité de la chorale : nom affiché, logo et informations de contact.
@@ -94,7 +93,7 @@ class ChoraleIdentity
                 return null;
             }
 
-            return Storage::disk('local')->exists($path) ? $path : null;
+            return app(PrivateFiles::class)->exists($path) ? $path : null;
         });
     }
 

@@ -2,6 +2,7 @@
     <x-page-header title="Informations de la chorale" icon="building"
         subtitle="Nom, coordonnées et logo affichés dans toute l'application." />
 
+    @if($logoMissing ?? false)<p class="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-950">L’ancien logo n’est plus disponible. Réimportez votre fichier original pour rétablir l’identité visuelle.</p>@endif
     <form wire:submit="save" class="grid gap-6 lg:grid-cols-3">
         @if($space = request()->attributes->get('tenant'))
             <x-card title="Adresse de votre chorale" subtitle="Partagez cette adresse avec vos membres pour ouvrir la connexion de votre chorale." class="lg:col-span-3">
@@ -11,7 +12,7 @@
             </x-card>
         @endif
         {{-- Logo --}}
-        <x-card title="Logo" subtitle="PNG, JPG, WEBP ou SVG — 2 Mo maximum." class="lg:col-span-1">
+        <x-card title="Logo" subtitle="PNG, JPG ou WEBP — 2 Mo maximum." class="lg:col-span-1">
             <div class="flex flex-col items-center gap-4 text-center">
                 <div
                     class="flex h-32 w-32 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-3 text-slate-400">
@@ -31,7 +32,7 @@
                         <x-icon name="upload" class="h-4 w-4" />
                         Choisir un logo
                         <input id="logo" type="file" wire:model="logo" class="sr-only"
-                            accept="image/png,image/jpeg,image/webp,image/svg+xml" />
+                            accept="image/png,image/jpeg,image/webp" />
                     </label>
                     <p wire:loading wire:target="logo" class="mt-2 text-xs text-slate-500">Téléversement…</p>
                 </div>

@@ -11,11 +11,16 @@ class ChoirCommission extends Model
 {
     use BelongsToTenant;
 
-    protected $fillable = ['name', 'name_key', 'kind', 'mission', 'starts_on', 'ends_on', 'archived_at'];
+    protected $fillable = ['name', 'name_key', 'kind', 'mission', 'starts_on', 'ends_on', 'archived_at', 'module_key', 'archive_commission', 'leader_id', 'associate_id'];
 
     protected function casts(): array
     {
         return ['starts_on' => 'date', 'ends_on' => 'date', 'archived_at' => 'datetime'];
+    }
+
+    public function leader()
+    {
+        return $this->belongsTo(User::class, 'leader_id');
     }
 
     public function members(): BelongsToMany
@@ -48,5 +53,23 @@ class ChoirCommission extends Model
     public static function statuses(): array
     {
         return ['active' => 'En cours', 'scheduled' => 'À venir', 'completed' => 'Terminées', 'archived' => 'Archivées'];
+    }
+
+    public static function moduleLabels(): array
+    {
+        return ['members' => 'Choristes et organisation', 'liturgique' => 'Liturgie, répertoire et célébrations', 'instruments' => 'Instruments et inventaire', 'courriers' => 'Courriers et secrétariat', 'activites' => 'Activités et vie de la chorale', 'comptabilite' => 'Trésorerie et comptabilité'];
+    }
+
+    public function featureLinks(): array
+    {
+        return match ($this->module_key) {
+            'members' => ['members.index' => 'Choristes'],
+            'liturgique' => ['works.index' => 'Œuvres et partitions', 'rehearsals.index' => 'Répétitions', 'performances.index' => 'Célébrations', 'seasons.index' => 'Temps liturgiques'],
+            'instruments' => ['instruments.index' => 'Inventaire', 'instruments.movements' => 'Mouvements', 'instruments.maintenances' => 'Maintenance', 'instruments.ensembles' => 'Ensembles'],
+            'courriers' => ['correspondences.index' => 'Courriers'],
+            'activites' => ['activities.index' => 'Activités'],
+            'comptabilite' => ['transactions.index' => 'Recettes et dépenses', 'budgets.index' => 'Budgets', 'contributions.index' => 'Cotisations', 'donations.index' => 'Dons'],
+            default => [],
+        };
     }
 }

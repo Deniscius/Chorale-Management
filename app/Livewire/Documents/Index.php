@@ -9,6 +9,7 @@ use App\Models\Correspondence;
 use App\Models\Document;
 use App\Models\User;
 use App\Services\DocumentArchive;
+use App\Services\PrivateFiles;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -197,7 +198,7 @@ class Index extends Component
     #[Computed]
     public function documents()
     {
-        return Document::query()
+        $documents = Document::query()
             ->with(['uploader', 'member', 'team'])
             ->readable(auth()->user())
             ->when($this->correspondenceId, fn ($q) => $q->where('correspondence_id', $this->correspondenceId))
@@ -209,6 +210,9 @@ class Index extends Component
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->paginate(12);
+        app(PrivateFiles::class)->primeExists($documents->pluck('path')->all());
+
+        return $documents;
     }
 
     #[Computed]

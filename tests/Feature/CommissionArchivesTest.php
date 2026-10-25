@@ -111,12 +111,12 @@ class CommissionArchivesTest extends TestCase
         app(CommissionTeamWriter::class)->save(Commission::Liturgique, $leader->id, $associate->id);
     }
 
-    public function test_admin_cannot_choose_wrong_role_or_duplicate_person(): void
+    public function test_admin_can_choose_any_account_but_not_a_missing_or_duplicate_person(): void
     {
         [$leader] = $this->team();
         $admin = User::factory()->role(UserRole::Admin)->create();
         $this->actingAs($admin);
-        foreach ([[$admin->id, null], [$leader->id, $leader->id]] as [$l,$a]) {
+        foreach ([[PHP_INT_MAX, null], [$leader->id, $leader->id]] as [$l,$a]) {
             try {
                 app(CommissionTeamWriter::class)->save(Commission::Liturgique, $l, $a);
                 $this->fail('Invalid assignment');

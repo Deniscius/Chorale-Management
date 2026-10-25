@@ -34,6 +34,7 @@ jobs:
           DB_CONNECTION=pgsql
           DB_URL=postgresql://chorale:ci-only@postgres:5432/chorale_ci
           DB_SSLMODE=disable
+          PRIVATE_FILES_DRIVER=database
           CACHE_STORE=database
           SESSION_DRIVER=database
           QUEUE_CONNECTION=database
@@ -54,7 +55,7 @@ jobs:
         run: |
           docker run -d --name hosted --network chorale-ci --env-file /tmp/chorale-ci.env -p 10001:10000 \
             -e APP_DEMO_MODE=false -e RUN_MIGRATIONS_ON_START=true \
-            -e PLATFORM_BOOTSTRAP_ENABLED=true \
+            -e CI_STORAGE_TEST=1 -e PLATFORM_BOOTSTRAP_ENABLED=true \
             -e PLATFORM_SETUP_TOKEN=CIOnlyPrivateInstallationTokenWithAtLeast32Characters \
             chorale-production
           for attempt in $(seq 1 30); do curl --fail --silent http://localhost:10001/up && break; sleep 2; done
@@ -70,10 +71,20 @@ jobs:
             --data-urlencode password=TestOnlyOwnerSecret2026 --data-urlencode password_confirmation=TestOnlyOwnerSecret2026 \
             --data-urlencode "code=$code")" = '302'
           test "$(docker exec postgres psql -U chorale -d chorale_ci -tAc 'SELECT count(*) FROM platform_admins')" = '1'
-          docker restart hosted
+          docker exec hosted php docker/verify-private-storage.php write
+          curl --fail --silent http://localhost:10001/c/espace-existant/logo > /tmp/logo-before.png
+          docker rm -f hosted
+          docker run -d --name hosted --network chorale-ci --env-file /tmp/chorale-ci.env -p 10001:10000 \
+            -e APP_DEMO_MODE=false -e RUN_MIGRATIONS_ON_START=true \
+            -e CI_STORAGE_TEST=1 -e PLATFORM_BOOTSTRAP_ENABLED=true \
+            -e PLATFORM_SETUP_TOKEN=CIOnlyPrivateInstallationTokenWithAtLeast32Characters \
+            chorale-production
           for attempt in $(seq 1 30); do curl --fail --silent http://localhost:10001/up && break; sleep 2; done
           curl --fail --silent http://localhost:10001/up > /dev/null
           test "$(docker exec postgres psql -U chorale -d chorale_ci -tAc 'SELECT count(*) FROM platform_admins')" = '1'
+          docker exec hosted php docker/verify-private-storage.php verify
+          curl --fail --silent http://localhost:10001/c/espace-existant/logo > /tmp/logo-after.png
+          cmp /tmp/logo-before.png /tmp/logo-after.png
       - name: Logs on failure
         if: failure()
         run: |

@@ -245,8 +245,8 @@ class FinalAuditTest extends TestCase
         Storage::fake('local');
         [$tenant] = $this->space();
         $this->within($tenant, function () {
-            Storage::disk('local')->put('old.png', base64_decode(self::PNG));
-            Setting::setMany([ChoraleIdentity::KEY_NAME => 'Avant', ChoraleIdentity::KEY_LOGO_PATH => 'old.png']);
+            Storage::disk('local')->put(app(TenantContext::class)->path('old.png'), base64_decode(self::PNG));
+            Setting::setMany([ChoraleIdentity::KEY_NAME => 'Avant', ChoraleIdentity::KEY_LOGO_PATH => app(TenantContext::class)->path('old.png')]);
             $file = \Mockery::mock(UploadedFile::class);
             $file->shouldReceive('store')->once()->andReturn(false);
             try {
@@ -256,8 +256,8 @@ class FinalAuditTest extends TestCase
                 $this->assertArrayHasKey('logo', $e->errors());
             }
             $this->assertSame('Avant', Setting::get(ChoraleIdentity::KEY_NAME));
-            $this->assertSame('old.png', Setting::get(ChoraleIdentity::KEY_LOGO_PATH));
-            Storage::disk('local')->assertExists('old.png');
+            $this->assertSame(app(TenantContext::class)->path('old.png'), Setting::get(ChoraleIdentity::KEY_LOGO_PATH));
+            Storage::disk('local')->assertExists(app(TenantContext::class)->path('old.png'));
         });
     }
 
@@ -266,8 +266,8 @@ class FinalAuditTest extends TestCase
         Storage::fake('local');
         [$tenant] = $this->space();
         $this->within($tenant, function () use ($tenant) {
-            Storage::disk('local')->put('old.png', base64_decode(self::PNG));
-            Setting::setMany([ChoraleIdentity::KEY_NAME => 'Avant', ChoraleIdentity::KEY_LOGO_PATH => 'old.png']);
+            Storage::disk('local')->put(app(TenantContext::class)->path('old.png'), base64_decode(self::PNG));
+            Setting::setMany([ChoraleIdentity::KEY_NAME => 'Avant', ChoraleIdentity::KEY_LOGO_PATH => app(TenantContext::class)->path('old.png')]);
             $armed = true;
             DB::listen(function ($query) use (&$armed) {
                 if ($armed && str_starts_with(strtolower($query->sql), 'insert') && str_contains($query->sql, 'settings')) {
@@ -282,7 +282,7 @@ class FinalAuditTest extends TestCase
                 $this->assertSame('Synthetic database failure', $e->getMessage());
             }
             $this->assertSame('Avant', Setting::get(ChoraleIdentity::KEY_NAME));
-            Storage::disk('local')->assertExists('old.png');
+            Storage::disk('local')->assertExists(app(TenantContext::class)->path('old.png'));
             $this->assertSame([], Storage::disk('local')->allFiles('tenants/'.$tenant->id.'/chorale'));
         });
     }
@@ -394,8 +394,8 @@ class FinalAuditTest extends TestCase
         Storage::fake('local');
         [$tenant] = $this->space();
         $this->within($tenant, function () {
-            Storage::disk('local')->put('old.png', base64_decode(self::PNG));
-            Setting::set(ChoraleIdentity::KEY_LOGO_PATH, 'old.png');
+            Storage::disk('local')->put(app(TenantContext::class)->path('old.png'), base64_decode(self::PNG));
+            Setting::set(ChoraleIdentity::KEY_LOGO_PATH, app(TenantContext::class)->path('old.png'));
             Log::shouldReceive('warning')->once()->andThrow(new \RuntimeException('Synthetic log destination failure'));
             $this->app->instance(SettingsStore::class, new class extends SettingsStore
             {
@@ -411,9 +411,9 @@ class FinalAuditTest extends TestCase
             });
             app(ChoraleBranding::class)->save([], UploadedFile::fake()->createWithContent('new.png', base64_decode(self::PNG)));
             $path = Setting::get(ChoraleIdentity::KEY_LOGO_PATH);
-            $this->assertNotSame('old.png', $path);
+            $this->assertNotSame(app(TenantContext::class)->path('old.png'), $path);
             Storage::disk('local')->assertExists($path);
-            Storage::disk('local')->assertMissing('old.png');
+            Storage::disk('local')->assertMissing(app(TenantContext::class)->path('old.png'));
         });
     }
 }

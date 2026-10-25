@@ -9,7 +9,7 @@
                 @foreach ($this->leaders as $user)<option value="{{ $user->id }}">{{ $user->name }}</option>@endforeach
             </select>
             <x-input-error id="documents-team-settings-leader_id-error" :messages="$errors->get('leader_id')" />
-            @if (auth()->user()->isAdmin())<p class="text-xs text-slate-500">Choisissez un compte du rôle de la commission. Si la liste est vide, attribuez d’abord ce rôle dans Utilisateurs.</p>@endif
+            @if (auth()->user()->isAdmin())<p class="text-xs text-slate-500">Choisissez un compte de votre chorale. La délégation donne les droits de la commission sans changer son rôle général.</p>@endif
         </div>
         <x-input id="documents-team-settings-search" name="search" data-modal-transient label="Rechercher un associé" wire:model.live.debounce.300ms="search" placeholder="Nom du compte" />
         <div>

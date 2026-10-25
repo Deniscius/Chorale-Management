@@ -7,7 +7,6 @@ use App\Tenancy\TenantContext;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use League\Flysystem\FilesystemException;
 use Throwable;
@@ -21,7 +20,9 @@ final class ChoraleBranding
         try {
             if ($logo) {
                 try {
-                    $stored = $logo->store(app(TenantContext::class)->path('chorale'), 'local');
+                    $stored = app(PrivateFiles::class)->store($logo, app(TenantContext::class)->path('chorale'));
+                } catch (ValidationException $e) {
+                    throw ValidationException::withMessages(['logo' => $e->errors()['file'] ?? 'Le logo n’a pas pu être enregistré.']);
                 } catch (FilesystemException $e) {
                     throw ValidationException::withMessages(['logo' => 'Le logo n’a pas pu être enregistré. Réessayez.']);
                 }
@@ -65,7 +66,7 @@ final class ChoraleBranding
     {
         $failed = false;
         try {
-            $failed = ! Storage::disk('local')->delete($path);
+            $failed = ! app(PrivateFiles::class)->delete($path);
         } catch (Throwable $e) {
             $failed = true;
         }

@@ -9,7 +9,6 @@ use App\Tenancy\TenantContext;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -44,7 +43,7 @@ final class DocumentArchive
         $stored = null;
         try {
             if ($file) {
-                $stored = $file->store(app(TenantContext::class)->path('documents/'.$data['commission']), 'local');
+                $stored = app(PrivateFiles::class)->store($file, app(TenantContext::class)->path('documents/'.$data['commission']));
                 if (! $stored) {
                     throw new \RuntimeException('Le fichier n’a pas pu être enregistré.');
                 }
@@ -69,7 +68,7 @@ final class DocumentArchive
             });
         } catch (Throwable $e) {
             if ($stored) {
-                Storage::disk('local')->delete($stored);
+                app(PrivateFiles::class)->delete($stored);
             }
             throw $e;
         }
@@ -99,7 +98,7 @@ final class DocumentArchive
     {
         DB::afterCommit(function () use ($path) {
             try {
-                if (! Storage::disk('local')->delete($path)) {
+                if (! app(PrivateFiles::class)->delete($path)) {
                     Log::warning('Archive à nettoyer', ['path' => $path]);
                 }
             } catch (Throwable $e) {

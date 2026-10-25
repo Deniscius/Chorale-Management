@@ -11,6 +11,9 @@ final class BillingController extends Controller
     public function show(Request $request)
     {
         abort_unless(config('tenancy.enabled'), 404);
+        if ($request->query('from') === 'expiry' && $request->attributes->get('tenant')?->hasAccess()) {
+            return redirect()->route('dashboard')->header('Cache-Control', 'no-store, private');
+        }
         $url = (string) config('tenancy.chariow.payment_url');
         $url = filter_var($url, FILTER_VALIDATE_URL) && parse_url($url, PHP_URL_SCHEME) === 'https' ? $url : null;
 

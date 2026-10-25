@@ -20,6 +20,8 @@ Une révocation ou expiration confirmée retire le droit correspondant, en conse
 
 Le bouton **Actualiser mon abonnement** permet à un responsable de demander une vérification immédiate de ses licences récentes, sans nouveau paiement. L’état de synchronisation et la date de dernière vérification sont visibles dans le portail propriétaire sur la fiche client. Les montants encaissés, frais, remboursements et revenus récurrents ne sont pas reconstruits à partir de droits d’accès : ils restent à consulter dans Chariow.
 
+Lorsqu’une page restée ouverte atteint son ancienne échéance, le serveur revérifie l’accès. Si la synchronisation a déjà confirmé le renouvellement, le navigateur revient au tableau de bord avec la nouvelle échéance au lieu de demander de payer à nouveau. L’ouverture volontaire de **Mon accès** affiche toujours l’abonnement normalement.
+
 Cette version synchronise les licences existantes, sans webhook de paiement. Si le produit marchand émet une **nouvelle clé et un nouvel identifiant à chaque échéance** au lieu de renouveler la licence existante, il faut rattacher la nouvelle clé, ou compléter le raccordement événementiel après vérification des événements réels du compte marchand. Ne pas annoncer de renouvellement transparent avant d’avoir validé ce comportement.
 
 ## Mise en service et recette

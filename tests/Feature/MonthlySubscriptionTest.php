@@ -227,4 +227,14 @@ class MonthlySubscriptionTest extends TestCase
         Http::assertSentCount(1);
         Http::assertSent(fn ($request) => $request->method() === 'GET');
     }
+
+    public function test_a_page_left_open_does_not_show_an_expired_paywall_after_automatic_renewal(): void
+    {
+        [$tenant, $admin] = $this->space();
+        $this->activate($tenant, $admin);
+        $this->actingAs($admin)->get('/abonnement?from=expiry')->assertRedirect(route('dashboard'));
+        $this->get('/abonnement')->assertOk()->assertSee('Votre accès à l’application');
+        $this->travelTo($tenant->fresh()->paid_until);
+        $this->get('/abonnement?from=expiry')->assertOk()->assertSee('Votre abonnement est à renouveler');
+    }
 }

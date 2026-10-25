@@ -122,6 +122,8 @@ class PersonalProfilesAndCommissionsTest extends TestCase
         Livewire::test(Index::class)->call('create')->set('name', 'CONCERT DE NOËL')->set('mission', 'Autre mission')->call('save')->assertHasErrors(['name']);
         $this->assertSame(UserRole::Choriste, $user->fresh()->role);
         Livewire::actingAs($user)->test(Index::class)->set('mine', true)->assertSee($entry->name)->call('view', $entry->id)->assertSee('Choristes affectés');
+        $admin = User::factory()->role(UserRole::Admin)->create();
+        $this->actingAs($admin)->get(route('audit.index'))->assertOk()->assertSee('Commission');
     }
 
     public function test_foreign_chorales_and_members_are_not_accessible(): void

@@ -46,9 +46,10 @@ final class ChoirCommissionWriter
                     throw ValidationException::withMessages(['member_ids' => 'Sélectionnez des choristes disponibles dans votre chorale.']);
                 }
                 $entry->fill(collect($data)->except('member_ids')->all())->save();
+                $before = $entry->members()->orderBy('members.id')->pluck('members.id')->implode(', ');
                 $changes = $entry->members()->sync($data['member_ids']);
                 if ($changes['attached'] !== [] || $changes['detached'] !== []) {
-                    AuditEvent::create(['actor_id' => auth()->id(), 'subject_type' => ChoirCommission::class, 'subject_id' => $entry->id, 'action' => 'updated', 'changes' => ['membership' => $changes], 'created_at' => now()]);
+                    AuditEvent::create(['actor_id' => auth()->id(), 'subject_type' => ChoirCommission::class, 'subject_id' => $entry->id, 'action' => 'updated', 'changes' => ['before' => ['member_ids' => $before], 'after' => ['member_ids' => collect($data['member_ids'])->sort()->implode(', ')]], 'created_at' => now()]);
                 }
 
                 return $entry;

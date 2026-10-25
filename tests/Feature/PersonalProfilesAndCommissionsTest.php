@@ -31,8 +31,9 @@ class PersonalProfilesAndCommissionsTest extends TestCase
     {
         $member = Member::factory()->create();
         $user = User::factory()->role(UserRole::Choriste)->create(['member_id' => $member->id]);
-        $this->actingAs($user)->patch('/profile', ['name' => 'Ignored', 'first_name' => 'Anne Marie', 'last_name' => 'Koffi', 'username' => 'anne', 'email' => 'anne@example.test', 'phone' => '+22890000000', 'notify_email' => 0, 'role' => 'admin', 'member_id' => 999])->assertSessionHasNoErrors()->assertRedirect('/profile');
+        $this->actingAs($user)->patch('/profile', ['name' => 'Ignored', 'first_name' => 'Anne Marie', 'last_name' => 'Koffi', 'username' => ' ANNE ', 'email' => ' ANNE@EXAMPLE.TEST ', 'phone' => '+22890000000', 'notify_email' => 0, 'role' => 'admin', 'member_id' => 999])->assertSessionHasNoErrors()->assertRedirect('/profile');
         $this->assertSame('Anne Marie Koffi', $user->fresh()->name);
+        $this->assertSame('anne', $user->fresh()->username);
         $this->assertSame(UserRole::Choriste, $user->fresh()->role);
         $this->assertSame($member->id, $user->fresh()->member_id);
         $this->assertSame('anne@example.test', $member->fresh()->email);
@@ -50,6 +51,16 @@ class PersonalProfilesAndCommissionsTest extends TestCase
         $this->assertNotSame('Identity stolen', $user->fresh()->name);
         Livewire::actingAs($admin)->test(UserForm::class, ['user' => $user])->set('role', 'secretaire')->call('save')->assertHasNoErrors();
         $this->assertSame(UserRole::Secretaire, $user->fresh()->role);
+    }
+
+    public function test_duplicate_profile_contact_does_not_partially_change_membership(): void
+    {
+        $member = Member::factory()->create(['first_name' => 'Anne']);
+        $user = User::factory()->create(['member_id' => $member->id]);
+        $other = Member::factory()->create(['email' => 'already@example.test']);
+        $this->actingAs($user)->patch('/profile', ['name' => 'Ignored', 'first_name' => 'Changed', 'email' => $other->email])->assertSessionHasErrors('email');
+        $this->assertSame('Anne', $member->fresh()->first_name);
+        $this->assertNotSame($other->email, $user->fresh()->email);
     }
 
     public function test_member_manager_can_change_voice_but_cannot_change_personal_details(): void

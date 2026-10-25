@@ -1,4 +1,4 @@
-# Offre gratuite : renommer le service web existant avant synchronisation ; conserver la base.
+# Offre gratuite : ancien web renommé chorale-initial ; nouvelle adresse, même base et même clé.
 services:
   - type: web
     name: chorale-management
@@ -18,7 +18,8 @@ services:
       - {key: FILES_EPHEMERAL, value: 'true'}
       - {key: DATABASE_FREE_PLAN, value: 'true'}
       - {key: RUN_MIGRATIONS_ON_START, value: 'true'}
-      - {key: APP_KEY, generateValue: true}
+      - key: APP_KEY
+        fromService: {type: web, name: chorale-initial, envVarKey: APP_KEY}
       - key: APP_URL
         fromService: {type: web, name: chorale-management, envVarKey: RENDER_EXTERNAL_URL}
       - {key: TRUSTED_PROXIES, value: ''}

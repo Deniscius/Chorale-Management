@@ -2,15 +2,15 @@
 
 ## Déploiement existant
 
-Le Blueprint racine utilise les ressources Free existantes dans working’s workspace. Le service web existant doit être renommé **chorale-management** dans Render, en conservant son identifiant `srv-dbf15t67bikc73bqgtr0`. La base conserve son nom technique `chorale-demo-postgres` et son identifiant : elle n’est ni recréée ni effacée. L’interface affiche **Chorale Management**, sans bandeau « démo ».
+Le Blueprint racine utilise PostgreSQL existant dans working’s workspace. Un nouveau service web Free **chorale-management** donne une adresse publique sans « demo » ; l’ancien service `srv-dbf15t67bikc73bqgtr0` est renommé **chorale-initial**. Le nouveau web reprend son APP_KEY par référence Render, sans lecture ni copie publique du secret. La base conserve son nom technique `chorale-demo-postgres` et son identifiant : elle n’est ni recréée ni effacée. L’interface affiche **Chorale Management**, sans bandeau « démo ».
 
 Le budget reste de 0 : aucune ressource payante n’est ajoutée. Les limites de Render Free restent réelles : veille après 15 minutes, fichiers perdus à la veille/redémarrage/livraison, PostgreSQL expirant après 30 jours, aucune sauvegarde intégrée de cette base et pas de worker/cron indépendant. Le portail propriétaire les présente dans Supervision. L’échéance de la base actuellement créée est le **24 novembre 2026**. Avant de conserver durablement les archives des clients, prévoir un stockage privé persistant et une base sauvegardée. L’essai applicatif de 72 heures reste indépendant de l’hébergement.
 
 ## Appliquer la correction au Blueprint existant
 
-Avant synchronisation, dans les Settings du service web existant, remplacer son nom `chorale-demo` par `chorale-management`, en conservant le même identifiant. Vérifier ensuite l’adresse publique effectivement attribuée dans Render. Ne pas créer un second service pour ce changement de nom.
+Avant synchronisation, dans les Settings de l’ancien service web, lui donner le nom **chorale-initial**, en conservant son identifiant. Changer simplement le nom d’un service Render ne change pas son sous-domaine existant ; un nouveau web Free fournit l’adresse publique propre. Le service initial doit rester présent tant que sa clé APP_KEY est utilisée par référence, mais il peut être suspendu une fois le nouveau web vérifié. Ne pas le supprimer ni régénérer sa clé.
 
-Après fusion du code validé sur `main`, ouvrir **le Blueprint existant → Manual sync**. Ne pas créer un second Blueprint et ne pas effacer PostgreSQL. Examiner les modifications : elles doivent actualiser les ressources existantes en Free, sans recréer la base. Arrêter si Render propose une nouvelle base ou un second service inattendu.
+Après fusion du code validé sur `main`, ouvrir **le Blueprint existant → Manual sync**. Ne pas créer un second Blueprint et ne pas effacer PostgreSQL. Examiner les modifications : un nouveau web Free **chorale-management** est attendu, avec réutilisation de la base existante. Arrêter si Render propose une nouvelle base ou une ressource payante. Vérifier l’adresse réellement attribuée dans Render après création ; le Blueprint l’utilise automatiquement comme APP_URL.
 
 Les variables principales sont désormais :
 

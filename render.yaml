@@ -15,7 +15,7 @@ services:
       - {key: RUN_MIGRATIONS_ON_START, value: 'true'}
       - {key: APP_KEY, generateValue: true}
       - {key: APP_URL, sync: false}
-      - {key: TRUSTED_PROXIES, sync: false}
+      - {key: TRUSTED_PROXIES, value: ''}
       - {key: PLATFORM_BOOTSTRAP_EMAIL, sync: false}
       - {key: PLATFORM_BOOTSTRAP_PASSWORD, sync: false}
       - {key: PLATFORM_BOOTSTRAP_TOTP_SECRET, sync: false}

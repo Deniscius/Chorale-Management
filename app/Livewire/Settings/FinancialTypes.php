@@ -66,6 +66,7 @@ class FinancialTypes extends Component
         $this->editingId = $type->id;
         $this->fill($type->only('kind', 'label', 'default_amount', 'is_active'));
         $this->base_type = $type->base_type ?? 'autre';
+        $this->dispatch('financial-type-edited');
     }
 
     public function cancel(): void

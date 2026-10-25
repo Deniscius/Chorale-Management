@@ -155,7 +155,7 @@ class Index extends Component
         $row = Donation::query()->selectRaw('COUNT(*) AS nombre, COALESCE(SUM(amount), 0) AS total, COALESCE(MAX(amount), 0) AS maximum')->toBase()->first();
         $total = (float) $row->total;
         $count = (int) $row->nombre;
-        $parType = Donation::query()->selectRaw('COALESCE(type_code, donation_type) AS nature_code, COUNT(*) as nombre, SUM(amount) as total')->groupByRaw('COALESCE(type_code, donation_type)')->orderByDesc('total')->toBase()->first();
+        $parType = Donation::query()->selectRaw('COALESCE(type_code, donation_type) AS nature_code, COUNT(*) as nombre, SUM(amount) as total')->groupByRaw('COALESCE(type_code, donation_type)')->orderByDesc('total')->orderBy('nature_code')->toBase()->first();
 
         return ['total' => $total, 'nombre' => $count, 'moyenne' => $count > 0 ? $total / $count : 0, 'max' => (float) $row->maximum, 'type_dominant' => $parType?->nature_code, 'type_dominant_montant' => $parType ? (float) $parType->total : 0.0];
     }

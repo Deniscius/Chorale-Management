@@ -13,7 +13,7 @@
     ]" caption="Historique des changements sensibles">
         @foreach ($this->events as $event)
             @php
-                $labels = ['CommissionTeam' => 'Accès aux archives', 'User' => 'Compte', 'Document' => 'Document', 'Donation' => 'Don', 'Contribution' => 'Cotisation', 'Budget' => 'Budget', 'Transaction' => 'Opération', 'Reminder' => 'Rappel'];
+                $labels = ['MemberInvitation' => 'Invitation de membre', 'CommissionTeam' => 'Accès aux archives', 'User' => 'Compte', 'Document' => 'Document', 'Donation' => 'Don', 'Contribution' => 'Cotisation', 'Budget' => 'Budget', 'Transaction' => 'Opération', 'Reminder' => 'Rappel'];
                 $actions = ['created' => 'Création', 'updated' => 'Modification', 'deleted' => 'Suppression'];
                 $fields = ['leader_id'=>'Responsable','associate_id'=>'Associé désigné','visibility'=>'Visibilité','correspondence_id'=>'Courrier lié','role'=>'Rôle','member_id'=>'Choriste','commission'=>'Commission','path'=>'Fichier','size'=>'Taille','amount'=>'Montant','donor_type'=>'Donateur','transaction_id'=>'Opération liée','donated_on'=>'Date du don','year'=>'Année','month'=>'Mois','due_amount'=>'Montant dû','paid_amount'=>'Montant réglé','paid_on'=>'Date du règlement','status'=>'Statut','category'=>'Poste','allocated_amount'=>'Alloué','committed_amount'=>'Engagé','opening_realized_amount'=>'Reprise antérieure','reference'=>'Référence','type'=>'Type','transaction_date'=>'Date','budget_id'=>'Budget lié','validated_by'=>'Validateur','attempts'=>'Tentatives'];
             @endphp

@@ -1,4 +1,5 @@
 <x-guest-layout>
+    <x-slot name="title">Activer mon compte</x-slot>
     <div class="mb-6">
         <p class="text-sm font-medium text-slate-500">{{ $organization }}</p>
         <h1 class="mt-2 text-2xl font-semibold text-slate-900">Bienvenue, {{ $member->first_name }}</h1>

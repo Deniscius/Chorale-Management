@@ -11,14 +11,15 @@ Chaque référence d’inventaire peut contenir plusieurs pièces. Chaque exempl
 5. Choisir la première case libre de la feuille (1 à 24, ligne par ligne), puis **Préparer les étiquettes A4**. Une nouvelle fenêtre présente la planche.
 6. Utiliser **Imprimer / enregistrer en PDF** : papier A4, échelle 100 %, sans ajustement automatique ni en-têtes/pieds de page du navigateur. Tester une feuille ordinaire avant une planche adhésive.
 
-Le format proposé comporte 24 cases de 63,5 × 33,9 mm, trois colonnes et huit lignes. La disposition utilise des marges physiques en millimètres et des barres vectorielles, sans service externe. Les imprimantes et planches peuvent nécessiter un contrôle d’alignement ; faire un essai physique avant une série.
+Le format proposé comporte 24 cases de 63,5 × 33,9 mm, trois colonnes et huit lignes, avec des contours pointillés imprimés pour faciliter le découpage. La disposition utilise des marges physiques en millimètres et des barres vectorielles, sans service externe. Les imprimantes et planches peuvent nécessiter un contrôle d’alignement ; faire un essai physique avant une série.
 
 Maximum : 240 articles par impression. Réimprimer ne crée aucun nouveau code et ne modifie pas le stock. Les feuilles peuvent aussi être enregistrées en PDF par le navigateur.
 
 ## Cycle de vie et sécurité
 
 - Les utilisateurs ayant accès en consultation aux instruments peuvent consulter les identifiants et préparer les impressions.
-- Le responsable habilité peut attribuer les identifiants manquants, augmenter une quantité, retirer ou réintégrer un exemplaire.
+- Le responsable habilité et ses associés désignés peuvent créer et modifier les références, attribuer les identifiants manquants, augmenter une quantité, retirer ou réintégrer un exemplaire. Le retrait d’une référence est un archivage qui conserve les identifiants.
+- L’administrateur ouvre **Commissions → Déléguer**, choisit le responsable et coche les associés des instruments (20 maximum). Une délégation ne change pas leur rôle général. Les membres ordinaires restent en consultation ; les accès délégués cessent à l’archivage ou à l’échéance de la commission. Les règles des archives privées liturgiques et des courriers restent indépendantes.
 - Réduire directement une quantité déjà identifiée est refusé : retirer explicitement les exemplaires concernés pour conserver la correspondance entre les objets et leurs étiquettes.
 - Un retrait diminue le stock de 1, conserve le code et reste réversible. Une réintégration retrouve le code d’origine. Une augmentation de quantité crée de nouveaux identifiants ; aucun code retiré n’est réattribué.
 - Les prêts/sorties existants restent suivis par quantité. Ils ne désignent pas encore un exemplaire précis. Leur présence bloque le retrait ou la réintégration d’un exemplaire pour éviter une ambiguïté de stock.

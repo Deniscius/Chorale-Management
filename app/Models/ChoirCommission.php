@@ -28,6 +28,11 @@ class ChoirCommission extends Model
         return $this->belongsToMany(Member::class, 'choir_commission_member');
     }
 
+    public function instrumentAssociates(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'instrument_commission_associates');
+    }
+
     public function scopeInStatus(Builder $query, string $status): void
     {
         $today = today()->toDateString();

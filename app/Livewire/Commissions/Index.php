@@ -154,7 +154,7 @@ class Index extends Component
         }
         if ($this->mine) {
             $memberId = auth()->user()->member_id;
-            $query->where(fn ($q) => $q->where('leader_id', auth()->id())->orWhereHas('members', fn ($q) => $q->where('members.id', $memberId ?? 0)));
+            $query->where(fn ($q) => $q->where('leader_id', auth()->id())->orWhereHas('members', fn ($q) => $q->where('members.id', $memberId ?? 0))->orWhere(fn ($q) => $q->where('module_key', 'instruments')->whereHas('instrumentAssociates', fn ($q) => $q->where('users.id', auth()->id()))));
         }
         $counts = collect(ChoirCommission::statuses())->map(fn ($label, $key) => ChoirCommission::inStatus($key)->count())->all();
         // The roster is loaded only while editing; cards use counts instead of N+1 queries.

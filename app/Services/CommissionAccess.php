@@ -38,13 +38,15 @@ final class CommissionAccess
         }
 
         return $this->memo[$key] = ChoirCommission::inStatus('active')
-            ->where(fn ($q) => $q->where('leader_id', $user->id)->orWhereHas('members', fn ($q) => $q->where('members.id', $user->member_id ?? 0)))
+            ->where(fn ($q) => $q->where('leader_id', $user->id)->orWhereHas('members', fn ($q) => $q->where('members.id', $user->member_id ?? 0))
+                ->orWhere(fn ($q) => $q->where('module_key', 'instruments')->whereHas('instrumentAssociates', fn ($q) => $q->where('users.id', $user->id))))
+            ->withExists(['instrumentAssociates as is_instrument_associate' => fn ($q) => $q->where('users.id', $user->id)])
             ->get(['id', 'tenant_id', 'module_key', 'archive_commission', 'leader_id']);
     }
 
     public function modules(User $user, bool $manage = false): array
     {
-        return $this->assignments($user)->filter(fn ($c) => ! $manage || (int) $c->leader_id === (int) $user->id)
+        return $this->assignments($user)->filter(fn ($c) => ! $manage || (int) $c->leader_id === (int) $user->id || ($c->module_key === 'instruments' && $c->is_instrument_associate))
             ->pluck('module_key')->filter()->unique()->values()->all();
     }
 

@@ -25,7 +25,9 @@ use App\Services\Ai\OllamaClient;
 use App\Services\Ai\OpenRouterClient;
 use App\Services\ChoraleAssistant;
 use App\Services\ChoraleIdentity;
+use App\Services\CommissionAccess;
 use App\Services\FinancialCatalog;
+use App\Services\PrivateFiles;
 use App\Services\SettingsStore;
 use App\Services\Sms\HttpSmsSender;
 use App\Services\Sms\LogSmsSender;
@@ -50,6 +52,8 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(TenantContext::class);
+        $this->app->scoped(CommissionAccess::class);
+        $this->app->scoped(PrivateFiles::class);
         $this->app->extend('validation.presence', fn ($verifier, $app) => new TenantPresenceVerifier($app['db']));
         // Passerelle SMS : l'implémentation dépend de l'environnement.
         $this->app->bind(

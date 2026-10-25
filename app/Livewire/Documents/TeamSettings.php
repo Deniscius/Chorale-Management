@@ -3,7 +3,6 @@
 namespace App\Livewire\Documents;
 
 use App\Enums\Commission;
-use App\Enums\UserRole;
 use App\Models\CommissionTeam;
 use App\Models\User;
 use App\Services\CommissionTeamWriter;
@@ -58,9 +57,7 @@ final class TeamSettings extends Component
     #[Computed]
     public function leaders()
     {
-        $role = $this->commission === Commission::Liturgique->value ? UserRole::CommissionLiturgique : UserRole::Secretaire;
-
-        return User::where('role', $role)->orderBy('name')->get(['id', 'name']);
+        return User::orderBy('name')->get(['id', 'name']);
     }
 
     #[Computed]

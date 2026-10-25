@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Settings;
 
+use App\Models\Setting;
 use App\Services\ChoraleBranding;
 use App\Services\ChoraleIdentity;
+use App\Services\PrivateFiles;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -107,6 +109,8 @@ class Chorale extends Component
 
     public function render(): View
     {
-        return view('livewire.settings.chorale');
+        $path = Setting::get(ChoraleIdentity::KEY_LOGO_PATH);
+
+        return view('livewire.settings.chorale', ['logoMissing' => $path && ! app(PrivateFiles::class)->exists($path)]);
     }
 }

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Document;
-use Illuminate\Support\Facades\Storage;
+use App\Services\PrivateFiles;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -24,20 +24,10 @@ class DocumentDownloadController extends Controller
             'Document non accessible avec votre rôle.',
         );
 
-        abort_unless(Storage::disk('local')->exists($document->path), 404, 'Fichier introuvable.');
-
-        $path = Storage::disk('local')->path($document->path);
-
-        // Consultation en ligne pour les formats que le navigateur sait afficher.
-        if (in_array($document->mime_type, ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'], true)) {
-            return response()->file($path, [
-                'Content-Type' => $document->mime_type,
-                'Cache-Control' => 'private, no-store',
-                'X-Content-Type-Options' => 'nosniff',
-
-            ])->setPrivate()->setContentDisposition('inline', $document->original_name);
-        }
-
-        return response()->download($path, $document->original_name, ['Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff'])->setPrivate();
+        return app(PrivateFiles::class)->response(
+            $document->path, $document->original_name,
+            in_array($document->mime_type, ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'], true),
+            $document->mime_type,
+        );
     }
 }

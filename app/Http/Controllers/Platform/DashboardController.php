@@ -104,7 +104,9 @@ final class DashboardController extends Controller
         $oldest = DB::table('jobs')->min('created_at');
         $daily = DB::table('platform_usage_daily')->where('day', '>=', today()->subDays(6)->toDateString())->select('day')->selectRaw('SUM(requests) as requests, SUM(errors) as errors, SUM(slow_requests) as slow_requests')->groupBy('day')->orderBy('day')->get();
 
-        return view('platform.health', compact('usage', 'queued', 'failed', 'oldest', 'daily'));
+        $fileStorage = DB::table('private_files')->selectRaw('COUNT(*) as files, COALESCE(SUM(stored_bytes), 0) as bytes')->first();
+
+        return view('platform.health', compact('usage', 'queued', 'failed', 'oldest', 'daily', 'fileStorage'));
     }
 
     public function audit()

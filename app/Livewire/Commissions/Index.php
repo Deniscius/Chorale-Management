@@ -36,6 +36,9 @@ class Index extends Component
     #[Locked]
     public ?int $viewingId = null;
 
+    #[Locked]
+    public ?int $responsibilityId = null;
+
     public string $name = '';
 
     public string $mission = '';
@@ -103,6 +106,21 @@ class Index extends Component
         $this->viewingId = $id;
     }
 
+    public function delegate(int $id): void
+    {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+        ChoirCommission::findOrFail($id);
+        $this->showForm = false;
+        $this->viewingId = null;
+        $this->responsibilityId = $id;
+    }
+
+    #[On('close-responsibilities')]
+    public function closeResponsibilities(): void
+    {
+        $this->responsibilityId = null;
+    }
+
     #[On('close-form')]
     public function closeForm(): void
     {
@@ -126,7 +144,7 @@ class Index extends Component
 
     public function render()
     {
-        $query = ChoirCommission::query()->withCount('members');
+        $query = ChoirCommission::query()->with('leader:id,name')->withCount('members');
         if (trim($this->search) !== '') {
             $search = '%'.mb_strtolower(trim($this->search)).'%';
             $query->where(fn ($q) => $q->whereRaw('LOWER(name) LIKE ?', [$search])->orWhereRaw('LOWER(mission) LIKE ?', [$search]));
@@ -136,7 +154,7 @@ class Index extends Component
         }
         if ($this->mine) {
             $memberId = auth()->user()->member_id;
-            $query->whereHas('members', fn ($q) => $q->where('members.id', $memberId ?? 0));
+            $query->where(fn ($q) => $q->where('leader_id', auth()->id())->orWhereHas('members', fn ($q) => $q->where('members.id', $memberId ?? 0)));
         }
         $counts = collect(ChoirCommission::statuses())->map(fn ($label, $key) => ChoirCommission::inStatus($key)->count())->all();
         // The roster is loaded only while editing; cards use counts instead of N+1 queries.

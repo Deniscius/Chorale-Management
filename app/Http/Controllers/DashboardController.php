@@ -31,11 +31,11 @@ class DashboardController extends Controller
     public function __invoke(): View
     {
         $tenantId = app(TenantContext::class)->requireId();
-        $modules = auth()->user()->role->modules();
+        $modules = auth()->user()->accessibleModules();
         sort($modules);
 
         return view('dashboard', Cache::flexible(
-            app(TenantContext::class)->key('dashboard.overview.v2.'.hash('sha256', implode('|', $modules))),
+            app(TenantContext::class)->key('dashboard.overview.v3.'.hash('sha256', implode('|', $modules))),
             [30, 120],
             fn (): array => app(TenantContext::class)->run($tenantId, fn () => $this->overview($modules)),
         ));

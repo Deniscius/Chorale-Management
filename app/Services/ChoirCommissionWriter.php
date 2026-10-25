@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AuditEvent;
 use App\Models\ChoirCommission;
 use App\Models\Member;
+use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -41,6 +42,12 @@ final class ChoirCommissionWriter
         try {
             return DB::transaction(function () use ($id, $data) {
                 $entry = $id ? ChoirCommission::lockForUpdate()->findOrFail($id) : new ChoirCommission;
+                if ($entry->leader_id) {
+                    $leaderMember = User::find($entry->leader_id)?->member_id;
+                    if ($leaderMember && ! in_array($leaderMember, $data['member_ids'])) {
+                        throw ValidationException::withMessages(['member_ids' => 'Le responsable doit rester dans l’équipe. L’administrateur peut d’abord déléguer cette responsabilité à un autre compte.']);
+                    }
+                }
                 // Recheck the selected memberships inside the transaction, including soft deletes.
                 if (Member::whereKey($data['member_ids'])->lockForUpdate()->get()->count() !== count($data['member_ids'])) {
                     throw ValidationException::withMessages(['member_ids' => 'Sélectionnez des choristes disponibles dans votre chorale.']);
@@ -56,6 +63,8 @@ final class ChoirCommissionWriter
             }, 3);
         } catch (UniqueConstraintViolationException $e) {
             throw ValidationException::withMessages(['name' => 'Une commission porte déjà ce nom dans votre chorale.']);
+        } finally {
+            app(CommissionAccess::class)->forget();
         }
     }
 
@@ -66,5 +75,6 @@ final class ChoirCommissionWriter
             $entry = ChoirCommission::lockForUpdate()->findOrFail($id);
             $entry->update(['archived_at' => $entry->archived_at ? null : now()]);
         }, 3);
+        app(CommissionAccess::class)->forget();
     }
 }

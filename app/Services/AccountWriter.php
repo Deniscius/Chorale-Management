@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\UserRole;
+use App\Models\ChoirCommission;
 use App\Models\User;
 use App\Tenancy\TenantContext;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -52,6 +53,9 @@ final class AccountWriter
                 $entry = User::query()->lockForUpdate()->findOrFail($user->id);
                 if ($entry->role === UserRole::Admin) {
                     $this->assertAnotherAdmin($entry);
+                }
+                if (ChoirCommission::where(fn ($q) => $q->where('leader_id', $entry->id)->orWhere('associate_id', $entry->id))->exists()) {
+                    throw ValidationException::withMessages(['operation' => 'Réattribuez les responsabilités et les accès aux archives de ce compte avant de le supprimer.']);
                 }
                 $entry->delete();
             }, 3);

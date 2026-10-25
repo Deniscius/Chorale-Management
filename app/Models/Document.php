@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Commission;
-use App\Enums\UserRole;
+use App\Services\PrivateFiles;
 use App\Tenancy\BelongsToTenant;
 use Database\Factories\DocumentFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Document archivé pour une commission.
@@ -82,19 +81,13 @@ class Document extends Model
         if (! $user) {
             return $query->whereRaw('1=0');
         }
-        $legacy = array_map(fn ($c) => $c->value, array_filter(Commission::forRole($user->role), fn ($c) => ! $c->hasPrivateArchive()));
+        $legacy = array_map(fn ($c) => $c->value, array_filter(Commission::forUser($user), fn ($c) => ! $c->hasPrivateArchive()));
 
         return $query->where(function (Builder $q) use ($user, $legacy) {
             $q->whereIn('commission', $legacy)->orWhere(function (Builder $q) use ($user) {
                 $q->whereIn('commission', [Commission::Liturgique->value, Commission::Secretariat->value])
                     ->where(fn ($q) => $q->where('visibility', 'published')->orWhereHas('team', function ($q) use ($user) {
-                        $q->where('associate_id', $user->id)->orWhere(function ($q) use ($user) {
-                            $q->where('leader_id', $user->id)->where('commission', match ($user->role) {
-                                UserRole::CommissionLiturgique => Commission::Liturgique->value,
-                                UserRole::Secretaire => Commission::Secretariat->value,
-                                default => '__none__',
-                            });
-                        });
+                        $q->allowing($user);
                     }));
             });
         });
@@ -138,7 +131,7 @@ class Document extends Model
      */
     public function fileExists(): bool
     {
-        return Storage::disk('local')->exists($this->path);
+        return app(PrivateFiles::class)->exists($this->path);
     }
 
     public function scopeForCommission(Builder $query, Commission|string $commission): Builder

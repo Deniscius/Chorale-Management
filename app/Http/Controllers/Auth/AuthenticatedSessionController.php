@@ -28,6 +28,12 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        if ($tenant = $request->attributes->get('access_tenant')) {
+            $request->session()->forget('url.intended');
+
+            return redirect()->route('tenant.entry', ['slug' => $tenant->slug]);
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

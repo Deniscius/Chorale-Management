@@ -11,6 +11,7 @@ use App\Enums\InstrumentCondition;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Enums\UserRole;
+use App\Livewire\Donations\Index;
 use App\Livewire\Settings\Chorale;
 use App\Models\Activity;
 use App\Models\Contribution;
@@ -30,6 +31,16 @@ use Tests\TestCase;
 class PerformanceStatsTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_dominant_donation_type_has_a_stable_tie_breaker(): void
+    {
+        Donation::factory()->create(['donation_type' => 'subvention', 'amount' => 10000]);
+        Donation::factory()->create(['donation_type' => 'don_materiel', 'amount' => 10000]);
+        $stats = (new Index)->stats();
+        $this->assertSame('don_materiel', $stats['type_dominant']);
+        $this->assertSame(10000.0, $stats['type_dominant_montant']);
+        $this->assertSame(20000.0, $stats['total']);
+    }
 
     public function test_branding_updates_are_visible_after_the_first_render(): void
     {
@@ -190,6 +201,7 @@ class PerformanceStatsTest extends TestCase
             ->selectRaw('donation_type, COUNT(*) as nombre, SUM(amount) as total')
             ->groupBy('donation_type')
             ->orderByDesc('total')
+            ->orderBy('donation_type')
             ->first();
 
         return [

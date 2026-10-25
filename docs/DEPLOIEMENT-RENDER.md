@@ -1,6 +1,6 @@
 # Déploiement Render et seeders
 
-**Budget retenu : 0.** Le fichier racine `render.yaml` déploie seulement une **démo gratuite temporaire** ; suivre [RENDER-GRATUIT.md](RENDER-GRATUIT.md). Les étapes d'exploitation payante ci-dessous concernent exclusivement le modèle optionnel `deploy/render.production.yaml`. Ne pas l'appliquer avec un budget nul.
+**Budget retenu : 0.** Le fichier racine `render.yaml` prépare un **service gratuit avec des limites de conservation** ; suivre [RENDER-GRATUIT.md](RENDER-GRATUIT.md). Les étapes d'exploitation payante ci-dessous concernent exclusivement le modèle optionnel `deploy/render.production.yaml`. Ne pas l'appliquer avec un budget nul.
 
 ## Ce qui entre en production
 

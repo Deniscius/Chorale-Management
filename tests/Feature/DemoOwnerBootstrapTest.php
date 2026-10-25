@@ -13,32 +13,32 @@ class DemoOwnerBootstrapTest extends TestCase
 
     private function configure(): void
     {
-        config(['deployment.demo' => true, 'deployment.bootstrap' => ['email' => 'owner@example.com', 'password' => 'StrongPersonalSecret2026!', 'totp_secret' => 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP']]);
+        config(['deployment.bootstrap_enabled' => true, 'deployment.bootstrap' => ['email' => 'owner@example.com', 'password' => 'StrongPersonalSecret2026!', 'totp_secret' => 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP']]);
     }
 
-    public function test_bootstrap_is_disabled_outside_demo(): void
+    public function test_bootstrap_requires_explicit_enablement(): void
     {
         $this->configure();
-        config(['deployment.demo' => false]);
-        $this->artisan('platform:bootstrap-demo')->assertFailed();
+        config(['deployment.bootstrap_enabled' => false]);
+        $this->artisan('platform:bootstrap')->assertFailed();
         $this->assertDatabaseCount('platform_admins', 0);
     }
 
     public function test_initial_owner_has_hashed_password_encrypted_mfa_and_is_never_reset(): void
     {
         $this->configure();
-        $this->artisan('platform:bootstrap-demo')->assertSuccessful();
+        $this->artisan('platform:bootstrap')->assertSuccessful();
         $admin = Admin::firstOrFail();
         $this->assertTrue(password_verify('StrongPersonalSecret2026!', $admin->password));
         $this->assertSame('JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP', $admin->totp_secret);
         $this->assertNotSame($admin->totp_secret, DB::table('platform_admins')->value('totp_secret'));
         $original = $admin->getRawOriginal();
         config(['deployment.bootstrap' => ['email' => 'different@example.com', 'password' => 'ChangedPersonalSecret2026!', 'totp_secret' => 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA']]);
-        $this->artisan('platform:bootstrap-demo')->assertSuccessful();
+        $this->artisan('platform:bootstrap')->assertSuccessful();
         $this->assertDatabaseCount('platform_admins', 1);
         $this->assertSame($original, $admin->fresh()->getRawOriginal());
         config(['deployment.bootstrap' => []]);
-        $this->artisan('platform:bootstrap-demo')->assertSuccessful();
+        $this->artisan('platform:bootstrap')->assertSuccessful();
         $this->assertDatabaseCount('platform_audit_events', 1);
     }
 
@@ -46,15 +46,15 @@ class DemoOwnerBootstrapTest extends TestCase
     {
         $this->configure();
         config(['deployment.bootstrap.password' => 'password', 'deployment.bootstrap.totp_secret' => 'bad']);
-        $this->artisan('platform:bootstrap-demo')->assertFailed();
+        $this->artisan('platform:bootstrap')->assertFailed();
         $this->assertDatabaseCount('platform_admins', 0);
     }
 
-    public function test_demo_notice_is_visible_only_in_demo_mode(): void
+    public function test_public_pages_have_no_demo_branding(): void
     {
-        config(['deployment.demo' => true]);
-        $this->get('/login')->assertOk()->assertSee('Démonstration gratuite.')->assertSee('Utilisez uniquement des données fictives.');
-        config(['deployment.demo' => false]);
+        config(['deployment.bootstrap_enabled' => true]);
+        $this->get('/login')->assertOk()->assertDontSee('Démonstration gratuite.');
+        config(['deployment.bootstrap_enabled' => false]);
         $this->get('/login')->assertOk()->assertDontSee('Démonstration gratuite.');
     }
 }

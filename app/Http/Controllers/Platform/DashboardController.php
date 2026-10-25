@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Platform;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Services\Platform\Audit;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -17,14 +18,14 @@ final class DashboardController extends Controller
     public function index()
     {
         $now = now();
-        $stats = DB::table('tenants')->selectRaw('COUNT(*) as total')
+        $stats = $this->customerSpaces()->selectRaw('COUNT(*) as total')
             ->selectRaw('SUM(CASE WHEN suspended_at IS NOT NULL THEN 1 ELSE 0 END) as suspended')
             ->selectRaw('SUM(CASE WHEN suspended_at IS NULL AND (paid_perpetual = ? OR paid_until > ?) THEN 1 ELSE 0 END) as paid', [true, $now])
             ->selectRaw('SUM(CASE WHEN suspended_at IS NULL AND paid_perpetual = ? AND (paid_until IS NULL OR paid_until <= ?) AND trial_ends_at > ? THEN 1 ELSE 0 END) as trial', [false, $now, $now])
             ->selectRaw('SUM(CASE WHEN suspended_at IS NULL AND paid_perpetual = ? AND (paid_until IS NULL OR paid_until <= ?) AND trial_ends_at <= ? THEN 1 ELSE 0 END) as expired', [false, $now, $now])->first();
         $usage = $this->usage();
-        $signups = DB::table('tenants')->where('created_at', '>=', now()->subDays(30))->count();
-        $recent = Tenant::orderByDesc('id')->limit(5)->get();
+        $signups = $this->customerSpaces()->where('created_at', '>=', now()->subDays(30))->count();
+        $recent = Tenant::whereIn('id', $this->customerSpaces()->select('tenants.id'))->orderByDesc('id')->limit(5)->get();
 
         return view('platform.dashboard', compact('stats', 'usage', 'signups', 'recent'));
     }
@@ -32,7 +33,7 @@ final class DashboardController extends Controller
     public function tenants(Request $request)
     {
         $filters = $request->validate(['q' => ['nullable', 'string', 'max:120'], 'status' => ['nullable', Rule::in(['trial', 'paid', 'expired', 'suspended'])]]);
-        $query = Tenant::query();
+        $query = Tenant::whereIn('id', $this->customerSpaces()->select('tenants.id'));
         if (filled($filters['q'] ?? null)) {
             $query->where('name', 'like', '%'.$filters['q'].'%');
         }
@@ -117,5 +118,13 @@ final class DashboardController extends Controller
     {
         return DB::table('platform_usage_daily')->when($tenant !== null, fn ($q) => $q->where('tenant_id', $tenant))->where('day', '>=', today()->subDays(6)->toDateString())
             ->selectRaw('COUNT(DISTINCT user_id) as active_users, COUNT(DISTINCT tenant_id) as active_tenants, COALESCE(SUM(requests), 0) as requests, COALESCE(SUM(errors), 0) as errors, COALESCE(SUM(slow_requests), 0) as slow_requests, COALESCE(SUM(duration_ms), 0) as duration_ms')->first();
+    }
+
+    private function customerSpaces(): Builder
+    {
+        // Ignore only the reserved migration space while it has no users.
+        return DB::table('tenants')->where(function ($query) {
+            $query->where('tenants.id', '<>', 1)->orWhereExists(fn ($users) => $users->selectRaw('1')->from('users')->whereColumn('users.tenant_id', 'tenants.id'));
+        });
     }
 }

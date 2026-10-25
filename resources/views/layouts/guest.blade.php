@@ -20,7 +20,6 @@
 </head>
 
 <body class="min-h-screen bg-slate-50 font-sans antialiased">
-    <x-demo-notice />
     <div class="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
 
         {{-- Panneau de marque (desktop) --}}

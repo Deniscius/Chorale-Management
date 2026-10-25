@@ -77,8 +77,8 @@ class LoginRequest extends FormRequest
         $identifier = trim((string) $this->string(self::IDENTIFIER_FIELD));
 
         return User::withoutGlobalScope(TenantScope::class)
-            ->where('username', $identifier)
-            ->orWhere('email', $identifier)
+            ->when($this->attributes->get('access_tenant'), fn ($query, $tenant) => $query->where('tenant_id', $tenant->id))
+            ->where(fn ($query) => $query->where('username', $identifier)->orWhere('email', $identifier))
             ->first();
     }
 

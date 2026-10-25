@@ -17,6 +17,10 @@ final class SessionController extends Controller
 {
     public function create()
     {
+        if (config('deployment.bootstrap_enabled') && strlen((string) config('deployment.setup_token')) >= 32 && ! Admin::exists()) {
+            return redirect()->route('platform.setup');
+        }
+
         return response()->view('platform.login')->header('Cache-Control', 'no-store, private');
     }
 

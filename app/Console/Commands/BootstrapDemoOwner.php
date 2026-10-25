@@ -10,16 +10,26 @@ use Illuminate\Validation\Rules\Password;
 
 final class BootstrapDemoOwner extends Command
 {
-    protected $signature = 'platform:bootstrap-demo';
+    protected $signature = 'platform:bootstrap';
 
-    protected $description = 'Initialiser une seule fois le propriétaire de la démo sans terminal interactif';
+    protected $description = 'Préparer le premier accès propriétaire sans réinitialiser les accès existants';
 
     public function handle(): int
     {
-        if (! config('deployment.demo')) {
-            $this->error('Cette initialisation est réservée au mode démonstration.');
+        if (Admin::exists()) {
+            $this->info('Propriétaire existant conservé.');
+
+            return self::SUCCESS;
+        }
+        if (! config('deployment.bootstrap_enabled')) {
+            $this->error('Initialisation propriétaire non activée.');
 
             return self::FAILURE;
+        }
+        if (strlen((string) config('deployment.setup_token')) >= 32) {
+            $this->info('Terminez l’installation du propriétaire sur /plateforme/installation. La clé privée reste dans Render.');
+
+            return self::SUCCESS;
         }
 
         return DB::transaction(function () {
@@ -42,7 +52,7 @@ final class BootstrapDemoOwner extends Command
                 return self::FAILURE;
             }
             $admin = Admin::create(['email' => mb_strtolower(trim($data['email'])), 'name' => 'Propriétaire', 'password' => $data['password'], 'totp_secret' => $data['totp_secret'], 'last_totp_counter' => -1, 'enabled' => true]);
-            DB::table('platform_audit_events')->insert(['platform_admin_id' => $admin->id, 'action' => 'admin_created', 'reason' => 'Initialisation unique de la démonstration depuis les secrets hébergeur', 'created_at' => now()]);
+            DB::table('platform_audit_events')->insert(['platform_admin_id' => $admin->id, 'action' => 'admin_created', 'reason' => 'Initialisation unique depuis les secrets hébergeur', 'created_at' => now()]);
             $this->info('Propriétaire initialisé. Retirez les variables PLATFORM_BOOTSTRAP des secrets hébergeur.');
 
             return self::SUCCESS;

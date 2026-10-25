@@ -41,10 +41,10 @@ class DeploymentProxyTest extends TestCase
         });
     }
 
-    public function test_render_demo_uses_its_https_origin_without_trusting_forwarded_headers(): void
+    public function test_render_uses_its_https_origin_without_trusting_forwarded_headers(): void
     {
         app()->instance('env', 'production');
-        config(['deployment.demo' => true, 'deployment.trusted_proxies' => [], 'app.url' => 'https://demo.example.com']);
+        config(['deployment.canonical_https' => true, 'deployment.trusted_proxies' => [], 'app.url' => 'https://demo.example.com']);
         $request = Request::create('http://demo.example.com/login', server: ['REMOTE_ADDR' => '203.0.113.3', 'HTTP_X_FORWARDED_FOR' => '198.51.100.5', 'HTTP_X_FORWARDED_HOST' => 'evil.example.com']);
         (new TrustDeploymentProxies)->handle($request, function ($request) {
             $this->assertTrue($request->isSecure());

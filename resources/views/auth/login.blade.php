@@ -7,7 +7,7 @@
     <!-- Session Status -->
     <x-auth-session-status class="mt-4 mb-4" :status="session('status')" />
 
-    <form method="POST" action="{{ route('login') }}" class="mt-6 space-y-5">
+    <form method="POST" action="{{ $loginAction ?? route('login') }}" class="mt-6 space-y-5">
         @csrf
 
         <div>

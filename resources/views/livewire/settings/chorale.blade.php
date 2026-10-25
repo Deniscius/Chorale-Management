@@ -3,6 +3,13 @@
         subtitle="Nom, coordonnées et logo affichés dans toute l'application." />
 
     <form wire:submit="save" class="grid gap-6 lg:grid-cols-3">
+        @if($space = request()->attributes->get('tenant'))
+            <x-card title="Adresse de votre chorale" subtitle="Partagez cette adresse avec vos membres pour ouvrir la connexion de votre chorale." class="lg:col-span-3">
+                <label for="chorale-access-url" class="text-sm font-medium text-slate-700">Lien d’accès personnel à la chorale</label>
+                <input id="chorale-access-url" type="url" readonly class="mt-2 w-full rounded-lg border-slate-300 bg-slate-50 text-sm" value="{{ route('tenant.entry', ['slug' => $space->slug]) }}" onclick="this.select()">
+                <p class="mt-2 text-sm text-slate-500">Cette adresse est propre à votre espace. La connexion et les autorisations restent obligatoires.</p>
+            </x-card>
+        @endif
         {{-- Logo --}}
         <x-card title="Logo" subtitle="PNG, JPG, WEBP ou SVG — 2 Mo maximum." class="lg:col-span-1">
             <div class="flex flex-col items-center gap-4 text-center">

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Choir;
 use App\Models\Setting;
+use App\Models\Tenant;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -82,7 +83,7 @@ class ChoraleIdentity
     public function logoPath(): ?string
     {
         $tenant = request()->attributes->get('tenant');
-        if (config('tenancy.enabled') && $tenant instanceof \App\Models\Tenant && ! $tenant->hasAccess()) {
+        if (config('tenancy.enabled') && $tenant instanceof Tenant && ! $tenant->hasAccess()) {
             return null;
         }
 
@@ -121,7 +122,9 @@ class ChoraleIdentity
     {
         $version = $this->logoVersion();
 
-        return $version !== null ? route('chorale.logo', ['v' => $version]) : null;
+        $publicTenant = request()->attributes->get('access_tenant');
+
+        return $version !== null ? ($publicTenant ? route('tenant.logo', ['slug' => $publicTenant->slug, 'v' => $version]) : route('chorale.logo', ['v' => $version])) : null;
     }
 
     /**
@@ -131,6 +134,10 @@ class ChoraleIdentity
      */
     public function contactLines(): array
     {
+        if (request()->attributes->has('access_tenant') && ! request()->user()) {
+            return [];
+        }
+
         return array_values(array_filter([
             $this->address() ? ['icon' => 'home', 'label' => 'Adresse', 'value' => $this->address()] : null,
             $this->phone() ? ['icon' => 'phone', 'label' => 'Téléphone', 'value' => $this->phone()] : null,

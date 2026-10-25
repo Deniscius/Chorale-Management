@@ -1,12 +1,15 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ChoraleLogoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentDownloadController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TenantAddressController;
 use App\Http\Controllers\TenantRegistrationController;
+use App\Http\Middleware\TenantAddress;
 use App\Livewire\Activities\Index as ActivitiesIndex;
 use App\Livewire\Audit\Index;
 use App\Livewire\Budgets\Index as BudgetsIndex;
@@ -33,6 +36,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => redirect()->route('dashboard'));
 
 require __DIR__.'/platform.php';
+
+Route::prefix('c/{slug}')->where(['slug' => '[a-z0-9]+(?:-[a-z0-9]+)*'])
+    ->middleware([TenantAddress::class, 'chorale.session'])->group(function () {
+        Route::get('/', [TenantAddressController::class, 'show'])->name('tenant.entry');
+        Route::get('/logo', [TenantAddressController::class, 'logo'])->name('tenant.logo');
+        Route::post('/connexion', [AuthenticatedSessionController::class, 'store'])->middleware(['guest', 'throttle:60,1,chorale-login:'])->name('tenant.login');
+    });
 
 Route::middleware('guest')->group(function () {
     Route::get('/creer-un-espace', [TenantRegistrationController::class, 'create'])->name('spaces.create');

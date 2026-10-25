@@ -25,7 +25,6 @@
 </head>
 
 <body class="min-h-screen bg-slate-50 font-sans antialiased">
-    <x-demo-notice />
     <a href="#contenu"
         class="sr-only z-[200] rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-lg focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:outline-none focus:ring-2 focus:ring-slate-900">
         Aller au contenu principal

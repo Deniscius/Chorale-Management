@@ -142,7 +142,7 @@ class PlatformAdministrationTest extends TestCase
         $expired->forceFill(['trial_ends_at' => now()])->save();
         $suspended->forceFill(['suspended_at' => now()])->save();
         $this->loginOwner();
-        $this->get('/plateforme')->assertOk()->assertViewHas('stats', fn ($stats) => (int) $stats->total === 5 && (int) $stats->trial === 2 && (int) $stats->paid === 1 && (int) $stats->expired === 1 && (int) $stats->suspended === 1);
+        $this->get('/plateforme')->assertOk()->assertViewHas('stats', fn ($stats) => (int) $stats->total === 4 && (int) $stats->trial === 1 && (int) $stats->paid === 1 && (int) $stats->expired === 1 && (int) $stats->suspended === 1);
         $this->get('/plateforme/chorales?status=expired')->assertOk()->assertSee('Chorale expired')->assertDontSee('Chorale trial');
         $this->get('/plateforme/chorales?q=paid')->assertOk()->assertSee('Chorale paid')->assertDontSee('Chorale trial');
     }
@@ -211,10 +211,10 @@ class PlatformAdministrationTest extends TestCase
         $this->assertDatabaseHas('platform_usage_daily', ['tenant_id' => $tenant->id, 'requests' => 1, 'errors' => 0]);
     }
 
-    public function test_all_platform_routes_except_login_use_dedicated_middleware(): void
+    public function test_platform_routes_except_login_and_initial_setup_use_dedicated_middleware(): void
     {
         foreach (Route::getRoutes() as $route) {
-            if (str_starts_with($route->getName() ?? '', 'platform.') && ! in_array($route->getName(), ['platform.login', 'platform.login.store'], true)) {
+            if (str_starts_with($route->getName() ?? '', 'platform.') && ! in_array($route->getName(), ['platform.login', 'platform.login.store', 'platform.setup', 'platform.setup.store'], true)) {
                 $this->assertContains('platform.auth', $route->middleware(), $route->getName());
             }
         }

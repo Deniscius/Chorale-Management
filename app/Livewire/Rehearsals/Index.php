@@ -11,6 +11,7 @@ use App\Services\ChoraleAssistant;
 use App\Tenancy\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
@@ -220,7 +221,8 @@ class Index extends Component
         try {
             $this->reportDraft = app(ChoraleAssistant::class)->generateRehearsalReport($rehearsal);
         } catch (Throwable $exception) {
-            $this->dispatch('toast', type: 'error', message: 'Génération impossible : '.$exception->getMessage());
+            Log::warning('Génération du compte rendu indisponible.', ['tenant_id' => app(TenantContext::class)->requireId(), 'rehearsal_id' => $rehearsal->id, 'exception' => get_class($exception)]);
+            $this->dispatch('toast', type: 'error', message: 'La génération est momentanément indisponible. Votre brouillon est conservé. Réessayez plus tard.');
         } finally {
             $this->generatingReport = false;
         }

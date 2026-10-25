@@ -148,8 +148,8 @@ class AuditRegressionTest extends TestCase
             $this->post('/login', ['login' => 'auditadmin', 'password' => 'wrong'])->assertSessionHasErrors('login');
         }
         $this->post('/login', ['login' => ' auditadmin ', 'password' => 'wrong'])->assertSessionHasErrors('login');
-        $this->assertTrue(RateLimiter::tooManyAttempts('auditadmin|127.0.0.1', 5));
-        $this->assertSame(0, RateLimiter::attempts(' auditadmin |127.0.0.1'));
+        $this->assertTrue(RateLimiter::tooManyAttempts(hash('sha256', 'auditadmin|127.0.0.1'), 5));
+        $this->assertSame(0, RateLimiter::attempts(hash('sha256', ' auditadmin |127.0.0.1')));
     }
 
     public function test_all_nine_roles_route_matrix(): void

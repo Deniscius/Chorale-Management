@@ -35,7 +35,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            self::IDENTIFIER_FIELD => ['required', 'string'],
+            self::IDENTIFIER_FIELD => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ];
     }
@@ -51,8 +51,9 @@ class LoginRequest extends FormRequest
 
         $user = $this->resolveUser();
 
-        if (! $user || ! Auth::attempt([
-            'id' => $user->id,
+        // Always use the guard's timebox, including for unknown identifiers.
+        if (! Auth::attempt([
+            'id' => $user?->id,
             'password' => $this->string('password'),
         ], $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
@@ -109,6 +110,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string(self::IDENTIFIER_FIELD)).'|'.$this->ip());
+        return hash('sha256', Str::lower(trim((string) $this->string(self::IDENTIFIER_FIELD))).'|'.$this->ip());
     }
 }

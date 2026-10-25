@@ -11,6 +11,9 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->isProduction()) {
+            throw new \LogicException('Les comptes de démonstration sont interdits en production.');
+        }
         $users = [
             ['name' => 'Administrateur', 'username' => 'admin', 'email' => 'admin@chorale.ci', 'role' => UserRole::Admin],
             ['name' => 'Pierre Koffi', 'username' => 'directeur', 'email' => 'directeur@chorale.ci', 'role' => UserRole::Directeur],

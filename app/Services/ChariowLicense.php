@@ -33,7 +33,7 @@ final class ChariowLicense
             || ($license['status'] ?? null) !== 'active' || filled($license['revoked_at'] ?? null)
             || data_get($license, 'product.id') !== config('tenancy.chariow.product_id')
             || mb_strtolower((string) data_get($license, 'customer.email')) !== mb_strtolower($user->email)
-            || ! is_string($license['id'] ?? null)) {
+            || ! is_string($license['id'] ?? null) || blank($license['id']) || strlen($license['id']) > 255) {
             $this->reject('Cette licence n’est pas valide pour votre compte et cette application.');
         }
         if (! array_key_exists('expires_at', $license) || ($license['expires_at'] !== null && (! is_string($license['expires_at']) || ! preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/D', $license['expires_at'])))) {
@@ -42,6 +42,10 @@ final class ChariowLicense
         try {
             // Chariow declares null for a lifetime licence; do not invent a billing period.
             $expires = filled($license['expires_at'] ?? null) ? CarbonImmutable::parse($license['expires_at']) : null;
+            $parseErrors = CarbonImmutable::getLastErrors();
+            if ($expires !== null && $parseErrors !== false && ($parseErrors['warning_count'] > 0 || $parseErrors['error_count'] > 0)) {
+                $this->reject('La date de validité de la licence ne peut pas être vérifiée.');
+            }
         } catch (Throwable $e) {
             $this->reject('La date de validité de la licence ne peut pas être vérifiée.');
         }

@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="billing-url" content="{{ route('billing.show') }}">
+    @if(config('tenancy.enabled') && ($accessEnd = request()->attributes->get('tenant')?->accessEndsAt()))
+        <meta name="tenant-access-expires" content="{{ $accessEnd->toIso8601String() }}">
+        <meta name="tenant-server-time" content="{{ now()->toIso8601String() }}">
+    @endif
     <meta name="theme-color" content="#0f172a">
 
     <title>{{ isset($title) ? $title . ' · ' : '' }}{{ $chorale->name() }}</title>

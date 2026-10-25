@@ -6,12 +6,13 @@ use App\Enums\MemberStatus;
 use App\Enums\Voice;
 use App\Models\Choir;
 use App\Models\Member;
-use Illuminate\Database\Seeder;
+use App\Models\User;
 
-class ChoirSeeder extends Seeder
+class ChoirSeeder extends DemoSeeder
 {
     public function run(): void
     {
+        $this->assertDemoEnvironment();
         $chorale = Choir::firstOrCreate(
             ['slug' => 'chorale-saint-joseph'],
             [
@@ -144,10 +145,10 @@ class ChoirSeeder extends Seeder
         ]);
 
         // Rattachement des comptes utilisateurs aux fiches de choristes
-        \App\Models\User::where('email', 'directeur@chorale.ci')->update(['member_id' => $directeur->id]);
-        \App\Models\User::where('email', 'liturgique@chorale.ci')->update(['member_id' => $liturgique->id]);
-        \App\Models\User::where('email', 'instruments@chorale.ci')->update(['member_id' => $instruments->id]);
-        \App\Models\User::where('email', 'tresorerie@chorale.ci')->update(['member_id' => $tresorier->id]);
-        \App\Models\User::where('email', 'secretariat@chorale.ci')->update(['member_id' => $secretaire->id]);
+        User::where('email', 'directeur@chorale.ci')->update(['member_id' => $directeur->id]);
+        User::where('email', 'liturgique@chorale.ci')->update(['member_id' => $liturgique->id]);
+        User::where('email', 'instruments@chorale.ci')->update(['member_id' => $instruments->id]);
+        User::where('email', 'tresorerie@chorale.ci')->update(['member_id' => $tresorier->id]);
+        User::where('email', 'secretariat@chorale.ci')->update(['member_id' => $secretaire->id]);
     }
 }

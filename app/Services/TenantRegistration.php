@@ -3,9 +3,7 @@
 namespace App\Services;
 
 use App\Enums\UserRole;
-use App\Models\Account;
 use App\Models\Choir;
-use App\Models\CommissionTeam;
 use App\Models\Setting;
 use App\Models\Tenant;
 use App\Models\User;
@@ -25,13 +23,7 @@ final class TenantRegistration
                 $user = User::create(['name' => $data['name'], 'username' => $data['username'], 'email' => $data['email'], 'password' => $data['password'], 'role' => UserRole::Admin]);
                 Choir::create(['name' => $data['organization'], 'slug' => 'principale', 'is_active' => true]);
                 Setting::setMany(['chorale.name' => $data['organization']]);
-                foreach ([['501', 'Caisse de la chorale', 'tresorerie'], ['502', 'Caisse des offrandes', 'tresorerie'], ['503', 'Compte bancaire', 'tresorerie'], ['61', 'Achats de partitions', 'charge'], ['62', 'Maintenance des instruments', 'charge'], ['63', 'Location de salle', 'charge'], ['64', 'Frais de déplacement', 'charge'], ['65', 'Frais divers', 'charge'], ['71', 'Produits des concerts', 'produit'], ['72', 'Cotisations des choristes', 'produit'], ['73', 'Subventions et dons', 'produit'], ['74', 'Offrandes', 'produit']] as [$code, $name, $type]) {
-                    Account::create(['code' => $code, 'name' => $name, 'type' => $type, 'is_active' => true]);
-                }
-                foreach (['commission_liturgique', 'commission_secretariat'] as $commission) {
-                    CommissionTeam::create(['commission' => $commission]);
-                }
-                DB::table('operation_locks')->insert(['tenant_id' => app(TenantContext::class)->requireId(), 'key' => 'accounts']);
+                app(TenantDefaults::class)->ensure();
 
                 return $user;
             });

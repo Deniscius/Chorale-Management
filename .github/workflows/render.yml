@@ -1,0 +1,72 @@
+name: Render container
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Blueprint structure
+        run: |
+          python -m pip install pyyaml jsonschema
+          python - <<'PY'
+          import json, urllib.request, yaml, jsonschema
+          schema = json.load(urllib.request.urlopen('https://render.com/schema/render.yaml.json'))
+          for path in ['render.yaml', 'deploy/render.production.yaml']:
+              jsonschema.validate(yaml.safe_load(open(path)), schema)
+          PY
+      - name: Build production image
+        run: docker build -t chorale-production .
+      - name: Start disposable PostgreSQL
+        run: |
+          docker network create chorale-ci
+          docker run -d --name postgres --network chorale-ci -e POSTGRES_DB=chorale_ci -e POSTGRES_USER=chorale -e POSTGRES_PASSWORD=ci-only postgres:17
+          for attempt in $(seq 1 30); do docker exec postgres pg_isready -U chorale -d chorale_ci && break; sleep 2; done
+      - name: Check release, production defaults, and HTTP
+        run: |
+          cat > /tmp/chorale-ci.env <<EOF
+          APP_ENV=production
+          APP_DEBUG=false
+          APP_KEY=$(openssl rand -base64 32)
+          APP_URL=http://localhost:10000
+          DB_CONNECTION=pgsql
+          DB_URL=postgresql://chorale:ci-only@postgres:5432/chorale_ci
+          DB_SSLMODE=disable
+          CACHE_STORE=database
+          SESSION_DRIVER=database
+          QUEUE_CONNECTION=database
+          LOG_CHANNEL=stderr
+          MAIL_MAILER=log
+          EOF
+          docker run --rm --network chorale-ci --env-file /tmp/chorale-ci.env chorale-production sh docker/release.sh
+          docker run --rm --network chorale-ci --env-file /tmp/chorale-ci.env chorale-production sh docker/release.sh
+          test "$(docker exec postgres psql -U chorale -d chorale_ci -tAc 'SELECT count(*) FROM users')" = '0'
+          test "$(docker exec postgres psql -U chorale -d chorale_ci -tAc 'SELECT count(*) FROM members')" = '0'
+          docker run -d --name web --network chorale-ci --env-file /tmp/chorale-ci.env -p 10000:10000 chorale-production
+          for attempt in $(seq 1 30); do curl --fail --silent http://localhost:10000/up && break; sleep 2; done
+          curl --fail --silent http://localhost:10000/up > /dev/null
+          curl --fail --silent http://localhost:10000/login > /dev/null
+          docker run --rm --network chorale-ci --env-file /tmp/chorale-ci.env chorale-production schedule
+          docker run --rm --network chorale-ci --env-file /tmp/chorale-ci.env chorale-production php artisan queue:work database --once --stop-when-empty
+      - name: Check Free profile startup and owner bootstrap
+        run: |
+          docker run -d --name demo --network chorale-ci --env-file /tmp/chorale-ci.env -p 10001:10000 \
+            -e APP_DEMO_MODE=true -e RUN_MIGRATIONS_ON_START=true \
+            -e PLATFORM_BOOTSTRAP_EMAIL=owner@example.test \
+            -e PLATFORM_BOOTSTRAP_PASSWORD=TestOnlyOwnerSecret2026 \
+            -e PLATFORM_BOOTSTRAP_TOTP_SECRET=JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP \
+            chorale-production
+          for attempt in $(seq 1 30); do curl --fail --silent http://localhost:10001/up && break; sleep 2; done
+          curl --fail --silent http://localhost:10001/login | grep -q 'Démonstration gratuite.'
+          test "$(docker exec postgres psql -U chorale -d chorale_ci -tAc 'SELECT count(*) FROM platform_admins')" = '1'
+          docker restart demo
+          for attempt in $(seq 1 30); do curl --fail --silent http://localhost:10001/up && break; sleep 2; done
+          curl --fail --silent http://localhost:10001/up > /dev/null
+          test "$(docker exec postgres psql -U chorale -d chorale_ci -tAc 'SELECT count(*) FROM platform_admins')" = '1'
+      - name: Logs on failure
+        if: failure()
+        run: |
+          docker logs web 2>/dev/null || true
+          docker logs demo 2>/dev/null || true

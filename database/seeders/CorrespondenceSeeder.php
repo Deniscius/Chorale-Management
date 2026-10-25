@@ -10,13 +10,13 @@ use App\Models\CorrespondenceEvent;
 use App\Models\CorrespondenceService;
 use App\Models\Member;
 use App\Models\User;
-use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
-class CorrespondenceSeeder extends Seeder
+class CorrespondenceSeeder extends DemoSeeder
 {
     public function run(): void
     {
+        $this->assertDemoEnvironment();
         $chorale = Choir::where('slug', 'chorale-saint-joseph')->firstOrFail();
 
         $services = collect([

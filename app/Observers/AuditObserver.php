@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\AuditEvent;
 use App\Models\Budget;
+use App\Models\ChoirCommission;
 use App\Models\CommissionTeam;
 use App\Models\Contribution;
 use App\Models\Document;
@@ -21,6 +22,7 @@ final class AuditObserver
     private function fields(Model $model): array
     {
         return match ($model::class) {
+            ChoirCommission::class => ['name', 'kind', 'mission', 'starts_on', 'ends_on', 'archived_at'],
             User::class => ['role', 'member_id'],
             FinancialType::class => ['kind', 'label', 'default_amount', 'is_active', 'base_type'],
             MemberInvitation::class => ['role', 'member_id', 'expires_at', 'accepted_at'],

@@ -6,16 +6,19 @@ use App\Enums\UserRole;
 use App\Http\Middleware\AuthenticateChoraleSession;
 use App\Http\Middleware\EnsureModuleAccess;
 use App\Models\Budget;
+use App\Models\ChoirCommission;
 use App\Models\CommissionTeam;
 use App\Models\Contribution;
 use App\Models\Document;
 use App\Models\Donation;
 use App\Models\FinancialType;
+use App\Models\Member;
 use App\Models\MemberInvitation;
 use App\Models\Reminder;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Observers\AuditObserver;
+use App\Observers\PersonalInformationObserver;
 use App\Services\Ai\AiClient;
 use App\Services\Ai\NullAiClient;
 use App\Services\Ai\OllamaClient;
@@ -104,8 +107,15 @@ class AppServiceProvider extends ServiceProvider
         // silencieusement les performances.
         Model::preventLazyLoading(! $this->app->isProduction());
 
+        Member::observe(PersonalInformationObserver::class);
+        User::observe(PersonalInformationObserver::class);
+        ChoirCommission::observe(AuditObserver::class);
+
         // L'administrateur contourne toutes les vérifications de rôle.
         Gate::before(function (User $user, string $ability) {
+            if ($ability === 'manage-commissions') {
+                return $user->role === UserRole::Directeur;
+            }
             if ($user->role === UserRole::Admin) {
                 return true;
             }
@@ -118,6 +128,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Écriture dans un module fonctionnel.
         Gate::define('manage-module', fn (User $user, string $module) => $user->canManageModule($module));
+
+        Gate::define('manage-commissions', fn (User $user) => $user->role === UserRole::Directeur);
 
         // Gestion des comptes utilisateurs : administrateur uniquement.
         Gate::define('manage-users', fn (User $user) => $user->role === UserRole::Admin);

@@ -61,6 +61,8 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::post('/abonnement/actualiser', [BillingController::class, 'refresh'])->middleware('throttle:5,1,billing-refresh:')->name('billing.refresh');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
+    Route::get('/commissions', App\Livewire\Commissions\Index::class)->middleware('module:'.UserRole::MODULE_MEMBERS)->name('commissions.index');
+
     // La chorale
     Route::get('/membres', MembersIndex::class)
         ->middleware('module:'.UserRole::MODULE_MEMBERS)

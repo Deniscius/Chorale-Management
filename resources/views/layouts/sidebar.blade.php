@@ -11,6 +11,7 @@
         [
             'label' => 'La chorale',
             'items' => [
+                ['route' => 'commissions.index', 'label' => 'Commissions', 'icon' => 'users'],
                 ['route' => 'members.index', 'label' => 'Choristes', 'icon' => 'users', 'module' => UserRole::MODULE_MEMBERS],
             ],
         ],

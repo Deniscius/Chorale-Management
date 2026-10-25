@@ -1,6 +1,11 @@
 <div>
     <form wire:submit="save" class="space-y-5">
         <x-validation-summary />
+        <div>
+            <x-input-label for="contributions-form-type" value="Type de cotisation" />
+            <select id="contributions-form-type" wire:model.live="type_code" class="form-select mt-1">@foreach($this->typeOptions as $code => $label)<option value="{{ $code }}">{{ $label }}</option>@endforeach</select>
+            <x-input-error :messages="$errors->get('type_code')" />
+        </div>
         <p class="text-sm text-slate-500">Un encaissement prépare une recette en brouillon. Le trésorier la valide dans les opérations.</p>
         <div class="grid gap-4 sm:grid-cols-3">
             <div>

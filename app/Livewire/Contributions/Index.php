@@ -38,6 +38,9 @@ class Index extends Component
     #[Url(as: 'statut', except: '')]
     public string $status = '';
 
+    #[Url(as: 'type', except: '')]
+    public string $typeCode = '';
+
     public bool $showForm = false;
 
     public ?int $editingId = null;
@@ -49,14 +52,14 @@ class Index extends Component
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['overview', 'search', 'year', 'month', 'status'], true)) {
+        if (in_array($property, ['overview', 'search', 'year', 'month', 'status', 'typeCode'], true)) {
             $this->resetPage();
         }
     }
 
     public function resetFilters(): void
     {
-        $this->reset(['search', 'year', 'month', 'status', 'overview']);
+        $this->reset(['search', 'year', 'month', 'status', 'overview', 'typeCode']);
         $this->resetPage();
     }
 
@@ -115,6 +118,7 @@ class Index extends Component
     {
         return Contribution::query()
             ->with('member')
+            ->when($this->typeCode !== '', fn ($q) => $q->where('type_code', $this->typeCode))
             ->when($this->overview === 'reglees', fn ($q) => $q->where('paid_amount', '>', 0))
             ->when($this->overview === 'impayees', fn ($q) => $q->whereColumn('paid_amount', '<', 'due_amount'))
             ->when($this->search !== '', fn (Builder $query) => $query->whereHas(

@@ -2,12 +2,18 @@
 
 namespace App\Models;
 
+use App\Services\FinancialCatalog;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 
 final class Tenant extends Model
 {
     protected $fillable = ['name', 'slug'];
+
+    protected static function booted(): void
+    {
+        self::created(fn (self $tenant) => FinancialCatalog::seed((int) $tenant->id));
+    }
 
     protected function casts(): array
     {

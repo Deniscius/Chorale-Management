@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Donations;
 
-use App\Enums\DonationType;
 use App\Enums\DonorType;
 use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Donation;
 use App\Models\Member;
+use App\Services\FinancialCatalog;
 use App\Services\ReceiptLedger;
 use App\Support\CalendarYears;
 use Illuminate\Contracts\View\View;
@@ -109,7 +109,7 @@ class Index extends Component
                 });
             })
             ->when($this->donorType !== '', fn (Builder $query) => $query->where('donor_type', $this->donorType))
-            ->when($this->donationType !== '', fn (Builder $query) => $query->where('donation_type', $this->donationType))
+            ->when($this->donationType !== '', fn (Builder $query) => $query->where(fn ($q) => $q->where('type_code', $this->donationType)->orWhere(fn ($legacy) => $legacy->whereNull('type_code')->where('donation_type', $this->donationType))))
             ->when($this->year !== '', fn (Builder $query) => $query->whereYear('donated_on', (int) $this->year))
             ->orderByDesc('donated_on')
             ->orderByDesc('id')
@@ -140,7 +140,7 @@ class Index extends Component
     #[Computed]
     public function donationTypeOptions(): array
     {
-        return DonationType::options();
+        return app(FinancialCatalog::class)->options('donation', includeArchived: true);
     }
 
     #[Computed]
@@ -155,9 +155,9 @@ class Index extends Component
         $row = Donation::query()->selectRaw('COUNT(*) AS nombre, COALESCE(SUM(amount), 0) AS total, COALESCE(MAX(amount), 0) AS maximum')->toBase()->first();
         $total = (float) $row->total;
         $count = (int) $row->nombre;
-        $parType = Donation::query()->whereNotNull('donation_type')->selectRaw('donation_type, COUNT(*) as nombre, SUM(amount) as total')->groupBy('donation_type')->orderByDesc('total')->first();
+        $parType = Donation::query()->selectRaw('COALESCE(type_code, donation_type) AS nature_code, COUNT(*) as nombre, SUM(amount) as total')->groupByRaw('COALESCE(type_code, donation_type)')->orderByDesc('total')->toBase()->first();
 
-        return ['total' => $total, 'nombre' => $count, 'moyenne' => $count > 0 ? $total / $count : 0, 'max' => (float) $row->maximum, 'type_dominant' => $parType?->donation_type?->value, 'type_dominant_montant' => $parType ? (float) $parType->total : 0.0];
+        return ['total' => $total, 'nombre' => $count, 'moyenne' => $count > 0 ? $total / $count : 0, 'max' => (float) $row->maximum, 'type_dominant' => $parType?->nature_code, 'type_dominant_montant' => $parType ? (float) $parType->total : 0.0];
     }
 
     public function render(): View

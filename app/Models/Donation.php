@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\DonationType;
 use App\Enums\DonorType;
+use App\Services\FinancialCatalog;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +20,7 @@ class Donation extends Model
         'donor_type',
         'donation_type',
         'donor_name',
+        'type_code',
         'member_id',
         'amount',
         'donated_on',
@@ -26,6 +28,11 @@ class Donation extends Model
         'transaction_id',
         'notes',
     ];
+
+    public function typeLabel(): string
+    {
+        return app(FinancialCatalog::class)->label($this->type_code ?? $this->donation_type?->value);
+    }
 
     protected function casts(): array
     {

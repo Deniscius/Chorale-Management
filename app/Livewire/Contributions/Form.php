@@ -8,10 +8,12 @@ use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Livewire\Concerns\SearchesMembers;
 use App\Models\Contribution;
+use App\Services\FinancialCatalog;
 use App\Services\ReceiptLedger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -23,6 +25,11 @@ class Form extends Component
     public const MODULE_KEY = UserRole::MODULE_COMPTABILITE;
 
     public ?Contribution $contribution = null;
+
+    public string $type_code = 'mensuelle';
+
+    #[Locked]
+    public ?string $lastProposedAmount = null;
 
     #[Validate('required|exists:members,id')]
     public ?string $member_id = null;
@@ -54,9 +61,10 @@ class Form extends Component
     protected function rules(): array
     {
         return [
+            'type_code' => ['required', Rule::in(array_keys($this->typeOptions))],
             'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
             'status' => ['required', Rule::enum(ContributionStatus::class)],
-            'month' => ['required', 'integer', 'min:1', 'max:12', Rule::unique('contributions', 'month')->where('member_id', $this->member_id)->where('year', $this->year)->ignore($this->contribution)],
+            'month' => ['required', 'integer', 'min:1', 'max:12', Rule::unique('contributions', 'month')->where('member_id', $this->member_id)->where('year', $this->year)->where('type_code', $this->type_code)->ignore($this->contribution)],
         ];
     }
 
@@ -70,6 +78,7 @@ class Form extends Component
         if ($contribution) {
             $this->fill([
                 'payment_method' => $contribution->receipts()->where('status', 'brouillon')->value('payment_method') ?? 'especes',
+                'type_code' => $contribution->type_code,
                 'member_id' => $contribution->member_id,
                 'year' => (string) $contribution->year,
                 'month' => (string) $contribution->month,
@@ -82,7 +91,8 @@ class Form extends Component
         } else {
             $this->year = (string) now()->year;
             $this->month = (string) now()->month;
-            $this->due_amount = '2000';
+            $this->type_code = array_key_first($this->typeOptions) ?? 'mensuelle';
+            $this->updatedTypeCode();
         }
     }
 
@@ -93,6 +103,7 @@ class Form extends Component
         $this->validate();
 
         $data = [
+            'type_code' => $this->type_code,
             'payment_method' => $this->payment_method,
             'member_id' => (int) $this->member_id,
             'year' => (int) $this->year,
@@ -125,6 +136,23 @@ class Form extends Component
             $this->status = ContributionStatus::Payee->value;
             $this->paid_on = $this->paid_on ?: today()->format('Y-m-d');
         }
+    }
+
+    public function updatedTypeCode(): void
+    {
+        if (! $this->contribution) {
+            $amount = app(FinancialCatalog::class)->all()->where('kind', 'contribution')->firstWhere('code', $this->type_code)?->default_amount;
+            if (blank($this->due_amount) || ($this->lastProposedAmount !== null && $this->due_amount === $this->lastProposedAmount)) {
+                $this->due_amount = $amount;
+            }
+            $this->lastProposedAmount = $amount;
+        }
+    }
+
+    #[Computed]
+    public function typeOptions(): array
+    {
+        return app(FinancialCatalog::class)->options('contribution', $this->contribution?->type_code);
     }
 
     #[Computed]

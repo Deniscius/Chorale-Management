@@ -48,8 +48,8 @@
             'items' => [
                 ['route' => 'transactions.index', 'label' => 'Recettes & dépenses', 'icon' => 'banknotes', 'module' => UserRole::MODULE_COMPTABILITE],
                 ['route' => 'budgets.index', 'label' => 'Budgets', 'icon' => 'chart', 'module' => UserRole::MODULE_COMPTABILITE],
-                ['route' => 'contributions.index', 'label' => 'Cotisations', 'icon' => 'users', 'module' => UserRole::MODULE_COMPTABILITE],
-                ['route' => 'donations.index', 'label' => 'Dons', 'icon' => 'sparkles', 'module' => UserRole::MODULE_COMPTABILITE],
+                ['route' => 'contributions.index', 'label' => app(\App\Services\FinancialCatalog::class)->section('contribution'), 'icon' => 'users', 'module' => UserRole::MODULE_COMPTABILITE],
+                ['route' => 'donations.index', 'label' => app(\App\Services\FinancialCatalog::class)->section('donation'), 'icon' => 'sparkles', 'module' => UserRole::MODULE_COMPTABILITE],
             ],
         ],
         [
@@ -57,6 +57,7 @@
             'items' => [
                 ['label' => 'Journal des modifications', 'route' => 'audit.index', 'icon' => 'clock', 'admin' => true],
                 ['route' => 'users.index', 'label' => 'Utilisateurs', 'icon' => 'cog', 'admin' => true],
+                ['route' => 'settings.financial-types', 'label' => 'Types de contribution', 'icon' => 'banknotes', 'admin' => true],
                 ['route' => 'settings.chorale', 'label' => 'Informations de la chorale', 'icon' => 'building', 'admin' => true],
             ],
         ],

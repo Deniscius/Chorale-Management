@@ -1,64 +1,32 @@
 <section>
-    <header>
-        <h2 class="text-lg font-medium text-slate-900">
-            Informations du profil
-        </h2>
-
-        <p class="mt-1 text-sm text-slate-600">
-            Mettez à jour vos informations personnelles et votre adresse e-mail.
-        </p>
-    </header>
-
-    <form id="send-verification" method="post" action="{{ route('verification.send') }}">
-        @csrf
-    </form>
-
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
-        @csrf
-        @method('patch')
-
-        <div>
-            <x-input-label for="name" value="Nom complet" />
-            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
-            <x-input-error class="mt-2" :messages="$errors->get('name')" />
-        </div>
-
-        <div>
-            <x-input-label for="email" value="Adresse e-mail" />
-            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
-            <x-input-error class="mt-2" :messages="$errors->get('email')" />
-
-            @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
-                <div>
-                    <p class="text-sm mt-2 text-slate-800">
-                        Votre adresse e-mail n'est pas vérifiée.
-
-                        <button form="send-verification" class="underline text-sm text-slate-600 hover:text-slate-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
-                            Cliquez ici pour renvoyer l'e-mail de vérification.
-                        </button>
-                    </p>
-
-                    @if (session('status') === 'verification-link-sent')
-                        <p class="mt-2 font-medium text-sm text-emerald-600">
-                            Un nouveau lien de vérification a été envoyé à votre adresse e-mail.
-                        </p>
-                    @endif
-                </div>
-            @endif
-        </div>
-
-        <div class="flex items-center gap-4">
-            <x-primary-button class="bg-slate-900 hover:bg-slate-700 focus:bg-slate-700">Enregistrer</x-primary-button>
-
-            @if (session('status') === 'profile-updated')
-                <p
-                    x-data="{ show: true }"
-                    x-show="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-emerald-600"
-                >Enregistré.</p>
-            @endif
-        </div>
+    <header><h2 class="text-lg font-semibold text-slate-900">Mes informations personnelles</h2><p class="mt-2 text-sm text-slate-600">Vous seul pouvez modifier ces informations. La direction gère votre voix, votre pupitre et vos affectations.</p></header>
+    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-5">
+        @csrf @method('patch')
+        <x-validation-summary />
+        @if($user->member)
+            <input type="hidden" name="name" value="{{ $user->name }}">
+            <div class="grid gap-4 sm:grid-cols-2">
+                @foreach(['first_name' => 'Prénom(s)', 'last_name' => 'Nom'] as $field => $label)
+                    <div><x-input-label :for="$field" :value="$label"/><x-text-input :id="$field" :name="$field" :value="old($field, $user->member->$field)" class="mt-1 w-full" maxlength="100" required/><x-input-error :messages="$errors->get($field)"/></div>
+                @endforeach
+            </div>
+        @else
+            <div><x-input-label for="name" value="Nom complet"/><x-text-input id="name" name="name" :value="old('name', $user->name)" class="mt-1 w-full" maxlength="255" required autocomplete="name"/><x-input-error :messages="$errors->get('name')"/></div>
+        @endif
+        <div><x-input-label for="username" value="Identifiant de connexion"/><x-text-input id="username" name="username" :value="old('username', $user->username)" class="mt-1 w-full" maxlength="50" pattern="[a-z0-9][a-z0-9._-]*" required autocomplete="username" autocapitalize="none" spellcheck="false"/><p class="mt-1 text-xs text-slate-500">Lettres minuscules, chiffres, points ou tirets. Conservez votre nouvel identifiant pour la prochaine connexion.</p><x-input-error :messages="$errors->get('username')"/></div>
+        <div><x-input-label for="email" value="Adresse e-mail"/><x-text-input id="email" name="email" type="email" :value="old('email', $user->email)" class="mt-1 w-full" maxlength="255" required autocomplete="email"/><x-input-error :messages="$errors->get('email')"/></div>
+        @if($user->member)
+            <div class="grid gap-4 sm:grid-cols-2">
+                @foreach(['phone'=>'Téléphone','birth_date'=>'Date de naissance','profession'=>'Profession','address'=>'Adresse'] as $field=>$label)
+                    <div><x-input-label :for="$field" :value="$label"/><x-text-input :id="$field" :name="$field" :type="$field === 'birth_date' ? 'date' : ($field === 'phone' ? 'tel' : 'text')" :value="old($field, $field === 'birth_date' ? $user->member->birth_date?->format('Y-m-d') : $user->member->$field)" class="mt-1 w-full"/><x-input-error :messages="$errors->get($field)"/></div>
+                @endforeach
+            </div>
+            <fieldset class="rounded-xl border border-slate-200 p-4"><legend class="px-1 text-sm font-semibold">Mes rappels de répétition</legend><div class="flex flex-wrap gap-4">
+                @foreach(['notify_email'=>'Par e-mail','notify_sms'=>'Par SMS'] as $field=>$label)
+                    <input type="hidden" name="{{ $field }}" value="0"><label class="flex items-center gap-2 text-sm"><input type="checkbox" name="{{ $field }}" value="1" @checked(old($field, $user->member->$field)) class="rounded border-slate-300">{{ $label }}</label>
+                @endforeach
+            </div><p class="mt-2 text-xs text-slate-500">Les rappels dépendent des services activés par votre chorale et des coordonnées renseignées.</p></fieldset>
+        @endif
+        <div class="flex flex-wrap items-center gap-4"><x-primary-button>Enregistrer mes informations</x-primary-button>@if(session('status') === 'profile-updated')<p role="status" class="text-sm font-medium text-emerald-700">Vos informations ont été enregistrées.</p>@endif</div>
     </form>
 </section>

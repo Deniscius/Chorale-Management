@@ -1,16 +1,17 @@
 <div>
     <form wire:submit="save" class="space-y-5">
         <x-validation-summary />
+        @if($user)<p class="rounded-xl bg-sky-50 p-4 text-sm text-sky-900">Les informations personnelles et le mot de passe sont gérés par le titulaire dans <a class="underline" href="{{ route('profile.edit') }}">Mon profil</a>. Seul le rôle peut être modifié ici.</p>@endif
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
                 <x-input-label for="users-form-name" value="Nom complet" />
-                <x-text-input id="users-form-name" type="text" name="name" aria-describedby="users-form-name-error" aria-invalid="{{ $errors->has('name') ? 'true' : 'false' }}" wire:model="name" class="mt-1 block w-full" required autofocus />
+                <x-text-input id="users-form-name" type="text" name="name" aria-describedby="users-form-name-error" aria-invalid="{{ $errors->has('name') ? 'true' : 'false' }}" wire:model="name" :disabled="(bool) $user" class="mt-1 block w-full" required autofocus />
                 <x-input-error id="users-form-name-error" :messages="$errors->get('name')" class="mt-1" />
             </div>
 
             <div>
                 <x-input-label for="users-form-username" value="Identifiant de connexion" />
-                <x-text-input id="users-form-username" type="text" name="username" aria-describedby="users-form-username-error" aria-invalid="{{ $errors->has('username') ? 'true' : 'false' }}" wire:model="username" class="mt-1 block w-full"
+                <x-text-input id="users-form-username" type="text" name="username" aria-describedby="users-form-username-error" aria-invalid="{{ $errors->has('username') ? 'true' : 'false' }}" wire:model="username" :disabled="(bool) $user" class="mt-1 block w-full"
                     autocapitalize="none" spellcheck="false" required />
                 <x-input-error id="users-form-username-error" :messages="$errors->get('username')" class="mt-1" />
                 <p class="mt-1 text-xs text-slate-500">
@@ -22,7 +23,7 @@
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
                 <x-input-label for="users-form-email" value="Adresse e-mail" />
-                <x-text-input id="users-form-email" type="email" name="email" aria-describedby="users-form-email-error" aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" wire:model="email" class="mt-1 block w-full" required />
+                <x-text-input id="users-form-email" type="email" name="email" aria-describedby="users-form-email-error" aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" wire:model="email" :disabled="(bool) $user" class="mt-1 block w-full" required />
                 <x-input-error id="users-form-email-error" :messages="$errors->get('email')" class="mt-1" />
                 <p class="mt-1 text-xs text-slate-500">Utilisée pour les rappels et les notifications.</p>
             </div>
@@ -44,7 +45,7 @@
 
         <div>
             <x-input-label for="users-form-member_id" value="Choriste rattaché" />
-            <select id="users-form-member_id" aria-describedby="users-form-member_id-error" aria-invalid="{{ $errors->has('member_id') ? 'true' : 'false' }}" wire:model="member_id"
+            <select id="users-form-member_id" aria-describedby="users-form-member_id-error" aria-invalid="{{ $errors->has('member_id') ? 'true' : 'false' }}" wire:model="member_id" @disabled($user)
                 class="form-select mt-1">
                 <option value="">—</option>
                 @foreach ($this->availableMembers as $member)
@@ -54,6 +55,7 @@
             <x-input-error id="users-form-member_id-error" :messages="$errors->get('member_id')" class="mt-1" />
         </div>
 
+        @unless($user)
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
                 <x-input-label for="users-form-password" :value="$user ? 'Nouveau mot de passe' : 'Mot de passe'" />
@@ -73,6 +75,7 @@
             </div>
         </div>
 
+        @endunless
         <div class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">
             <button type="button" wire:click="$dispatch('close-form')"
                 class="btn btn-secondary">

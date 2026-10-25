@@ -81,8 +81,10 @@ class AuditHardeningTest extends TestCase
     {
         $a = User::factory()->role(UserRole::Admin)->create();
         $u = User::factory()->role(UserRole::Choriste)->create();
+        $this->actingAs($u);
+        app(AccountWriter::class)->save($u, ['password' => 'SYNTHETIC-SECRET']);
         $this->actingAs($a);
-        app(AccountWriter::class)->save($u, ['role' => 'secretaire', 'password' => 'SYNTHETIC-SECRET']);
+        app(AccountWriter::class)->save($u, ['role' => 'secretaire']);
         $event = AuditEvent::where('subject_type', User::class)->where('subject_id', $u->id)->where('action', 'updated')->latest('id')->firstOrFail();
         $this->assertEquals($a->id, $event->actor_id);
         $this->assertSame('choriste', $event->changes['before']['role']);

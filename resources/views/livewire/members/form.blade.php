@@ -5,16 +5,17 @@
     @else
     <form wire:submit="save" class="space-y-5">
         <x-validation-summary />
+        @if((bool) $member)<p class="rounded-xl bg-sky-50 p-4 text-sm text-sky-900">Seul le choriste peut modifier ses informations personnelles dans Mon profil. Vous pouvez gérer sa voix, son pupitre et sa situation dans la chorale.</p>@endif
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
                 <x-input-label for="members-form-first_name" value="Prénom" />
-                <x-text-input id="members-form-first_name" type="text" name="first_name" aria-describedby="members-form-first_name-error" aria-invalid="{{ $errors->has('first_name') ? 'true' : 'false' }}" wire:model="first_name" class="mt-1 block w-full" required autofocus />
+                <x-text-input id="members-form-first_name" type="text" name="first_name" aria-describedby="members-form-first_name-error" aria-invalid="{{ $errors->has('first_name') ? 'true' : 'false' }}" wire:model="first_name" :disabled="(bool) $member" class="mt-1 block w-full" required autofocus />
                 <x-input-error id="members-form-first_name-error" :messages="$errors->get('first_name')" class="mt-1" />
             </div>
 
             <div>
                 <x-input-label for="members-form-last_name" value="Nom" />
-                <x-text-input id="members-form-last_name" type="text" name="last_name" aria-describedby="members-form-last_name-error" aria-invalid="{{ $errors->has('last_name') ? 'true' : 'false' }}" wire:model="last_name" class="mt-1 block w-full" required />
+                <x-text-input id="members-form-last_name" type="text" name="last_name" aria-describedby="members-form-last_name-error" aria-invalid="{{ $errors->has('last_name') ? 'true' : 'false' }}" wire:model="last_name" :disabled="(bool) $member" class="mt-1 block w-full" required />
                 <x-input-error id="members-form-last_name-error" :messages="$errors->get('last_name')" class="mt-1" />
             </div>
         </div>
@@ -22,13 +23,13 @@
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
                 <x-input-label for="members-form-email" value="Adresse e-mail" />
-                <x-text-input id="members-form-email" type="email" name="email" aria-describedby="members-form-email-error" aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" wire:model="email" class="mt-1 block w-full" />
+                <x-text-input id="members-form-email" type="email" name="email" aria-describedby="members-form-email-error" aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" wire:model="email" :disabled="(bool) $member" class="mt-1 block w-full" />
                 <x-input-error id="members-form-email-error" :messages="$errors->get('email')" class="mt-1" />
             </div>
 
             <div>
                 <x-input-label for="members-form-phone" value="Téléphone" />
-                <x-text-input id="members-form-phone" type="text" name="phone" aria-describedby="members-form-phone-error" aria-invalid="{{ $errors->has('phone') ? 'true' : 'false' }}" wire:model="phone" class="mt-1 block w-full" />
+                <x-text-input id="members-form-phone" type="text" name="phone" aria-describedby="members-form-phone-error" aria-invalid="{{ $errors->has('phone') ? 'true' : 'false' }}" wire:model="phone" :disabled="(bool) $member" class="mt-1 block w-full" />
                 <x-input-error id="members-form-phone-error" :messages="$errors->get('phone')" class="mt-1" />
             </div>
         </div>
@@ -39,13 +40,13 @@
             </legend>
             <div class="mt-1 flex flex-wrap items-center gap-x-6 gap-y-2">
                 <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                    <input type="checkbox" aria-describedby="members-form-notify_email-error" aria-invalid="{{ $errors->has('notify_email') ? 'true' : 'false' }}" wire:model="notify_email"
+                    <input type="checkbox" aria-describedby="members-form-notify_email-error" aria-invalid="{{ $errors->has('notify_email') ? 'true' : 'false' }}" wire:model="notify_email" @disabled((bool) $member)
                         class="form-checkbox rounded border-slate-300 text-slate-900 focus:ring-slate-500">
                     Recevoir un e-mail
                 </label>
 
                 <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                    <input type="checkbox" aria-describedby="members-form-notify_sms-error" aria-invalid="{{ $errors->has('notify_sms') ? 'true' : 'false' }}" wire:model="notify_sms"
+                    <input type="checkbox" aria-describedby="members-form-notify_sms-error" aria-invalid="{{ $errors->has('notify_sms') ? 'true' : 'false' }}" wire:model="notify_sms" @disabled((bool) $member)
                         class="form-checkbox rounded border-slate-300 text-slate-900 focus:ring-slate-500">
                     Recevoir un SMS
                 </label>
@@ -107,7 +108,7 @@
 
             <div>
                 <x-input-label for="members-form-birth_date" value="Date de naissance" />
-                <x-text-input id="members-form-birth_date" type="date" name="birth_date" aria-describedby="members-form-birth_date-error" aria-invalid="{{ $errors->has('birth_date') ? 'true' : 'false' }}" wire:model="birth_date" class="mt-1 block w-full" />
+                <x-text-input id="members-form-birth_date" type="date" name="birth_date" aria-describedby="members-form-birth_date-error" aria-invalid="{{ $errors->has('birth_date') ? 'true' : 'false' }}" wire:model="birth_date" :disabled="(bool) $member" class="mt-1 block w-full" />
                 <x-input-error id="members-form-birth_date-error" :messages="$errors->get('birth_date')" class="mt-1" />
             </div>
 
@@ -121,13 +122,13 @@
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
                 <x-input-label for="members-form-profession" value="Profession" />
-                <x-text-input id="members-form-profession" type="text" name="profession" aria-describedby="members-form-profession-error" aria-invalid="{{ $errors->has('profession') ? 'true' : 'false' }}" wire:model="profession" class="mt-1 block w-full" />
+                <x-text-input id="members-form-profession" type="text" name="profession" aria-describedby="members-form-profession-error" aria-invalid="{{ $errors->has('profession') ? 'true' : 'false' }}" wire:model="profession" :disabled="(bool) $member" class="mt-1 block w-full" />
                 <x-input-error id="members-form-profession-error" :messages="$errors->get('profession')" class="mt-1" />
             </div>
 
             <div>
                 <x-input-label for="members-form-address" value="Adresse" />
-                <x-text-input id="members-form-address" type="text" name="address" aria-describedby="members-form-address-error" aria-invalid="{{ $errors->has('address') ? 'true' : 'false' }}" wire:model="address" class="mt-1 block w-full" />
+                <x-text-input id="members-form-address" type="text" name="address" aria-describedby="members-form-address-error" aria-invalid="{{ $errors->has('address') ? 'true' : 'false' }}" wire:model="address" :disabled="(bool) $member" class="mt-1 block w-full" />
                 <x-input-error id="members-form-address-error" :messages="$errors->get('address')" class="mt-1" />
             </div>
         </div>

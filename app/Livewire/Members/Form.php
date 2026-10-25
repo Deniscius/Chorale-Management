@@ -8,8 +8,10 @@ use App\Enums\Voice;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Choir;
 use App\Models\Member;
+use App\Observers\PersonalInformationObserver;
 use App\Services\MemberOnboarding;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -141,6 +143,9 @@ class Form extends Component
         ];
 
         if ($this->member) {
+            $current = Member::findOrFail($this->member->id);
+            $current->fill(Arr::only($data, PersonalInformationObserver::MEMBER_FIELDS));
+            abort_if($current->isDirty(), 403, 'Les informations personnelles se modifient dans Mon profil.');
             $this->member->update($data);
             $message = 'Choriste mis à jour.';
         } else {

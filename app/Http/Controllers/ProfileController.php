@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\Member;
+use App\Observers\PersonalInformationObserver;
 use App\Services\AccountWriter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
@@ -18,7 +22,7 @@ class ProfileController extends Controller
     public function edit(Request $request): View
     {
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => $request->user()->load('member'),
         ]);
     }
 
@@ -27,7 +31,17 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        app(AccountWriter::class)->save($request->user(), $request->validated());
+        DB::transaction(function () use ($request) {
+            $data = $request->validated();
+            $user = $request->user();
+            $member = $user->member_id ? Member::lockForUpdate()->findOrFail($user->member_id) : null;
+            if ($member) {
+                $member->fill(Arr::only($data, PersonalInformationObserver::MEMBER_FIELDS));
+                $member->save();
+                $data['name'] = $member->first_name.' '.$member->last_name;
+            }
+            app(AccountWriter::class)->save($user, Arr::only($data, ['name', 'username', 'email']));
+        }, 3);
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }

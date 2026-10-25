@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Tenancy\TenantContext;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 final class AccountWriter
@@ -22,13 +24,23 @@ final class AccountWriter
                 if ($entry->exists && $entry->role === UserRole::Admin && $role !== UserRole::Admin) {
                     $this->assertAnotherAdmin($entry);
                 }
-                $entry->fill($data)->save();
+                $entry->fill($data);
+                if ($entry->exists && $entry->isDirty('email')) {
+                    $entry->email_verified_at = null;
+                }
+                $entry->save();
 
                 return $entry;
             }, 3);
         } catch (UniqueConstraintViolationException $e) {
-            // A concurrent account creation may have passed the form validation.
-            throw ValidationException::withMessages(['member_id' => 'Le choriste, l’identifiant ou l’adresse e-mail est déjà lié à un compte.']);
+            // Recheck outside the rolled-back transaction and attach a concurrent
+            // uniqueness conflict to its actual field, without exposing SQL details.
+            Validator::make($data, [
+                'username' => [Rule::unique('users', 'username')->ignore($user)],
+                'email' => [Rule::unique('users', 'email')->ignore($user)],
+                'member_id' => ['nullable', Rule::unique('users', 'member_id')->ignore($user)],
+            ])->validate();
+            throw ValidationException::withMessages(['operation' => 'Ce compte a été modifié simultanément. Rechargez la page avant de réessayer.']);
         }
     }
 

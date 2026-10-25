@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AuthenticateChoraleSession;
 use App\Http\Middleware\EnsureModuleAccess;
 use App\Http\Middleware\EstablishTenant;
 use App\Http\Middleware\PlatformAccess;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'module' => EnsureModuleAccess::class,
             'platform.auth' => PlatformAccess::class,
+            'chorale.session' => AuthenticateChoraleSession::class,
         ]);
 
         $middleware->redirectGuestsTo(fn () => route('login'));

@@ -55,7 +55,7 @@ class ChoraleAssistant
         } catch (Throwable $exception) {
             Log::warning('Échec de la génération du compte rendu IA', [
                 'rehearsal_id' => $rehearsal->getKey(),
-                'error' => $exception->getMessage(),
+                'exception' => get_class($exception),
             ]);
 
             throw $exception;

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Enums\UserRole;
+use App\Http\Middleware\AuthenticateChoraleSession;
 use App\Http\Middleware\EnsureModuleAccess;
 use App\Models\Budget;
 use App\Models\CommissionTeam;
@@ -88,7 +89,7 @@ class AppServiceProvider extends ServiceProvider
         // Livewire fournit Alpine : on l'injecte sur toutes les pages (même sans
         // composant Livewire) pour que les interactions x-data de la coque restent actives.
         app('livewire')->forceAssetInjection();
-        Livewire::addPersistentMiddleware([EnsureModuleAccess::class]);
+        Livewire::addPersistentMiddleware([EnsureModuleAccess::class, AuthenticateChoraleSession::class]);
         foreach ([CommissionTeam::class, User::class, Document::class, Donation::class, Contribution::class, Budget::class, Transaction::class, Reminder::class] as $model) {
             $model::observe(AuditObserver::class);
         }

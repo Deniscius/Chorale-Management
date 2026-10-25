@@ -62,12 +62,13 @@ class Document extends Model
 
     public function canManage(?User $user): bool
     {
-        return $this->commission->canManageArchive($user, $this->team);
+        return $user !== null && (int) $this->tenant_id === (int) $user->tenant_id
+            && $this->commission->canManageArchive($user, $this->team);
     }
 
     public function canView(?User $user): bool
     {
-        if (! $user) {
+        if (! $user || (int) $this->tenant_id !== (int) $user->tenant_id) {
             return false;
         }
 

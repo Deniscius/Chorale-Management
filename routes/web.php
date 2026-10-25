@@ -35,7 +35,7 @@ require __DIR__.'/platform.php';
 
 Route::middleware('guest')->group(function () {
     Route::get('/creer-un-espace', [TenantRegistrationController::class, 'create'])->name('spaces.create');
-    Route::post('/creer-un-espace', [TenantRegistrationController::class, 'store'])->middleware('throttle:3,60')->name('spaces.store');
+    Route::post('/creer-un-espace', [TenantRegistrationController::class, 'store'])->middleware('throttle:3,60,space-registration:')->name('spaces.store');
 });
 
 // Logo de la chorale : affiché sur les pages publiques (connexion).
@@ -43,9 +43,9 @@ Route::get('/chorale/logo', ChoraleLogoController::class)
     ->middleware(['web'])
     ->name('chorale.logo');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/abonnement', [BillingController::class, 'show'])->name('billing.show');
-    Route::post('/abonnement/activer', [BillingController::class, 'activate'])->middleware('throttle:5,1')->name('billing.activate');
+    Route::post('/abonnement/activer', [BillingController::class, 'activate'])->middleware('throttle:5,1,billing-activation:')->name('billing.activate');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     // La chorale

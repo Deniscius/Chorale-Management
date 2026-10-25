@@ -2,11 +2,9 @@
 
 namespace App\Livewire\Settings;
 
-use App\Models\Setting;
+use App\Services\ChoraleBranding;
 use App\Services\ChoraleIdentity;
-use App\Tenancy\TenantContext;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -62,18 +60,15 @@ class Chorale extends Component
 
         $this->validate();
 
-        Setting::setMany([
+        app(ChoraleBranding::class)->save([
             ChoraleIdentity::KEY_NAME => $this->name,
             ChoraleIdentity::KEY_TAGLINE => $this->tagline,
             ChoraleIdentity::KEY_EMAIL => $this->email,
             ChoraleIdentity::KEY_PHONE => $this->phone,
             ChoraleIdentity::KEY_ADDRESS => $this->address,
             ChoraleIdentity::KEY_WEBSITE => $this->website,
-        ]);
-
-        if ($this->logo) {
-            $this->storeLogo($identity);
-        }
+        ], $this->logo);
+        $this->reset('logo');
 
         // Le logo et les informations viennent de changer : on réinitialise la
         // mémoire de requête pour que la coque affiche les nouvelles valeurs
@@ -90,13 +85,7 @@ class Chorale extends Component
     {
         $this->authorizeManage();
 
-        $path = $identity->logoPath();
-
-        if ($path) {
-            Storage::disk('local')->delete($path);
-        }
-
-        Setting::set(ChoraleIdentity::KEY_LOGO_PATH, null);
+        app(ChoraleBranding::class)->removeLogo();
 
         $identity->forget();
 
@@ -108,22 +97,6 @@ class Chorale extends Component
      */
     public function cancelLogoUpload(): void
     {
-        $this->reset('logo');
-    }
-
-    protected function storeLogo(ChoraleIdentity $identity): void
-    {
-        // Remplace l'ancien logo pour ne pas accumuler les fichiers orphelins.
-        $previous = $identity->logoPath();
-
-        if ($previous) {
-            Storage::disk('local')->delete($previous);
-        }
-
-        $path = $this->logo->store(app(TenantContext::class)->path('chorale'), 'local');
-
-        Setting::set(ChoraleIdentity::KEY_LOGO_PATH, $path);
-
         $this->reset('logo');
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 
 final class Tenant extends Model
@@ -27,5 +28,17 @@ final class Tenant extends Model
             $this->trial_ends_at?->isFuture() => 'En essai',
             default => 'Expiré',
         };
+    }
+
+    public function accessEndsAt(): ?CarbonImmutable
+    {
+        if ($this->paid_perpetual) {
+            return null;
+        }
+        if (! $this->paid_until) {
+            return $this->trial_ends_at;
+        }
+
+        return ! $this->trial_ends_at || $this->paid_until->gt($this->trial_ends_at) ? $this->paid_until : $this->trial_ends_at;
     }
 }

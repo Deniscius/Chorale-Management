@@ -37,14 +37,19 @@ final class EstablishTenant
                 $request->attributes->set('tenant', $tenant);
                 if (! $tenant->hasAccess() && ! $request->routeIs('billing.*', 'logout', 'verification.*')) {
                     if ($request->hasHeader('X-Livewire') || $request->expectsJson()) {
-                        return response()->json(['message' => 'Votre accès a expiré.', 'redirect' => route('billing.show')], 402);
+                        return response()->json(['message' => 'Votre accès a expiré.', 'redirect' => route('billing.show')], 402, ['Cache-Control' => 'no-store, private']);
                     }
 
-                    return redirect()->route('billing.show');
+                    return redirect()->route('billing.show')->header('Cache-Control', 'no-store, private');
                 }
             }
 
-            return $next($request);
+            $response = $next($request);
+            if ($request->user()) {
+                $response->headers->set('Cache-Control', 'no-store, private');
+            }
+
+            return $response;
         } finally {
             config(['livewire.temporary_file_upload.directory' => $uploadDirectory]);
             $context->set(null);

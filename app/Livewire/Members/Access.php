@@ -7,6 +7,7 @@ use App\Models\Member;
 use App\Models\User;
 use App\Services\AccountWriter;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -54,27 +55,17 @@ class Access extends Component
         $this->authorizeManage();
 
         $this->username = strtolower(trim($this->username));
+        $this->email = mb_strtolower(trim($this->email));
 
         // Règles déclarées sur les propriétés (identifiant, e-mail, mot de passe).
         $this->validate(array_merge($this->getRules(), [
             'role' => ['required', Rule::enum(UserRole::class)],
+            'username' => ['required', 'string', 'max:50', 'regex:/^[a-z0-9][a-z0-9._-]*$/', Rule::unique('users', 'username')->ignore($this->member->user)],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->member->user)],
         ]));
 
         $this->member->loadMissing('user');
         $user = $this->member->user;
-
-        // Unicité de l'identifiant, en excluant le compte du choriste.
-        $duplicate = User::query()
-            ->where('username', $this->username)
-            ->when($user, fn ($query) => $query->whereKeyNot($user->id))
-            ->exists();
-
-        if ($duplicate) {
-            $this->addError('username', 'Cet identifiant est déjà utilisé par un autre compte.');
-
-            return;
-        }
 
         if (! $user) {
             // Le cast « hashed » du modèle hache lui-même la valeur.
@@ -128,13 +119,11 @@ class Access extends Component
     protected function suggestUsername(): string
     {
         $base = Str::slug($this->member->full_name, '.');
-        $base = $base !== '' ? $base : 'choriste'.$this->member->id;
+        $base = $base !== '' ? substr($base, 0, 40) : 'choriste'.$this->member->id;
 
         $candidate = $base;
-        $suffix = 1;
-
-        while (User::where('username', $candidate)->exists()) {
-            $candidate = $base.$suffix++;
+        while (Validator::make(['username' => $candidate], ['username' => 'unique:users,username'])->fails()) {
+            $candidate = $base.'.'.Str::lower(Str::random(6));
         }
 
         return $candidate;

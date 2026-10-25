@@ -40,6 +40,7 @@ class Form extends Component
     protected function rules(): array
     {
         return [
+            'username' => ['required', 'string', 'max:50', 'regex:/^[a-z0-9][a-z0-9._-]*$/', Rule::unique('users', 'username')->ignore($this->user)],
             'role' => ['required', Rule::enum(UserRole::class)],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->user)],
             'member_id' => ['nullable', 'exists:members,id', Rule::unique('users', 'member_id')->ignore($this->user)],
@@ -69,20 +70,9 @@ class Form extends Component
         abort_unless(auth()->user()?->can('manage-users'), 403);
 
         $this->username = strtolower(trim($this->username));
+        $this->email = mb_strtolower(trim($this->email));
 
         $this->validate();
-
-        // L'identifiant doit rester unique : on exclut le compte en cours d'édition.
-        $duplicate = User::query()
-            ->where('username', $this->username)
-            ->when($this->user, fn ($query) => $query->whereKeyNot($this->user->id))
-            ->exists();
-
-        if ($duplicate) {
-            $this->addError('username', 'Cet identifiant est déjà utilisé par un autre compte.');
-
-            return;
-        }
 
         $data = [
             'name' => $this->name,

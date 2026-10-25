@@ -6,6 +6,9 @@ use App\Services\SettingsStore;
 use App\Tenancy\BelongsToTenant;
 use App\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Paramètre applicatif persistant (clé / valeur).
@@ -99,6 +102,20 @@ class Setting extends Model
         static::upsert($rows, ['tenant_id', 'key'], ['value', 'updated_at']);
 
         app(SettingsStore::class)->flush();
+        $tenantId = app(TenantContext::class)->requireId();
+        DB::afterCommit(function () use ($tenantId) {
+            try {
+                app(TenantContext::class)->run($tenantId, fn () => app(SettingsStore::class)->flush());
+            } catch (Throwable $e) {
+                // The database is already committed. A cache incident must not
+                // make a caller undo newly stored files referenced by that data.
+                try {
+                    Log::warning('Invalidation du cache des paramètres à reprendre.', ['tenant_id' => $tenantId]);
+                } catch (Throwable $loggingError) {
+                    // A failed log destination must not turn a committed write into a rollback signal.
+                }
+            }
+        });
     }
 
     /**

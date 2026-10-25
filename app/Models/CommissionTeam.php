@@ -20,7 +20,7 @@ final class CommissionTeam extends Model
 
     public function allows(?User $user): bool
     {
-        if (! $user) {
+        if (! $user || (int) $this->tenant_id !== (int) $user->tenant_id) {
             return false;
         }
         $leaderRole = $this->commission === Commission::Liturgique ? UserRole::CommissionLiturgique : UserRole::Secretaire;

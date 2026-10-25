@@ -1,7 +1,7 @@
-# Offre gratuite : les noms techniques existants sont conservés pour préserver la base.
+# Offre gratuite : renommer le service web existant avant synchronisation ; conserver la base.
 services:
   - type: web
-    name: chorale-demo
+    name: chorale-management
     runtime: docker
     region: frankfurt
     plan: free
@@ -20,7 +20,7 @@ services:
       - {key: RUN_MIGRATIONS_ON_START, value: 'true'}
       - {key: APP_KEY, generateValue: true}
       - key: APP_URL
-        fromService: {type: web, name: chorale-demo, envVarKey: RENDER_EXTERNAL_URL}
+        fromService: {type: web, name: chorale-management, envVarKey: RENDER_EXTERNAL_URL}
       - {key: TRUSTED_PROXIES, value: ''}
       - key: DB_URL
         fromDatabase: {name: chorale-demo-postgres, property: connectionString}

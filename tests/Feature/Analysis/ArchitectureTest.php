@@ -4,6 +4,7 @@ namespace Tests\Feature\Analysis;
 
 use App\Enums\UserRole;
 use App\Http\Controllers\DashboardController;
+use App\Http\Middleware\TenantAddress;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -40,9 +41,26 @@ class ArchitectureTest extends TestCase
         'spaces.store',
         'platform.login',
         'platform.login.store',
+        'platform.setup',
+        'platform.setup.store',
+        'tenant.entry',
+        'tenant.logo',
+        'tenant.login',
         'member-activation.show',
         'member-activation.store',
     ];
+
+    public function test_personal_addresses_have_tenant_checks_and_initial_setup_is_rate_limited(): void
+    {
+        foreach (['tenant.entry', 'tenant.logo', 'tenant.login'] as $name) {
+            $route = Route::getRoutes()->getByName($name);
+            $this->assertContains(TenantAddress::class, $route->middleware());
+            $this->assertContains('slug', $route->parameterNames());
+        }
+        foreach (['platform.setup', 'platform.setup.store'] as $name) {
+            $this->assertTrue(collect(Route::getRoutes()->getByName($name)->middleware())->contains(fn ($middleware) => str_starts_with($middleware, 'throttle:')));
+        }
+    }
 
     public function test_les_routes_activation_publiques_restent_limitees_et_reservees_aux_invites(): void
     {

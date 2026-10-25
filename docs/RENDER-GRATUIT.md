@@ -2,13 +2,15 @@
 
 ## Déploiement existant
 
-Le Blueprint racine utilise les ressources Free existantes dans working’s workspace. Les noms techniques `chorale-demo` et `chorale-demo-postgres` sont conservés pour rattacher exactement le service et sa base ; ils ne sont pas le nom commercial affiché. Modifier ces noms dans le YAML sans migration contrôlée peut créer d’autres ressources. L’interface affiche **Chorale Management**, sans bandeau « démo ».
+Le Blueprint racine utilise les ressources Free existantes dans working’s workspace. Le service web existant doit être renommé **chorale-management** dans Render, en conservant son identifiant `srv-dbf15t67bikc73bqgtr0`. La base conserve son nom technique `chorale-demo-postgres` et son identifiant : elle n’est ni recréée ni effacée. L’interface affiche **Chorale Management**, sans bandeau « démo ».
 
 Le budget reste de 0 : aucune ressource payante n’est ajoutée. Les limites de Render Free restent réelles : veille après 15 minutes, fichiers perdus à la veille/redémarrage/livraison, PostgreSQL expirant après 30 jours, aucune sauvegarde intégrée de cette base et pas de worker/cron indépendant. Le portail propriétaire les présente dans Supervision. L’échéance de la base actuellement créée est le **24 novembre 2026**. Avant de conserver durablement les archives des clients, prévoir un stockage privé persistant et une base sauvegardée. L’essai applicatif de 72 heures reste indépendant de l’hébergement.
 
 ## Appliquer la correction au Blueprint existant
 
-Après fusion du code validé sur `main`, ouvrir **le Blueprint existant → Manual sync**. Ne pas créer un second Blueprint et ne pas effacer PostgreSQL. Examiner les modifications : elles doivent actualiser les ressources existantes en Free, sans recréer la base.
+Avant synchronisation, dans les Settings du service web existant, remplacer son nom `chorale-demo` par `chorale-management`, en conservant le même identifiant. Vérifier ensuite l’adresse publique effectivement attribuée dans Render. Ne pas créer un second service pour ce changement de nom.
+
+Après fusion du code validé sur `main`, ouvrir **le Blueprint existant → Manual sync**. Ne pas créer un second Blueprint et ne pas effacer PostgreSQL. Examiner les modifications : elles doivent actualiser les ressources existantes en Free, sans recréer la base. Arrêter si Render propose une nouvelle base ou un second service inattendu.
 
 Les variables principales sont désormais :
 

@@ -1,6 +1,7 @@
 name: Render container
 on:
   push:
+    branches: [main]
   pull_request:
 jobs:
   container:
@@ -49,6 +50,23 @@ jobs:
           curl --fail --silent http://localhost:10000/login > /dev/null
           docker run --rm --network chorale-ci --env-file /tmp/chorale-ci.env chorale-production schedule
           docker run --rm --network chorale-ci --env-file /tmp/chorale-ci.env chorale-production php artisan queue:work database --once --stop-when-empty
+      - name: Check Free profile startup and owner bootstrap
+        run: |
+          docker run -d --name demo --network chorale-ci --env-file /tmp/chorale-ci.env -p 10001:10000 \
+            -e APP_DEMO_MODE=true -e RUN_MIGRATIONS_ON_START=true \
+            -e PLATFORM_BOOTSTRAP_EMAIL=owner@example.test \
+            -e PLATFORM_BOOTSTRAP_PASSWORD=TestOnlyOwnerSecret2026 \
+            -e PLATFORM_BOOTSTRAP_TOTP_SECRET=JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP \
+            chorale-production
+          for attempt in $(seq 1 30); do curl --fail --silent http://localhost:10001/up && break; sleep 2; done
+          curl --fail --silent http://localhost:10001/login | grep -q 'Démonstration gratuite.'
+          test "$(docker exec postgres psql -U chorale -d chorale_ci -tAc 'SELECT count(*) FROM platform_admins')" = '1'
+          docker restart demo
+          for attempt in $(seq 1 30); do curl --fail --silent http://localhost:10001/up && break; sleep 2; done
+          curl --fail --silent http://localhost:10001/up > /dev/null
+          test "$(docker exec postgres psql -U chorale -d chorale_ci -tAc 'SELECT count(*) FROM platform_admins')" = '1'
       - name: Logs on failure
         if: failure()
-        run: docker logs web 2>/dev/null || true
+        run: |
+          docker logs web 2>/dev/null || true
+          docker logs demo 2>/dev/null || true

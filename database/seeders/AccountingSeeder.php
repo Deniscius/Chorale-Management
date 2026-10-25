@@ -13,12 +13,12 @@ use App\Models\Donation;
 use App\Models\Member;
 use App\Models\Transaction;
 use App\Models\User;
-use Illuminate\Database\Seeder;
 
-class AccountingSeeder extends Seeder
+class AccountingSeeder extends DemoSeeder
 {
     public function run(): void
     {
+        $this->assertDemoEnvironment();
         $chorale = Choir::where('slug', 'chorale-saint-joseph')->firstOrFail();
         $annee = now()->year;
 

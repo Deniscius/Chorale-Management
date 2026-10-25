@@ -8,12 +8,12 @@ use App\Models\Activity;
 use App\Models\Choir;
 use App\Models\Member;
 use App\Models\User;
-use Illuminate\Database\Seeder;
 
-class ActivitySeeder extends Seeder
+class ActivitySeeder extends DemoSeeder
 {
     public function run(): void
     {
+        $this->assertDemoEnvironment();
         $chorale = Choir::where('slug', 'chorale-saint-joseph')->firstOrFail();
         $membres = Member::where('choir_id', $chorale->id)->where('status', 'actif')->get();
 

@@ -4,13 +4,13 @@ namespace Database\Seeders;
 
 use App\Enums\UserRole;
 use App\Models\User;
-use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-class AdminUserSeeder extends Seeder
+class AdminUserSeeder extends DemoSeeder
 {
     public function run(): void
     {
+        $this->assertDemoEnvironment();
         if (app()->isProduction()) {
             throw new \LogicException('Les comptes de démonstration sont interdits en production.');
         }

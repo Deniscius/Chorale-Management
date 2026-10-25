@@ -10,12 +10,12 @@ use App\Models\InstrumentMaintenance;
 use App\Models\InstrumentMovement;
 use App\Models\Member;
 use App\Models\User;
-use Illuminate\Database\Seeder;
 
-class InstrumentsSeeder extends Seeder
+class InstrumentsSeeder extends DemoSeeder
 {
     public function run(): void
     {
+        $this->assertDemoEnvironment();
         $chorale = Choir::where('slug', 'chorale-saint-joseph')->firstOrFail();
 
         $custodians = Member::where('choir_id', $chorale->id)

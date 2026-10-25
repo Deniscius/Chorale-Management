@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->replace(\Illuminate\Http\Middleware\TrustProxies::class, \App\Http\Middleware\TrustDeploymentProxies::class);
         $middleware->web(append: [EstablishTenant::class, RecordPlatformUsage::class]);
         $middleware->prependToPriorityList(SubstituteBindings::class, EstablishTenant::class);
         $middleware->prependToPriorityList(SubstituteBindings::class, PlatformAccess::class);

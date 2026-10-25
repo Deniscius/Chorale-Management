@@ -8,6 +8,7 @@ jobs:
     strategy:
       matrix:
         database: [sqlite, pgsql]
+        php: ['8.2', '8.4']
     services:
       postgres:
         image: postgres:17
@@ -31,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: ${{ matrix.php }}
           extensions: mbstring, pdo_sqlite, pdo_pgsql
           coverage: none
       - uses: actions/setup-node@v4

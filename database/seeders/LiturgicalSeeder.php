@@ -11,13 +11,13 @@ use App\Models\Rehearsal;
 use App\Models\RehearsalAttendance;
 use App\Models\User;
 use App\Models\Work;
-use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
-class LiturgicalSeeder extends Seeder
+class LiturgicalSeeder extends DemoSeeder
 {
     public function run(): void
     {
+        $this->assertDemoEnvironment();
         $chorale = Choir::where('slug', 'chorale-saint-joseph')->firstOrFail();
         $annee = now()->year;
 

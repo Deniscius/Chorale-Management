@@ -54,7 +54,7 @@ final class AccountWriter
                 if ($entry->role === UserRole::Admin) {
                     $this->assertAnotherAdmin($entry);
                 }
-                if (ChoirCommission::where(fn ($q) => $q->where('leader_id', $entry->id)->orWhere('associate_id', $entry->id))->exists()) {
+                if (ChoirCommission::where(fn ($q) => $q->where('leader_id', $entry->id)->orWhere('associate_id', $entry->id)->orWhereHas('instrumentAssociates', fn ($q) => $q->where('users.id', $entry->id)))->exists()) {
                     throw ValidationException::withMessages(['operation' => 'Réattribuez les responsabilités et les accès aux archives de ce compte avant de le supprimer.']);
                 }
                 $entry->delete();

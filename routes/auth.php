@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\Auth\MemberActivationController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -12,6 +13,10 @@ use Illuminate\Support\Facades\Route;
 
 // La création de compte est réservée à l'administrateur (module Utilisateurs).
 Route::middleware('guest')->group(function () {
+    Route::get('activer-mon-compte/{token}', [MemberActivationController::class, 'show'])
+        ->middleware('throttle:30,1,member-activation-view:')->name('member-activation.show');
+    Route::post('activer-mon-compte/{token}', [MemberActivationController::class, 'store'])
+        ->middleware('throttle:10,1,member-activation-save:')->name('member-activation.store');
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 

@@ -10,6 +10,7 @@ use App\Models\CommissionTeam;
 use App\Models\Contribution;
 use App\Models\Document;
 use App\Models\Donation;
+use App\Models\MemberInvitation;
 use App\Models\Reminder;
 use App\Models\Transaction;
 use App\Models\User;
@@ -90,7 +91,7 @@ class AppServiceProvider extends ServiceProvider
         // composant Livewire) pour que les interactions x-data de la coque restent actives.
         app('livewire')->forceAssetInjection();
         Livewire::addPersistentMiddleware([EnsureModuleAccess::class, AuthenticateChoraleSession::class]);
-        foreach ([CommissionTeam::class, User::class, Document::class, Donation::class, Contribution::class, Budget::class, Transaction::class, Reminder::class] as $model) {
+        foreach ([MemberInvitation::class, CommissionTeam::class, User::class, Document::class, Donation::class, Contribution::class, Budget::class, Transaction::class, Reminder::class] as $model) {
             $model::observe(AuditObserver::class);
         }
 

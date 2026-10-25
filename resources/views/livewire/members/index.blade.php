@@ -116,6 +116,8 @@
                             <td class="whitespace-nowrap px-4 py-3">
                                 @if ($member->accessRole())
                                     <x-enum-badge :enum="$member->accessRole()" />
+                                @elseif ($member->invitation_exists)
+                                    <span class="text-xs font-medium text-amber-700">Activation en attente</span>
                                 @else
                                     <span class="text-sm text-slate-400">—</span>
                                 @endif
@@ -195,7 +197,7 @@
     @if ($showAccess && $this->accessMember)
         <div wire:key="member-access">
             <x-modal-panel close-event="close-access" title="Rôle d'accès du choriste"
-                subtitle="Attribuez à ce choriste le rôle qui détermine ses modules.">
+                subtitle="Préparez son accès personnel et choisissez ses modules.">
                 <livewire:members.access :member="$this->accessMember" />
             </x-modal-panel>
         </div>

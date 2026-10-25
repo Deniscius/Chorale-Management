@@ -21,6 +21,8 @@ services:
         value: /var/data/chorale/private
       - key: APP_URL
         sync: false
+      - {key: PLATFORM_BOOTSTRAP_ENABLED, value: 'true'}
+      - {key: PLATFORM_SETUP_TOKEN, generateValue: true}
       - key: TRUSTED_PROXIES
         sync: false
       - key: MAIL_HOST

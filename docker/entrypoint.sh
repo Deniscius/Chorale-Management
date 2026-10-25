@@ -18,8 +18,8 @@ case "${1:-web}" in
         if [ "${RUN_MIGRATIONS_ON_START:-false}" = 'true' ]; then
             sh docker/release.sh
         fi
-        if [ "${APP_DEMO_MODE:-false}" = 'true' ]; then
-            php artisan platform:bootstrap-demo --no-interaction
+        if [ "${PLATFORM_BOOTSTRAP_ENABLED:-false}" = 'true' ]; then
+            php artisan platform:bootstrap --no-interaction
         fi
         case "${PORT:-10000}" in *[!0-9]*|'') echo 'Invalid PORT' >&2; exit 1;; esac
         printf 'Listen %s\n' "${PORT:-10000}" > /etc/apache2/ports.conf

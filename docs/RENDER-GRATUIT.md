@@ -1,58 +1,73 @@
-# Démonstration Render avec un budget de 0
+# Mise en service et pilotage de Chorale Management
 
-Le fichier **render.yaml** à la racine contient uniquement un service web Free et une base PostgreSQL Free. Aucun worker, cron ou disque payant n'est créé. Les paiements sont laissés désactivés et les rappels automatiques arrêtés. Les seeders de démonstration ne sont pas exécutés : la démo commence sans utilisateurs fictifs.
+## Déploiement existant
 
-## Limites à connaître
+Le Blueprint racine utilise les ressources Free existantes dans working’s workspace. Les noms techniques `chorale-demo` et `chorale-demo-postgres` sont conservés pour rattacher exactement le service et sa base ; ils ne sont pas le nom commercial affiché. Modifier ces noms dans le YAML sans migration contrôlée peut créer d’autres ressources. L’interface affiche **Chorale Management**, sans bandeau « démo ».
 
-- Le site se met en veille après 15 minutes sans trafic. Le réveil peut prendre environ une minute.
-- Tous les fichiers importés sont temporaires : ils disparaissent après une veille, un redémarrage ou une livraison. Un bandeau le rappelle dans l'application. Tester seulement avec des fichiers et des personnes fictifs.
-- La base PostgreSQL gratuite expire après **30 jours**. Elle devient alors inaccessible ; après 14 jours supplémentaires, Render la supprime si elle n'a pas été mise à niveau. Les comptes et les données ne sont donc pas pérennes. Cette échéance de l'hébergement est indépendante de l'essai applicatif de trois jours par chorale.
-- Il n'y a pas de sauvegarde intégrée de la base gratuite, de Shell Render ni de tâches planifiées garanties. Les e-mails sont simulés dans les logs : activation par mail, réinitialisation par mail et rappels réels ne sont pas disponibles. Les ports SMTP usuels sont bloqués par Render Free ; un fournisseur par API HTTPS serait une évolution distincte.
-- Les quotas de calcul, de construction et de trafic du compte s'appliquent. Pour respecter strictement 0, utiliser l'offre de compte gratuite, ne pas ajouter de moyen de paiement pour dépassements et vérifier les limites dans Billing ; Render peut suspendre le service ou les builds à épuisement. Ne pas choisir Upgrade ni une ressource payante.
+Le budget reste de 0 : aucune ressource payante n’est ajoutée. Les limites de Render Free restent réelles : veille après 15 minutes, fichiers perdus à la veille/redémarrage/livraison, PostgreSQL expirant après 30 jours, aucune sauvegarde intégrée de cette base et pas de worker/cron indépendant. Le portail propriétaire les présente dans Supervision. L’échéance de la base actuellement créée est le **24 novembre 2026**. Avant de conserver durablement les archives des clients, prévoir un stockage privé persistant et une base sauvegardée. L’essai applicatif de 72 heures reste indépendant de l’hébergement.
 
-Ces limites rendent cette configuration adaptée à une **présentation et des essais**, pas à la vente d'un service de conservation des archives. La configuration durable optionnelle se trouve dans `deploy/render.production.yaml` et nécessite un budget.
+## Appliquer la correction au Blueprint existant
 
-## Création dans Render
+Après fusion du code validé sur `main`, ouvrir **le Blueprint existant → Manual sync**. Ne pas créer un second Blueprint et ne pas effacer PostgreSQL. Examiner les modifications : elles doivent actualiser les ressources existantes en Free, sans recréer la base.
 
-1. Se connecter à [Render](https://dashboard.render.com/) avec GitHub et autoriser `Deniscius/Chorale-Management`.
-2. **New → Blueprint**, sélectionner le dépôt et la branche contenant la préparation Render, puis le fichier racine `render.yaml`.
-3. Vérifier que **chorale-demo** et **chorale-demo-postgres** sont tous deux **Free**, et qu'aucune ressource payante n'est proposée. Une seule base PostgreSQL Free est autorisée par espace de travail : si vous en avez déjà une, ne la supprimer pas pour créer celle-ci ; adapter la configuration.
-4. Renseigner `APP_URL` avec l'URL HTTPS publique choisie pour le site. Après attribution de l'adresse `onrender.com`, corriger cette variable si nécessaire et relancer la livraison avant de partager le lien.
-5. Le profil gratuit conserve `TRUSTED_PROXIES` vide : il ignore les IP/hôtes transmis par les en-têtes proxy et utilise l'origine HTTPS configurée dans `APP_URL` pour ses liens. Les limites par IP peuvent donc être partagées entre plusieurs visiteurs derrière Render ; c'est une limite de la démo. Pour l'exploitation commerciale, configurer une liste explicite de proxies confirmés avec Render, sans joker, et vérifier l'IP client réelle.
-6. Renseigner les trois secrets d'initialisation propriétaire décrits ci-dessous directement dans Render. Ne pas les transmettre dans une conversation ou un commit.
-7. Lancer la création gratuite. Le conteneur applique les migrations puis `ProductionSeeder` **au démarrage**, car ce profil ne dépend pas d'un pré-déploiement payant. Il ne réinitialise pas la base. Attendre la réussite des migrations et du démarrage.
+Les variables principales sont désormais :
 
-## Votre accès propriétaire sans Shell payant
-
-Le premier démarrage peut créer un unique compte propriétaire grâce à :
-
-| Secret Render | Valeur à fournir personnellement |
+| Variable | Configuration |
 | --- | --- |
-| `PLATFORM_BOOTSTRAP_EMAIL` | Votre adresse e-mail |
-| `PLATFORM_BOOTSTRAP_PASSWORD` | Un mot de passe unique d'au moins 16 caractères contenant lettres et chiffres |
-| `PLATFORM_BOOTSTRAP_TOTP_SECRET` | Une nouvelle clé Base32 aléatoire de 32 caractères, alphabet A–Z et 2–7 |
+| APP_NAME | Chorale Management |
+| APP_DEMO_MODE | false, pour neutraliser l’ancien réglage |
+| APP_CANONICAL_HTTPS | true |
+| APP_URL | Référence automatique à RENDER_EXTERNAL_URL du service |
+| PLATFORM_BOOTSTRAP_ENABLED | true pour préparer le premier propriétaire |
+| PLATFORM_SETUP_TOKEN | Secret aléatoire généré une seule fois par Render |
+| FILES_EPHEMERAL | true pour déclarer la réalité du stockage Free |
+| DATABASE_FREE_PLAN | true pour déclarer la durée limitée de PostgreSQL |
 
-Générer la clé TOTP dans votre gestionnaire de mots de passe, ou localement avec Node.js :
+`APP_KEY` reste inchangée. La connexion utilise PostgreSQL interne avec TLS ; les IP externes restent bloquées. Les en-têtes proxy non vérifiés ne sont pas acceptés. L’origine HTTPS est fixée explicitement pour les liens, formulaires et signatures. Les limites par IP peuvent être partagées entre visiteurs derrière les proxies Render ; une configuration explicite des proxies entrants est à vérifier pour une exploitation commerciale.
 
-```sh
-node -e "const c=require('crypto'),a='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; console.log(Array.from({length:32},()=>a[c.randomInt(32)]).join(''))"
-```
+Les trois anciens champs PLATFORM_BOOTSTRAP_EMAIL, PLATFORM_BOOTSTRAP_PASSWORD et PLATFORM_BOOTSTRAP_TOTP_SECRET ne sont plus nécessaires avec l’assistant. Les retirer après installation réussie s’ils ont été renseignés. Ne jamais copier leurs valeurs dans une conversation ou un dépôt.
 
-Ajouter cette clé par saisie manuelle dans votre application d'authentification : TOTP, SHA-1, six chiffres, période de 30 secondes. Garder la clé et le mot de passe dans votre gestionnaire sécurisé. Aucune clé commune prédéfinie n'est fournie.
+Les déploiements automatiques du service restent désactivés : après synchronisation des variables, lancer **Manual Deploy → Deploy latest commit** si nécessaire. Les migrations et ProductionSeeder sont exécutés au démarrage, sans effacement et sans comptes de test.
 
-Après la première connexion réussie à **https://VOTRE-URL/plateforme/connexion**, **retirer les trois variables PLATFORM_BOOTSTRAP des variables Render** et redéployer pour purger leur copie dans la configuration en cache. Les démarrages suivants préservent le propriétaire existant et n'utilisent plus ces secrets. La commande refuse de créer un second propriétaire ou de réinitialiser les accès existants. Sans mode démo, elle est désactivée.
+## Premier accès du propriétaire
 
-Garder `APP_KEY` inchangée : sa valeur générée par Render est normalisée au format Laravel par le script, et chiffre notamment la clé TOTP enregistrée en base. Ne pas publier cette valeur. Le profil gratuit ne fournit pas de récupération administrative interactive ; garder soigneusement les accès et facteurs de récupération.
+1. Dans Render → service web → Environment, retrouver `PLATFORM_SETUP_TOKEN` et en copier personnellement la valeur. Garder ce secret privé ; ne pas le mettre dans une URL ni l’envoyer dans une conversation.
+2. Ouvrir `https://VOTRE-ADRESSE/plateforme/installation`. La page de connexion propriétaire y redirige automatiquement tant que l’installation reste ouverte et qu’aucun propriétaire n’existe.
+3. Saisir la clé privée, votre nom, votre e-mail et un mot de passe unique d’au moins 16 caractères avec lettres et chiffres. Confirmer le mot de passe.
+4. L’application prépare une nouvelle clé TOTP. L’ajouter par saisie manuelle dans votre application d’authentification : TOTP, SHA-1, six chiffres, période de 30 secondes. Garder cette clé dans un gestionnaire sécurisé. La préparation expire après dix minutes ; une page rechargée après expiration fournit une autre clé.
+5. Saisir le code affiché et créer votre espace. La double authentification est confirmée avant toute création du compte.
+6. Se connecter sur `/plateforme/connexion` avec le prochain code. L’assistant est ensuite fermé : aucun second propriétaire ni réinitialisation ne peut être obtenu avec cette page, même en conservant le jeton.
+7. Après connexion réussie, retirer `PLATFORM_SETUP_TOKEN` des variables Render et redéployer pour purger sa copie dans le cache. `generateValue` le recréera lors d’une future synchronisation si absent, mais un propriétaire déjà présent maintient l’assistant fermé. Pour désactiver durablement l’initialisation, mettre `PLATFORM_BOOTSTRAP_ENABLED=false` dans le Blueprint également.
 
-## Démonstration et contrôles
+Le démarrage n’exige plus de mot de passe ni de clé TOTP du propriétaire en clair dans Render : avec un jeton d’installation valide, il laisse l’assistant terminer cette étape. Le mot de passe est haché, la clé TOTP enregistrée en base est chiffrée. L’initialisation conserve tout propriétaire existant. La page refuse les accès après création, limite les tentatives et ne réaffiche pas les secrets dans les erreurs.
 
-- `/up` doit répondre 200, `/login` doit afficher le bandeau de démo et fonctionner en HTTPS.
-- Créer votre chorale pilote par l'inscription publique puis vous connecter normalement ; il n'y a pas de mot de passe de démonstration partagé. L'essai reste limité à 72 heures et ne se réinitialise pas au réveil du site.
-- Vérifier les modals, contributions personnalisées, commissions, import de partitions et droits d'accès avec des données fictives. Les pièces sont temporaires sur ce profil.
-- Vérifier la connexion propriétaire avec votre mot de passe et votre code TOTP. Les métriques d'infrastructure et les logs sont dans Render.
-- Vérifier le comportement après un redémarrage : comptes conservés tant que la base est active, fichiers temporaires perdus, mot de passe propriétaire conservé.
-- Les achats et renouvellements automatiques ne peuvent pas être validés sur ce profil. Le contrôle `chorale:check-production` échoue volontairement pour cette démo : il exige les conditions de l'ouverture commerciale.
+## Suivi de la plateforme
 
-Pour une conservation durable à 0, il faudrait étudier des services externes avec leurs propres quotas et conditions, puis adapter et tester le stockage, les e-mails et la planification. Cette préparation ne prétend pas les avoir intégrés.
+Le propriétaire utilise `/plateforme`, avec une authentification distincte de celle des responsables de chorale :
 
-Source : [limitations officielles de Render Free](https://render.com/docs/free), vérifiées le 25 octobre 2026.
+- Vue d’ensemble : chorales réelles, essais, accès payants actifs, expirations et inscriptions récentes. L’espace technique réservé aux migrations n’est pas compté tant qu’il ne contient aucun utilisateur.
+- Chorales : recherche, filtres, comptes rattachés, licences et adresse personnelle de connexion. Les mutations d’accès demandent votre mot de passe et un motif conservé dans le journal.
+- Supervision : activité authentifiée sur sept jours, erreurs 5xx, requêtes lentes, durée moyenne côté application, tâches en attente/échec, e-mails configurés et limites de conservation de l’hébergement.
+- Journal : connexions propriétaire, création du compte et actions administratives tracées.
+
+Ces statistiques ne représentent pas les visites anonymes, les ressources statiques ni un p95 navigateur. Les compteurs de tâches ne prouvent pas qu’un worker fonctionne. Les paiements réellement encaissés et les remboursements restent à vérifier chez Chariow tant que leur synchronisation n’est pas intégrée.
+
+Render fournit les logs de construction/exécution et les métriques d’infrastructure. Les sauvegardes, leur rétention et une restauration doivent être vérifiées séparément avant exploitation durable ; aucun compteur applicatif ne les garantit.
+
+## Une adresse par chorale
+
+Chaque chorale dispose d’un point d’entrée permanent : `https://VOTRE-ADRESSE/c/SON-SLUG`. L’adresse est disponible dans **Paramètres → Informations de la chorale** et sur sa fiche du portail propriétaire. Le suffixe attribué à la création distingue les chorales de même nom.
+
+Un visiteur y voit la connexion et l’identité publique de cette chorale. Les identifiants sont vérifiés dans cet espace ; les identifiants d’une autre chorale ne sont pas acceptés sur cette connexion. Après connexion, la même adresse affiche son tableau de bord. Une session d’une autre chorale reçoit un refus et n’est jamais déplacée automatiquement vers un autre espace. Les autres modules continuent d’utiliser leurs routes communes avec isolation par compte authentifié ; le lien personnel ne modifie pas les autorisations des données.
+
+Le nom et le logo figurant sur cette page sont publics, à l’inverse des partitions et courriers privés. L’expiration de l’essai continue de rediriger vers l’abonnement. Les sous-domaines et domaines propres à chaque chorale nécessiteraient un routage DNS et une configuration séparés.
+
+## Contrôles avant ouverture commerciale
+
+- Vérifier `/up`, la connexion propriétaire et une connexion depuis l’adresse d’une chorale.
+- Contrôler deux chorales distinctes et les accès responsable/associé aux archives.
+- Vérifier SMTP/API e-mail réel, paiement Chariow, abonnement mensuel et renouvellement ; les fonctions non configurées ne sont pas réputées opérationnelles.
+- Sauvegarder base, fichiers et secrets, puis tester une restauration isolée.
+- Le modèle durable payant `deploy/render.production.yaml` est facultatif et ne doit pas être appliqué avec un budget nul.
+
+Documentation officielle : [Render Free](https://render.com/docs/free), [Blueprints](https://render.com/docs/blueprint-spec), [disques persistants](https://render.com/docs/disks).

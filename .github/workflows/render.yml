@@ -50,18 +50,27 @@ jobs:
           curl --fail --silent http://localhost:10000/login > /dev/null
           docker run --rm --network chorale-ci --env-file /tmp/chorale-ci.env chorale-production schedule
           docker run --rm --network chorale-ci --env-file /tmp/chorale-ci.env chorale-production php artisan queue:work database --once --stop-when-empty
-      - name: Check Free profile startup and owner bootstrap
+      - name: Check first owner installation without demo branding
         run: |
-          docker run -d --name demo --network chorale-ci --env-file /tmp/chorale-ci.env -p 10001:10000 \
-            -e APP_DEMO_MODE=true -e RUN_MIGRATIONS_ON_START=true \
-            -e PLATFORM_BOOTSTRAP_EMAIL=owner@example.test \
-            -e PLATFORM_BOOTSTRAP_PASSWORD=TestOnlyOwnerSecret2026 \
-            -e PLATFORM_BOOTSTRAP_TOTP_SECRET=JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP \
+          docker run -d --name hosted --network chorale-ci --env-file /tmp/chorale-ci.env -p 10001:10000 \
+            -e APP_DEMO_MODE=false -e RUN_MIGRATIONS_ON_START=true \
+            -e PLATFORM_BOOTSTRAP_ENABLED=true \
+            -e PLATFORM_SETUP_TOKEN=CIOnlyPrivateInstallationTokenWithAtLeast32Characters \
             chorale-production
           for attempt in $(seq 1 30); do curl --fail --silent http://localhost:10001/up && break; sleep 2; done
-          curl --fail --silent http://localhost:10001/login | grep -q 'Démonstration gratuite.'
+          curl --fail --silent http://localhost:10001/login > /tmp/public-login.html
+          ! grep -q 'Démonstration gratuite.' /tmp/public-login.html
+          curl --fail --silent -c /tmp/owner.cookies http://localhost:10001/plateforme/installation > /tmp/owner-form.html
+          csrf=$(python -c 'import re; print(re.search(r"name=\"_token\" value=\"([^\"]+)\"", open("/tmp/owner-form.html").read()).group(1))')
+          secret=$(python -c 'import re; print(re.search(r"<code[^>]*>([A-Z2-7]{32})</code>", open("/tmp/owner-form.html").read()).group(1))')
+          code=$(docker exec hosted php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); echo app(App\Services\Platform\Totp::class)->code($argv[1], intdiv(time(), 30));' "$secret")
+          test "$(curl --silent -o /tmp/setup-result.html -w '%{http_code}' -b /tmp/owner.cookies -X POST http://localhost:10001/plateforme/installation \
+            --data-urlencode "_token=$csrf" --data-urlencode setup_token=CIOnlyPrivateInstallationTokenWithAtLeast32Characters \
+            --data-urlencode name=Owner --data-urlencode email=owner@example.test \
+            --data-urlencode password=TestOnlyOwnerSecret2026 --data-urlencode password_confirmation=TestOnlyOwnerSecret2026 \
+            --data-urlencode "code=$code")" = '302'
           test "$(docker exec postgres psql -U chorale -d chorale_ci -tAc 'SELECT count(*) FROM platform_admins')" = '1'
-          docker restart demo
+          docker restart hosted
           for attempt in $(seq 1 30); do curl --fail --silent http://localhost:10001/up && break; sleep 2; done
           curl --fail --silent http://localhost:10001/up > /dev/null
           test "$(docker exec postgres psql -U chorale -d chorale_ci -tAc 'SELECT count(*) FROM platform_admins')" = '1'
@@ -69,4 +78,4 @@ jobs:
         if: failure()
         run: |
           docker logs web 2>/dev/null || true
-          docker logs demo 2>/dev/null || true
+          docker logs hosted 2>/dev/null || true

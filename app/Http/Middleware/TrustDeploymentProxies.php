@@ -12,10 +12,10 @@ final class TrustDeploymentProxies extends TrustProxies
     public function handle(Request $request, Closure $next)
     {
         return parent::handle($request, function (Request $request) use ($next) {
-            // Render terminates TLS. The temporary demo uses its configured HTTPS
+            // Render terminates TLS. Use the explicitly configured HTTPS
             // origin without accepting forwarded IP or host headers from peers.
             $origin = (string) config('app.url');
-            if (app()->isProduction() && config('deployment.demo') && parse_url($origin, PHP_URL_SCHEME) === 'https') {
+            if (app()->isProduction() && config('deployment.canonical_https') && parse_url($origin, PHP_URL_SCHEME) === 'https') {
                 $request->server->set('HTTPS', 'on');
                 $request->server->set('SERVER_PORT', 443);
                 URL::forceRootUrl($origin);

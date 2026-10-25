@@ -30,5 +30,5 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(fn () => route('login'));
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->dontFlash(['license_key', 'code', 'current_password']);
+        $exceptions->dontFlash(['license_key', 'code', 'current_password', 'setup_token']);
     })->create();

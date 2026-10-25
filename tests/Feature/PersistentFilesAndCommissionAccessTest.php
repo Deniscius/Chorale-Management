@@ -250,4 +250,14 @@ class PersistentFilesAndCommissionAccessTest extends TestCase
         }
         $this->assertNotNull($leader->fresh());
     }
+
+    public function test_reference_import_does_not_restore_revoked_legacy_leadership(): void
+    {
+        $user = User::factory()->role(UserRole::Choriste)->create();
+        CommissionTeam::where('commission', Commission::Liturgique->value)->update(['leader_id' => $user->id]);
+        app(CommissionCatalog::class)->ensure();
+        $entry = ChoirCommission::where('archive_commission', Commission::Liturgique->value)->firstOrFail();
+        $this->assertNull($entry->leader_id);
+        $this->assertFalse($user->canManageModule('liturgique'));
+    }
 }

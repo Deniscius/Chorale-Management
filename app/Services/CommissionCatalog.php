@@ -37,7 +37,7 @@ final class CommissionCatalog
                 }
                 $entry = ChoirCommission::create([
                     'name' => $name, 'name_key' => mb_strtolower($name), 'kind' => 'permanent',
-                    'mission' => 'Coordonner les missions de la '.$code->label().' au sein de la chorale.',
+                    'mission' => 'Coordonner les missions de cette équipe au sein de la chorale.',
                     'starts_on' => today(), 'module_key' => $code->module(), 'archive_commission' => $code->value,
                     'leader_id' => $leaderId, 'associate_id' => $team?->associate_id,
                 ]);

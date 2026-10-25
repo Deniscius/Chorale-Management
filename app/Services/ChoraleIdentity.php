@@ -134,6 +134,10 @@ class ChoraleIdentity
      */
     public function contactLines(): array
     {
+        if (request()->attributes->has('access_tenant') && ! request()->user()) {
+            return [];
+        }
+
         return array_values(array_filter([
             $this->address() ? ['icon' => 'home', 'label' => 'Adresse', 'value' => $this->address()] : null,
             $this->phone() ? ['icon' => 'phone', 'label' => 'Téléphone', 'value' => $this->phone()] : null,

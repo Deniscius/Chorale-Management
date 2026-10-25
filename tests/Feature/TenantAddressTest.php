@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Setting;
 use App\Models\Tenant;
+use App\Services\ChoraleIdentity;
 use App\Services\TenantRegistration;
 use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,7 +26,13 @@ class TenantAddressTest extends TestCase
     {
         [$alpha] = $this->space('alpha');
         [$beta] = $this->space('beta');
+        app(TenantContext::class)->run($alpha->id, fn () => Setting::setMany([
+            ChoraleIdentity::KEY_EMAIL => 'private-contact@example.test',
+            ChoraleIdentity::KEY_PHONE => '+22890001122',
+            ChoraleIdentity::KEY_ADDRESS => 'Adresse interne de la chorale',
+        ]));
         $this->get('/c/'.$alpha->slug)->assertOk()->assertSee('Chorale alpha')->assertDontSee('Chorale beta')->assertSee(route('tenant.login', ['slug' => $alpha->slug]), false)->assertHeader('Cache-Control', 'no-store, private');
+        $this->get('/c/'.$alpha->slug)->assertDontSee('private-contact@example.test')->assertDontSee('+22890001122')->assertDontSee('Adresse interne de la chorale');
         $this->assertNull(app(TenantContext::class)->id());
         $this->get('/c/'.$beta->slug)->assertOk()->assertSee('Chorale beta')->assertDontSee('Chorale alpha');
         $this->assertGuest();

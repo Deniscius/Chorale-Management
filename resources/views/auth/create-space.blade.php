@@ -3,6 +3,7 @@
     <span class="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">3 jours pour découvrir</span>
     <h2 class="mt-4 text-2xl font-semibold text-slate-900">Un espace pour votre chorale</h2>
     <p class="mt-2 text-sm leading-6 text-slate-600">Testez l’application pendant 72 heures, avec un accès immédiat sans confirmation par e-mail. Vos données restent dans votre espace. Aucun paiement automatique à la fin de l’essai.</p>
+    <x-subscription-offer />
     <form method="POST" action="{{ route('spaces.store') }}" class="mt-6 space-y-4">
         @csrf
         <div hidden aria-hidden="true">
@@ -41,7 +42,7 @@
         </div>
         <label class="flex items-start gap-3 text-sm leading-5 text-slate-600">
             <input type="checkbox" name="terms" value="1" required class="mt-1 rounded border-slate-300" @checked(old('terms'))>
-            <span>J’ai compris qu’après les 72 heures d’essai, un paiement sera nécessaire pour accéder à l’application.</span>
+            <span>J’ai compris qu’après les 72 heures d’essai, l’abonnement coûte {{ \App\Services\SubscriptionPlan::price() }} par mois pour ma chorale. La souscription et l’autorisation du renouvellement se font sur Chariow.</span>
         </label>
         <x-input-error :messages="$errors->get('terms')" />
         <x-primary-button class="w-full justify-center">Démarrer mon essai gratuit</x-primary-button>

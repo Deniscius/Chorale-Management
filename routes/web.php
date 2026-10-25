@@ -46,6 +46,7 @@ Route::get('/chorale/logo', ChoraleLogoController::class)
 Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/abonnement', [BillingController::class, 'show'])->name('billing.show');
     Route::post('/abonnement/activer', [BillingController::class, 'activate'])->middleware('throttle:5,1,billing-activation:')->name('billing.activate');
+    Route::post('/abonnement/actualiser', [BillingController::class, 'refresh'])->middleware('throttle:5,1,billing-refresh:')->name('billing.refresh');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     // La chorale

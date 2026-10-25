@@ -21,6 +21,8 @@
             <section class="p-panel"><div class="p-panel-head"><h2>Paiements Chariow</h2><x-icon name="banknotes" class="w-5 h-5 text-slate-400" /></div><div class="p-panel-body">
                 @php($url = (string) config('tenancy.chariow.payment_url'))
                 @php($paymentReady = filter_var($url, FILTER_VALIDATE_URL) && parse_url($url, PHP_URL_SCHEME) === 'https')
+                <div class="p-summary-row"><span>Abonnement par chorale</span><strong>{{ \App\Services\SubscriptionPlan::price() }} / mois</strong></div>
+                <div class="p-summary-row"><span>Renouvellement</span><span>Géré par Chariow</span></div>
                 <div class="p-summary-row"><span>Lien de paiement</span><span class="p-badge {{ $paymentReady ? 'p-badge-paid' : 'p-badge-trial' }}">{{ $paymentReady ? 'Renseigné' : 'À configurer' }}</span></div>
                 <div class="p-summary-row"><span>Vérification des licences</span><span class="p-badge {{ filled(config('tenancy.chariow.api_key')) && filled(config('tenancy.chariow.product_id')) ? 'p-badge-paid' : 'p-badge-trial' }}">{{ filled(config('tenancy.chariow.api_key')) && filled(config('tenancy.chariow.product_id')) ? 'Configurée' : 'À configurer' }}</span></div>
                 <p class="p-note"><x-icon name="info" /><span>Les ventes et remboursements ne sont pas encore synchronisés. Consultez votre compte Chariow pour les montants encaissés.</span></p>

@@ -60,7 +60,7 @@ final class DashboardController extends Controller
         }
         $counts['bytes'] = DB::table('documents')->where('tenant_id', $tenant->id)->sum('size');
         $users = DB::table('users')->where('tenant_id', $tenant->id)->select('name', 'email', 'username', 'role')->orderBy('id')->paginate(15);
-        $licenses = DB::table('tenant_licenses')->where('tenant_id', $tenant->id)->select('provider_id', 'expires_at', 'created_at')->orderByDesc('id')->limit(10)->get();
+        $licenses = DB::table('tenant_licenses')->where('tenant_id', $tenant->id)->select('provider_id', 'expires_at', 'created_at', 'status', 'sync_status', 'last_checked_at')->orderByDesc('id')->limit(10)->get();
         $usage = $this->usage($tenant->id);
 
         return view('platform.tenant', compact('tenant', 'counts', 'users', 'licenses', 'usage'));

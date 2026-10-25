@@ -36,7 +36,11 @@ if (typeof document !== 'undefined') {
         const server = Date.parse(document.querySelector('meta[name="tenant-server-time"]')?.content || '');
         const billing = document.querySelector('meta[name="billing-url"]')?.content;
         if (!Number.isFinite(expires) || !Number.isFinite(server) || !billing) return;
-        tracker = trackAccessExpiry({ remainingMs: remaining(expires, server), navigate: () => window.location.replace(billing) });
+        tracker = trackAccessExpiry({ remainingMs: remaining(expires, server), navigate: () => {
+            const destination = new URL(billing, window.location.href);
+            destination.searchParams.set('from', 'expiry');
+            window.location.replace(destination.href);
+        } });
     };
     initialize();
     document.addEventListener('livewire:navigated', initialize);

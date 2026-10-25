@@ -355,7 +355,7 @@ class FinalAuditTest extends TestCase
         $this->within($tenant, fn () => $admin->forceFill(['email_verified_at' => now()])->save());
         config(['tenancy.chariow.api_key' => 'fake', 'tenancy.chariow.product_id' => 'product']);
         foreach ([['id' => ''], ['id' => str_repeat('x', 256)], ['expires_at' => '2099-02-30T00:00:00Z']] as $invalid) {
-            Http::fake(['api.chariow.com/*' => Http::response(['data' => array_replace(['id' => 'license', 'is_active' => true, 'is_expired' => false, 'status' => 'active', 'revoked_at' => null, 'product' => ['id' => 'product'], 'customer' => ['email' => $admin->email], 'expires_at' => '2099-12-31T00:00:00Z'], $invalid)], 200)]);
+            Http::fake(['api.chariow.com/*' => Http::response(['data' => array_replace(['id' => 'license', 'is_active' => true, 'is_expired' => false, 'status' => 'active', 'revoked_at' => null, 'product' => ['id' => 'product', 'pricing' => ['price' => ['value' => 2000, 'currency' => 'XOF']]], 'customer' => ['email' => $admin->email], 'expires_at' => '2099-12-31T00:00:00Z'], $invalid)], 200)]);
             $this->actingAs($admin)->post('/abonnement/activer', ['license_key' => 'FAKE'])->assertSessionHasErrors('license_key');
         }
         $this->assertNull($tenant->fresh()->paid_until);

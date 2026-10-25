@@ -12,7 +12,9 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\ChoirCommissionWriter;
 use App\Tenancy\TenantContext;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -53,9 +55,9 @@ class PersonalProfilesAndCommissionsTest extends TestCase
     public function test_member_manager_can_change_voice_but_cannot_change_personal_details(): void
     {
         $director = User::factory()->role(UserRole::Directeur)->create();
-        $member = Member::factory()->create();
+        $member = Member::factory()->create(['birth_date' => '1990-01-01 15:30:00', 'voice' => 'soprano']);
         Livewire::actingAs($director)->test(MemberForm::class, ['member' => $member])->set('phone', '+22811111111')->call('save')->assertForbidden();
-        Livewire::actingAs($director)->test(MemberForm::class, ['member' => $member->fresh()])->set('voice', 'alto')->call('save')->assertHasNoErrors();
+        Livewire::actingAs($director)->test(MemberForm::class, ['member' => $member->fresh()])->set('voice', 'alto')->call('save')->assertStatus(200)->assertHasNoErrors();
         $this->assertSame('alto', $member->fresh()->voice->value);
     }
 
@@ -117,16 +119,22 @@ class PersonalProfilesAndCommissionsTest extends TestCase
         $a = Tenant::forceCreate(['name' => 'Alpha', 'slug' => 'alpha', 'trial_started_at' => now(), 'trial_ends_at' => now()->addDays(3)]);
         $b = Tenant::forceCreate(['name' => 'Beta', 'slug' => 'beta', 'trial_started_at' => now(), 'trial_ends_at' => now()->addDays(3)]);
         $ctx = app(TenantContext::class);
-        $foreign = $ctx->run($b->id, fn () => Member::factory()->create());
+        [$foreign, $foreignCommission] = $ctx->run($b->id, fn () => [Member::factory()->create(), ChoirCommission::create(['name' => 'Équipe Beta', 'name_key' => 'équipe beta', 'kind' => 'permanent', 'mission' => 'Mission confidentielle Beta', 'starts_on' => today()])]);
         $director = $ctx->run($a->id, fn () => User::factory()->role(UserRole::Directeur)->create());
         $this->actingAs($director);
-        $ctx->run($a->id, function () use ($foreign) {
+        $ctx->run($a->id, function () use ($foreign, $foreignCommission, $a) {
             $component = Livewire::test(Index::class)->call('create');
             foreach ($this->mission(['member_ids' => [$foreign->id]]) as $key => $value) {
                 $component->set($key, $value);
             }
             $component->call('save')->assertHasErrors(['member_ids.0']);
             $this->assertSame(0, ChoirCommission::count());
+            Livewire::test(Index::class)->call('view', $foreignCommission->id)->assertNotFound();
+            Livewire::test(Index::class)->call('edit', $foreignCommission->id)->assertNotFound();
+            Livewire::test(Index::class)->call('toggleArchive', $foreignCommission->id)->assertNotFound();
+            $own = app(ChoirCommissionWriter::class)->save(null, $this->mission());
+            $this->expectException(QueryException::class);
+            DB::transaction(fn () => DB::table('choir_commission_member')->insert(['tenant_id' => $a->id, 'choir_commission_id' => $own->id, 'member_id' => $foreign->id]));
         });
     }
 }

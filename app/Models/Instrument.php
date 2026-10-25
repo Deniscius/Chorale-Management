@@ -59,6 +59,11 @@ class Instrument extends Model
         return $this->belongsTo(Member::class, 'custodian_id');
     }
 
+    public function units(): HasMany
+    {
+        return $this->hasMany(InstrumentUnit::class);
+    }
+
     public function movements(): HasMany
     {
         return $this->hasMany(InstrumentMovement::class);

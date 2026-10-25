@@ -6,6 +6,7 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ChoraleLogoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentDownloadController;
+use App\Http\Controllers\InstrumentLabelsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TenantAddressController;
 use App\Http\Controllers\TenantRegistrationController;
@@ -21,6 +22,7 @@ use App\Livewire\Instruments\Ensembles as InstrumentsEnsembles;
 use App\Livewire\Instruments\Index as InstrumentsIndex;
 use App\Livewire\Instruments\Maintenances as InstrumentsMaintenances;
 use App\Livewire\Instruments\Movements as InstrumentsMovements;
+use App\Livewire\Instruments\Units;
 use App\Livewire\Members\Index as MembersIndex;
 use App\Livewire\Performances\Index as PerformancesIndex;
 use App\Livewire\Rehearsals\Index as RehearsalsIndex;
@@ -100,6 +102,9 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/rappels', RemindersHistory::class)
         ->middleware('module:'.UserRole::MODULE_LITURGIQUE)
         ->name('reminders.index');
+
+    Route::get('/instruments/articles', Units::class)->middleware('module:'.UserRole::MODULE_INSTRUMENTS)->name('instruments.units');
+    Route::post('/instruments/etiquettes', InstrumentLabelsController::class)->middleware(['module:'.UserRole::MODULE_INSTRUMENTS, 'throttle:30,1'])->name('instruments.labels');
 
     // Commission des instruments
     Route::get('/instruments', InstrumentsIndex::class)

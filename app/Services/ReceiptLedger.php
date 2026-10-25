@@ -20,6 +20,10 @@ final class ReceiptLedger
     {
         return DB::transaction(function () use ($donation, $data): Donation {
             $donation = $donation?->exists ? Donation::query()->lockForUpdate()->findOrFail($donation->id) : new Donation;
+            $currentCode = $donation->type_code ?? $donation->donation_type?->value;
+            $type = app(FinancialCatalog::class)->forWrite('donation', $data['type_code'] ?? $data['donation_type'] ?? $currentCode ?? 'autre', $currentCode);
+            $data['type_code'] = $type->code;
+            $data['donation_type'] = $type->base_type;
             if ($donation->exists && ! $donation->transaction_id && $donation->donation_type !== DonationType::DonMateriel) {
                 throw ValidationException::withMessages(['amount' => 'Ce don historique doit être rapproché par le trésorier avant modification.']);
             }
@@ -47,9 +51,9 @@ final class ReceiptLedger
             $entry ??= new Transaction;
             $entry->fill([
                 'type' => 'recette', 'transaction_date' => $donation->donated_on,
-                'description' => 'Don : '.($donation->donor_name ?: 'Anonyme'),
+                'description' => $type->label.' : '.($donation->donor_name ?: 'Anonyme'),
                 'amount' => $donation->amount, 'member_id' => $donation->member_id,
-                'choir_id' => $donation->choir_id, 'category' => 'Dons',
+                'choir_id' => $donation->choir_id, 'category' => app(FinancialCatalog::class)->section('donation'),
                 'payment_method' => $data['payment_method'] ?? $entry->payment_method?->value ?? 'especes', 'status' => 'brouillon',
             ]);
             if (! $entry->exists) {
@@ -67,6 +71,8 @@ final class ReceiptLedger
     {
         return DB::transaction(function () use ($contribution, $data): Contribution {
             $contribution = $contribution?->exists ? Contribution::query()->lockForUpdate()->findOrFail($contribution->id) : new Contribution;
+            $type = app(FinancialCatalog::class)->forWrite('contribution', $data['type_code'] ?? $contribution->type_code ?? 'mensuelle', $contribution->exists ? $contribution->type_code : null);
+            $data['type_code'] = $type->code;
             $entries = $contribution->exists ? $contribution->receipts()->lockForUpdate()->get() : collect();
             $validated = $entries->filter(fn (Transaction $entry) => $entry->isLocked())->sum(fn ($entry) => $this->cents($entry->amount));
             $previousPaidOn = $contribution->paid_on;
@@ -76,7 +82,7 @@ final class ReceiptLedger
             if ($paid < 0 || $paid > $due || $paid < $validated) {
                 throw ValidationException::withMessages(['paid_amount' => 'Le montant encaissé doit rester entre le total déjà validé et le montant dû.']);
             }
-            if ($validated > 0 && $contribution->isDirty(['member_id', 'year', 'month', 'due_amount'])) {
+            if ($validated > 0 && $contribution->isDirty(['member_id', 'year', 'month', 'due_amount', 'type_code'])) {
                 throw ValidationException::withMessages(['member_id' => 'Une cotisation avec un règlement validé conserve son choriste, sa période et son montant dû.']);
             }
             // Never infer a second receipt for a historical payment without an accounting link.
@@ -98,9 +104,9 @@ final class ReceiptLedger
                 $pending->fill([
                     'contribution_id' => $contribution->id, 'type' => 'recette',
                     'transaction_date' => $data['paid_on'] ?? ($pending->exists ? $pending->transaction_date : ($validated > 0 ? today() : $contribution->paid_on)),
-                    'description' => 'Cotisation '.$contribution->month.'/'.$contribution->year,
+                    'description' => $type->label.' '.$contribution->month.'/'.$contribution->year,
                     'amount' => number_format($remaining / 100, 2, '.', ''), 'member_id' => $contribution->member_id,
-                    'choir_id' => $contribution->choir_id, 'category' => 'Cotisations',
+                    'choir_id' => $contribution->choir_id, 'category' => app(FinancialCatalog::class)->section('contribution'),
                     'payment_method' => $data['payment_method'] ?? $pending->payment_method?->value ?? 'especes', 'status' => 'brouillon',
                 ]);
                 if (! $pending->exists) {

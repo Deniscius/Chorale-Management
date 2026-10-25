@@ -10,10 +10,12 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Livewire\Concerns\SearchesMembers;
 use App\Models\Donation;
 use App\Models\Member;
+use App\Services\FinancialCatalog;
 use App\Services\ReceiptLedger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -25,6 +27,9 @@ class Form extends Component
     public const MODULE_KEY = UserRole::MODULE_COMPTABILITE;
 
     public ?Donation $donation = null;
+
+    #[Locked]
+    public ?string $lastProposedAmount = null;
 
     #[Validate]
     public string $donor_type = 'paroissien';
@@ -58,7 +63,7 @@ class Form extends Component
         return [
             'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
             'donor_type' => ['required', Rule::enum(DonorType::class)],
-            'donation_type' => ['required', Rule::enum(DonationType::class)],
+            'donation_type' => ['required', Rule::in(array_keys($this->donationTypeOptions))],
         ];
     }
 
@@ -73,7 +78,7 @@ class Form extends Component
             $this->fill([
                 'payment_method' => $donation->transaction?->payment_method?->value ?? 'especes',
                 'donor_type' => $donation->donor_type->value,
-                'donation_type' => $donation->donation_type?->value ?? 'offrande_messe',
+                'donation_type' => $donation->type_code ?? $donation->donation_type?->value ?? 'offrande_messe',
                 'donor_name' => $donation->donor_name,
                 'member_id' => $donation->member_id,
                 'amount' => $donation->amount,
@@ -83,6 +88,8 @@ class Form extends Component
             ]);
         } else {
             $this->donated_on = today()->format('Y-m-d');
+            $this->donation_type = array_key_first($this->donationTypeOptions) ?? 'autre';
+            $this->updatedDonationType();
         }
     }
 
@@ -95,6 +102,7 @@ class Form extends Component
         $data = [
             'payment_method' => $this->payment_method,
             'donor_type' => $this->donor_type,
+            'type_code' => $this->donation_type,
             'donation_type' => $this->donation_type,
             'donor_name' => $this->donor_type === DonorType::Anonyme->value ? null : ($this->donor_name ?: null),
             'member_id' => $this->member_id !== null && $this->member_id !== '' ? (int) $this->member_id : null,
@@ -153,7 +161,7 @@ class Form extends Component
     #[Computed]
     public function donationTypeOptions(): array
     {
-        return DonationType::options();
+        return app(FinancialCatalog::class)->options('donation', $this->donation?->type_code ?? $this->donation?->donation_type?->value);
     }
 
     /**
@@ -162,7 +170,20 @@ class Form extends Component
     #[Computed]
     public function donationTypeDescription(): string
     {
-        return DonationType::tryFrom($this->donation_type)?->description() ?? '';
+        $base = app(FinancialCatalog::class)->all()->firstWhere('code', $this->donation_type)?->base_type;
+
+        return DonationType::tryFrom($base ?? '')?->description() ?? '';
+    }
+
+    public function updatedDonationType(): void
+    {
+        if (! $this->donation) {
+            $amount = app(FinancialCatalog::class)->all()->where('kind', 'donation')->firstWhere('code', $this->donation_type)?->default_amount;
+            if (blank($this->amount) || ($this->lastProposedAmount !== null && $this->amount === $this->lastProposedAmount)) {
+                $this->amount = $amount;
+            }
+            $this->lastProposedAmount = $amount;
+        }
     }
 
     public function render(): View

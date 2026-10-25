@@ -24,6 +24,7 @@ use App\Livewire\Rehearsals\Index as RehearsalsIndex;
 use App\Livewire\Reminders\History as RemindersHistory;
 use App\Livewire\Seasons\Index as SeasonsIndex;
 use App\Livewire\Settings\Chorale as SettingsChorale;
+use App\Livewire\Settings\FinancialTypes;
 use App\Livewire\Transactions\Index as TransactionsIndex;
 use App\Livewire\Users\Index as UsersIndex;
 use App\Livewire\Works\Index as WorksIndex;
@@ -44,6 +45,7 @@ Route::get('/chorale/logo', ChoraleLogoController::class)
     ->name('chorale.logo');
 
 Route::middleware(['auth', 'chorale.session'])->group(function () {
+    Route::get('/parametres/contributions', FinancialTypes::class)->middleware('can:manage-settings')->name('settings.financial-types');
     Route::get('/abonnement', [BillingController::class, 'show'])->name('billing.show');
     Route::post('/abonnement/activer', [BillingController::class, 'activate'])->middleware('throttle:5,1,billing-activation:')->name('billing.activate');
     Route::post('/abonnement/actualiser', [BillingController::class, 'refresh'])->middleware('throttle:5,1,billing-refresh:')->name('billing.refresh');

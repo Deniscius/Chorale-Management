@@ -4,7 +4,7 @@
         <p class="text-sm text-slate-500">Un don financier prépare une recette en brouillon, à valider par le trésorier. Un don en nature ne modifie pas la trésorerie.</p>
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
-                <x-input-label for="donations-form-donation_type" value="Nature du don" />
+                <x-input-label for="donations-form-donation_type" value="Type de contribution" />
                 <select id="donations-form-donation_type" aria-describedby="donations-form-donation_type-error" aria-invalid="{{ $errors->has('donation_type') ? 'true' : 'false' }}" wire:model.live="donation_type"
                     class="form-select mt-1">
                     @foreach ($this->donationTypeOptions as $value => $label)

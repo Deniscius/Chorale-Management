@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ContributionStatus;
+use App\Services\FinancialCatalog;
 use App\Support\Months;
 use App\Tenancy\BelongsToTenant;
 use Database\Factories\ContributionFactory;
@@ -19,6 +20,7 @@ class Contribution extends Model
     use HasFactory;
 
     protected $fillable = [
+        'type_code',
         'member_id',
         'choir_id',
         'year',
@@ -29,6 +31,11 @@ class Contribution extends Model
         'status',
         'notes',
     ];
+
+    public function typeLabel(): string
+    {
+        return app(FinancialCatalog::class)->label($this->type_code);
+    }
 
     protected function casts(): array
     {

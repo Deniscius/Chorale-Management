@@ -1,25 +1,26 @@
 <div>
     <x-validation-summary />
-    <x-page-header title="Dons" icon="sparkles"
-        :subtitle="'Dons et offrandes reçus par la chorale — '.$this->stats['nombre'].' don(s).'">
+    <x-page-header :title="app(\App\Services\FinancialCatalog::class)->section('donation')" icon="sparkles"
+        :subtitle="'Contributions reçues par la chorale — '.$this->stats['nombre'].' entrée(s).' ">
         <x-slot name="actions">
+            @can('manage-settings')<a href="{{ route('settings.financial-types') }}" class="btn btn-secondary">Configurer les types</a>@endcan
             @if ($this->canManage())
                 <button type="button" wire:click="create"
                     class="btn btn-primary">
                     <x-icon name="plus" class="h-4 w-4" />
-                    Nouveau don
+                    Nouvelle entrée
                 </button>
             @endif
         </x-slot>
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Total des dons" :value="\App\Support\Money::compact($this->stats['total'])" icon="banknotes" color="green" :href="route('donations.index', []).'#resultats'" />
-        <x-stat-card label="Nombre de dons" :value="$this->stats['nombre']" icon="sparkles" color="slate" :href="route('donations.index', []).'#resultats'" />
-        <x-stat-card label="Don moyen" :value="\App\Support\Money::compact($this->stats['moyenne'])" icon="chart" color="blue" :href="route('donations.index', []).'#resultats'" />
-        <x-stat-card label="Don le plus important" :value="\App\Support\Money::compact($this->stats['max'])" icon="folder" color="violet" :href="route('donations.index', ['vue'=>'montant']).'#resultats'" />
+        <x-stat-card label="Total reçu" :value="\App\Support\Money::compact($this->stats['total'])" icon="banknotes" color="green" :href="route('donations.index', []).'#resultats'" />
+        <x-stat-card label="Nombre d’entrées" :value="$this->stats['nombre']" icon="sparkles" color="slate" :href="route('donations.index', []).'#resultats'" />
+        <x-stat-card label="Montant moyen" :value="\App\Support\Money::compact($this->stats['moyenne'])" icon="chart" color="blue" :href="route('donations.index', []).'#resultats'" />
+        <x-stat-card label="Montant le plus élevé" :value="\App\Support\Money::compact($this->stats['max'])" icon="folder" color="violet" :href="route('donations.index', ['vue'=>'montant']).'#resultats'" />
         <x-stat-card label="Nature principale"
-            :value="$this->stats['type_dominant'] ? \App\Enums\DonationType::tryFrom($this->stats['type_dominant'])?->label() : '—'"
+            :value="$this->stats['type_dominant'] ? app(\App\Services\FinancialCatalog::class)->label($this->stats['type_dominant']) : '—'"
             :hint="$this->stats['type_dominant'] ? \App\Support\Money::compact($this->stats['type_dominant_montant']) : null"
             icon="sparkles" color="amber" :href="route('donations.index', ['nature'=>$this->stats['type_dominant']]).'#resultats'" />
     </div>
@@ -107,7 +108,7 @@
                     </td>
                     <td class="whitespace-nowrap px-4 py-3">
                         @if ($donation->donation_type)
-                            <x-enum-badge :enum="$donation->donation_type" />
+                            <span class="text-sm font-medium text-slate-700">{{ $donation->typeLabel() }}</span>
                         @else
                             <span class="text-sm text-slate-400">—</span>
                         @endif
@@ -137,8 +138,8 @@
     </div>
 
     @if ($showForm)
-        <x-modal-panel :title="$editingId ? 'Modifier le don' : 'Nouveau don'"
-            subtitle="Enregistrez un don reçu par la chorale et son affectation.">
+        <x-modal-panel :title="$editingId ? 'Modifier la contribution' : 'Nouvelle contribution'"
+            subtitle="Enregistrez une contribution reçue par la chorale et son affectation.">
             <livewire:donations.form :donation="$this->editingDonation" />
         </x-modal-panel>
     @endif

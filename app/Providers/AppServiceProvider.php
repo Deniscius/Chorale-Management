@@ -10,6 +10,7 @@ use App\Models\CommissionTeam;
 use App\Models\Contribution;
 use App\Models\Document;
 use App\Models\Donation;
+use App\Models\FinancialType;
 use App\Models\MemberInvitation;
 use App\Models\Reminder;
 use App\Models\Transaction;
@@ -21,6 +22,7 @@ use App\Services\Ai\OllamaClient;
 use App\Services\Ai\OpenRouterClient;
 use App\Services\ChoraleAssistant;
 use App\Services\ChoraleIdentity;
+use App\Services\FinancialCatalog;
 use App\Services\SettingsStore;
 use App\Services\Sms\HttpSmsSender;
 use App\Services\Sms\LogSmsSender;
@@ -71,6 +73,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Paramètres : une seule lecture de cache par requête.
         $this->app->singleton(SettingsStore::class);
+        $this->app->singleton(FinancialCatalog::class);
 
         // Identité de la chorale : une instance par requête (valeurs mémorisées).
         $this->app->singleton(ChoraleIdentity::class);
@@ -91,7 +94,7 @@ class AppServiceProvider extends ServiceProvider
         // composant Livewire) pour que les interactions x-data de la coque restent actives.
         app('livewire')->forceAssetInjection();
         Livewire::addPersistentMiddleware([EnsureModuleAccess::class, AuthenticateChoraleSession::class]);
-        foreach ([MemberInvitation::class, CommissionTeam::class, User::class, Document::class, Donation::class, Contribution::class, Budget::class, Transaction::class, Reminder::class] as $model) {
+        foreach ([FinancialType::class, MemberInvitation::class, CommissionTeam::class, User::class, Document::class, Donation::class, Contribution::class, Budget::class, Transaction::class, Reminder::class] as $model) {
             $model::observe(AuditObserver::class);
         }
 

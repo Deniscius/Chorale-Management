@@ -1,8 +1,9 @@
 <div>
     <x-validation-summary />
-    <x-page-header title="Cotisations des choristes" icon="users"
-        :subtitle="'Suivi des cotisations mensuelles — '.$this->stats['total'].' ligne(s).'">
+    <x-page-header :title="app(\App\Services\FinancialCatalog::class)->section('contribution')" icon="users"
+        :subtitle="'Suivi par type, mois et exercice — '.$this->stats['total'].' ligne(s).'">
         <x-slot name="actions">
+            @can('manage-settings')<a href="{{ route('settings.financial-types') }}" class="btn btn-secondary">Configurer les types</a>@endcan
             @if ($this->canManage())
                 <button type="button" wire:click="create"
                     class="btn btn-primary">
@@ -14,7 +15,7 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Cotisations" :value="$this->stats['total']" icon="users" color="slate" :href="route('contributions.index', []).'#resultats'" />
+        <x-stat-card :label="app(\App\Services\FinancialCatalog::class)->section('contribution')" :value="$this->stats['total']" icon="users" color="slate" :href="route('contributions.index', []).'#resultats'" />
         <x-stat-card label="Montant dû" :value="\App\Support\Money::compact($this->stats['du'])" icon="banknotes" color="blue" :href="route('contributions.index', []).'#resultats'" />
         <x-stat-card label="Encaissé" :value="\App\Support\Money::compact($this->stats['encaisse'])" icon="sparkles" color="green" :href="route('contributions.index', ['vue'=>'reglees']).'#resultats'" />
         <x-stat-card label="Reste à recouvrer" :value="\App\Support\Money::compact($this->stats['reste'])" icon="folder" color="amber"
@@ -25,7 +26,8 @@
         <p class="my-3 text-sm text-slate-600">Sélection issue d’une carte de synthèse. <a class="underline" href="{{ url()->current() }}" wire:navigate>Tout afficher</a></p>
     @endif
     <x-filter-bar class="mt-6">
-        <div class="grid gap-3 md:grid-cols-4">
+        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <div><label for="contribution-type-filter" class="sr-only">Type de cotisation</label><select id="contribution-type-filter" wire:model.live="typeCode" class="form-select"><option value="">Tous les types</option>@foreach(app(\App\Services\FinancialCatalog::class)->options('contribution', includeArchived: true) as $code => $label)<option value="{{ $code }}">{{ $label }}</option>@endforeach</select></div>
             <div>
                 <label for="search" class="sr-only">Rechercher</label>
                 <div class="relative">
@@ -72,7 +74,7 @@
             </div>
         </div>
 
-        @if ($this->search !== '' || $this->year !== '' || $this->month !== '' || $this->status !== '')
+        @if ($this->search !== '' || $this->year !== '' || $this->month !== '' || $this->status !== '' || $this->typeCode !== '')
             <div class="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
                 <span class="text-xs text-slate-500">Filtres actifs</span>
                 <button type="button" wire:click="resetFilters"
@@ -104,7 +106,7 @@
                         {{ $contribution->year }}
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
-                        {{ \App\Support\Months::short($contribution->month) }}
+                        <span class="block text-xs text-slate-500">{{ $contribution->typeLabel() }}</span>{{ \App\Support\Months::short($contribution->month) }}
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-slate-700">
                         <x-money :value="$contribution->due_amount" />

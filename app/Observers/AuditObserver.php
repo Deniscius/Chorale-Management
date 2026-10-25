@@ -8,6 +8,7 @@ use App\Models\CommissionTeam;
 use App\Models\Contribution;
 use App\Models\Document;
 use App\Models\Donation;
+use App\Models\MemberInvitation;
 use App\Models\Reminder;
 use App\Models\Transaction;
 use App\Models\User;
@@ -20,6 +21,7 @@ final class AuditObserver
     {
         return match ($model::class) {
             User::class => ['role', 'member_id'],
+            MemberInvitation::class => ['role', 'member_id', 'expires_at', 'accepted_at'],
             Document::class => ['commission', 'path', 'size', 'visibility', 'correspondence_id'],
             CommissionTeam::class => ['commission', 'leader_id', 'associate_id'],
             Donation::class => ['amount', 'donor_type', 'member_id', 'transaction_id', 'donated_on'],

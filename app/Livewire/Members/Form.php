@@ -8,9 +8,12 @@ use App\Enums\Voice;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Choir;
 use App\Models\Member;
+use App\Services\MemberOnboarding;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -21,6 +24,9 @@ class Form extends Component
     public const MODULE_KEY = UserRole::MODULE_MEMBERS;
 
     public ?Member $member = null;
+
+    #[Locked]
+    public ?string $activationLink = null;
 
     #[Validate('required|string|max:100')]
     public string $first_name = '';
@@ -110,6 +116,10 @@ class Form extends Component
     {
         $this->authorizeManage();
 
+        if ($this->activationLink !== null) {
+            return;
+        }
+
         $this->validate();
 
         $data = [
@@ -134,12 +144,19 @@ class Form extends Component
             $this->member->update($data);
             $message = 'Choriste mis à jour.';
         } else {
-            $this->member = Member::create($data);
+            DB::transaction(function () use ($data) {
+                $this->member = Member::create($data);
+                if (auth()->user()?->can('manage-users')) {
+                    $this->activationLink = app(MemberOnboarding::class)->issue($this->member);
+                }
+            });
             $message = 'Choriste enregistré.';
         }
 
         $this->dispatch('toast', type: 'success', message: $message);
-        $this->dispatch('close-form');
+        if (! $this->activationLink) {
+            $this->dispatch('close-form');
+        }
     }
 
     #[Computed]

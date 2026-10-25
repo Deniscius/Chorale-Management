@@ -123,6 +123,7 @@ class Index extends Component
         return Member::query()
             ->with('choir')
             ->with('user')
+            ->withExists(['invitation' => fn ($query) => $query->whereNull('accepted_at')->where('expires_at', '>', now())])
             ->search($this->search)
             ->when($this->voice !== '', fn ($q) => $q->where('voice', $this->voice))
             ->when($this->status !== '', fn ($q) => $q->where('status', $this->status))

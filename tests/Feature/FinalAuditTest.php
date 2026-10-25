@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Enums\UserRole;
-use App\Livewire\Members\Access;
 use App\Livewire\Rehearsals\Index;
 use App\Livewire\Users\Form;
 use App\Models\Document;
@@ -19,6 +18,7 @@ use App\Services\AccountWriter;
 use App\Services\Ai\AiClient;
 use App\Services\ChoraleBranding;
 use App\Services\ChoraleIdentity;
+use App\Services\MemberOnboarding;
 use App\Services\Platform\Totp;
 use App\Services\SettingsStore;
 use App\Services\TenantRegistration;
@@ -77,8 +77,12 @@ class FinalAuditTest extends TestCase
         $this->space('beta');
         $this->within($a, function () use ($admin) {
             $member = Member::factory()->create();
-            $component = Livewire::actingAs($admin)->test(Access::class, ['member' => $member])->set('username', 'beta')->set('email', ' NEW@EXAMPLE.TEST ')->call('save')->assertHasErrors(['username' => 'unique']);
-            $component->set('username', 'new.account')->call('save')->assertHasNoErrors();
+            $url = app(MemberOnboarding::class)->issue($member);
+            $data = ['username' => 'beta', 'email' => ' NEW@EXAMPLE.TEST ', 'password' => 'SecretPersonnel2026', 'password_confirmation' => 'SecretPersonnel2026'];
+            $this->post($url, $data)->assertSessionHasErrors('username');
+            $this->post($url, array_merge($data, ['username' => 'new.account']))->assertRedirect(route('dashboard'));
+            auth()->logout();
+            app(TenantContext::class)->set($admin->tenant_id);
             $this->assertSame('new@example.test', $member->fresh()->user->email);
         });
     }
@@ -87,14 +91,13 @@ class FinalAuditTest extends TestCase
     {
         [$a, $admin] = $this->space('alpha');
         [$b] = $this->space('beta');
-        $this->within($b, fn () => User::factory()->create(['username' => 'jean.kouassi']));
-        $this->within($a, function () use ($admin) {
+        $this->within($b, fn () => User::factory()->create(['username' => 'jean']));
+        $this->within($a, function () {
             $member = Member::factory()->create(['first_name' => 'Jean', 'last_name' => 'Kouassi']);
-            $component = Livewire::actingAs($admin)->test(Access::class, ['member' => $member]);
-            $this->assertNotSame('jean.kouassi', $component->get('username'));
+            $suggestion = app(MemberOnboarding::class)->suggestUsername($member);
+            $this->assertSame('jean.2', $suggestion);
             $long = Member::factory()->create(['first_name' => str_repeat('Jean', 15), 'last_name' => 'Kouassi']);
-            $component = Livewire::test(Access::class, ['member' => $long]);
-            $this->assertLessThanOrEqual(50, strlen($component->get('username')));
+            $this->assertLessThanOrEqual(50, strlen(app(MemberOnboarding::class)->suggestUsername($long)));
         });
     }
 

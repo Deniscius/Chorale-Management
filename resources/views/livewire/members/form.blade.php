@@ -1,4 +1,8 @@
 <div>
+    @if ($activationLink)
+        <x-member-activation-link :link="$activationLink" />
+        <div class="mt-5 flex justify-end"><button type="button" wire:click="$dispatch('close-form')" class="btn btn-primary">Terminer</button></div>
+    @else
     <form wire:submit="save" class="space-y-5">
         <x-validation-summary />
         <div class="grid gap-4 sm:grid-cols-2">
@@ -147,4 +151,5 @@
             </button>
         </div>
     </form>
+    @endif
 </div>

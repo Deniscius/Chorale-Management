@@ -1,117 +1,48 @@
-# Paid resources: review the cost estimate before applying this Blueprint.
+# Démonstration uniquement : aucune ressource payante dans ce Blueprint.
 services:
   - type: web
-    name: chorale-web
+    name: chorale-demo
     runtime: docker
     region: frankfurt
-    plan: starter
-    autoDeployTrigger: off
-    dockerfilePath: ./Dockerfile
-    preDeployCommand: sh docker/release.sh
+    plan: free
+    autoDeployTrigger: 'off'
     healthCheckPath: /up
-    disk:
-      name: chorale-private-files
-      mountPath: /var/data/chorale
-      sizeGB: 5
     envVars:
-      - fromGroup: chorale-production
-      - key: DB_URL
-        fromDatabase: {name: chorale-postgres, property: connectionString}
-      - key: PRIVATE_FILES_ROOT
-        value: /var/data/chorale/private
-      - key: APP_URL
-        sync: false
-      - key: TRUSTED_PROXIES
-        sync: false
-      - key: MAIL_HOST
-        sync: false
-      - key: MAIL_USERNAME
-        sync: false
-      - key: MAIL_PASSWORD
-        sync: false
-      - key: MAIL_FROM_ADDRESS
-        sync: false
-      - key: CHARIOW_PAYMENT_URL
-        sync: false
-      - key: CHARIOW_API_KEY
-        sync: false
-      - key: CHARIOW_PRODUCT_ID
-        sync: false
-  - type: worker
-    name: chorale-worker
-    runtime: docker
-    region: frankfurt
-    plan: starter
-    autoDeployTrigger: off
-    dockerCommand: /var/www/html/docker/entrypoint.sh worker
-    envVars:
-      - fromGroup: chorale-production
-      - key: DB_URL
-        fromDatabase: {name: chorale-postgres, property: connectionString}
-      - key: APP_URL
-        fromService: {type: web, name: chorale-web, envVarKey: APP_URL}
-      - key: MAIL_HOST
-        fromService: {type: web, name: chorale-web, envVarKey: MAIL_HOST}
-      - key: MAIL_USERNAME
-        fromService: {type: web, name: chorale-web, envVarKey: MAIL_USERNAME}
-      - key: MAIL_PASSWORD
-        fromService: {type: web, name: chorale-web, envVarKey: MAIL_PASSWORD}
-      - key: MAIL_FROM_ADDRESS
-        fromService: {type: web, name: chorale-web, envVarKey: MAIL_FROM_ADDRESS}
-  - type: cron
-    name: chorale-scheduler
-    runtime: docker
-    region: frankfurt
-    plan: starter
-    schedule: '* * * * *'
-    autoDeployTrigger: off
-    dockerCommand: /var/www/html/docker/entrypoint.sh schedule
-    envVars:
-      - fromGroup: chorale-production
-      - key: DB_URL
-        fromDatabase: {name: chorale-postgres, property: connectionString}
-      - key: APP_URL
-        fromService: {type: web, name: chorale-web, envVarKey: APP_URL}
-      - key: CHARIOW_PAYMENT_URL
-        fromService: {type: web, name: chorale-web, envVarKey: CHARIOW_PAYMENT_URL}
-      - key: CHARIOW_API_KEY
-        fromService: {type: web, name: chorale-web, envVarKey: CHARIOW_API_KEY}
-      - key: CHARIOW_PRODUCT_ID
-        fromService: {type: web, name: chorale-web, envVarKey: CHARIOW_PRODUCT_ID}
-databases:
-  - name: chorale-postgres
-    region: frankfurt
-    plan: 0.5c-1g
-    postgresMajorVersion: '17'
-    databaseName: chorale
-    user: chorale
-    diskSizeGB: 5
-    ipAllowList: []
-envVarGroups:
-  - name: chorale-production
-    envVars:
-      - key: APP_KEY
-        generateValue: true
-      - {key: APP_NAME, value: Chorale Management}
+      - {key: APP_NAME, value: Chorale Management - Démo}
       - {key: APP_ENV, value: production}
       - {key: APP_DEBUG, value: 'false'}
+      - {key: APP_DEMO_MODE, value: 'true'}
+      - {key: RUN_MIGRATIONS_ON_START, value: 'true'}
+      - {key: APP_KEY, generateValue: true}
+      - {key: APP_URL, sync: false}
+      - {key: TRUSTED_PROXIES, sync: false}
+      - {key: PLATFORM_BOOTSTRAP_EMAIL, sync: false}
+      - {key: PLATFORM_BOOTSTRAP_PASSWORD, sync: false}
+      - {key: PLATFORM_BOOTSTRAP_TOTP_SECRET, sync: false}
+      - key: DB_URL
+        fromDatabase: {name: chorale-demo-postgres, property: connectionString}
       - {key: DB_CONNECTION, value: pgsql}
       - {key: DB_SSLMODE, value: require}
+      - {key: CACHE_STORE, value: database}
       - {key: SESSION_DRIVER, value: database}
       - {key: SESSION_SECURE_COOKIE, value: 'true'}
-      - {key: SESSION_HTTP_ONLY, value: 'true'}
       - {key: SESSION_SAME_SITE, value: lax}
-      - {key: CACHE_STORE, value: database}
-      - {key: QUEUE_CONNECTION, value: database}
-      - {key: DB_QUEUE_RETRY_AFTER, value: '120'}
+      - {key: QUEUE_CONNECTION, value: sync}
       - {key: LOG_CHANNEL, value: stderr}
-      - {key: LOG_LEVEL, value: warning}
-      - {key: MAIL_MAILER, value: smtp}
-      - {key: MAIL_PORT, value: '587'}
-      - {key: MAIL_FROM_NAME, value: Chorale Management}
+      - {key: MAIL_MAILER, value: log}
       - {key: TENANCY_ENABLED, value: 'true'}
       - {key: TENANT_REGISTRATION_ENABLED, value: 'true'}
-      - {key: REMINDERS_ENABLED, value: 'true'}
-      - {key: REMINDERS_QUEUED, value: 'true'}
+      - {key: REMINDERS_ENABLED, value: 'false'}
       - {key: REMINDERS_SMS_ENABLED, value: 'false'}
       - {key: AI_ENABLED, value: 'false'}
+      - {key: CHARIOW_PAYMENT_URL, value: ''}
+      - {key: CHARIOW_API_KEY, value: ''}
+      - {key: CHARIOW_PRODUCT_ID, value: ''}
+databases:
+  - name: chorale-demo-postgres
+    region: frankfurt
+    plan: free
+    postgresMajorVersion: '17'
+    databaseName: chorale_demo
+    user: chorale
+    ipAllowList: []

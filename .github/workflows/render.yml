@@ -12,8 +12,9 @@ jobs:
           python -m pip install pyyaml jsonschema
           python - <<'PY'
           import json, urllib.request, yaml, jsonschema
-          schema = json.load(urllib.request.urlopen('https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/render.yaml.json'))
-          jsonschema.validate(yaml.safe_load(open('render.yaml')), schema)
+          schema = json.load(urllib.request.urlopen('https://render.com/schema/render.yaml.json'))
+          for path in ['render.yaml', 'deploy/render.production.yaml']:
+              jsonschema.validate(yaml.safe_load(open(path)), schema)
           PY
       - name: Build production image
         run: docker build -t chorale-production .

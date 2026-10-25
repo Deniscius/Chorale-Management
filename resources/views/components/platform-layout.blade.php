@@ -8,6 +8,7 @@
     @vite(['resources/css/app.css', 'resources/css/platform.css', 'resources/js/platform.js'])
 </head>
 <body class="platform-body">
+    <x-demo-notice />
     <a href="#contenu" class="sr-only focus:not-sr-only">Aller au contenu</a>
     @if($guest)
         {{ $slot }}

@@ -1,5 +1,7 @@
 # Déploiement Render et seeders
 
+**Budget retenu : 0.** Le fichier racine `render.yaml` déploie seulement une **démo gratuite temporaire** ; suivre [RENDER-GRATUIT.md](RENDER-GRATUIT.md). Les étapes d'exploitation payante ci-dessous concernent exclusivement le modèle optionnel `deploy/render.production.yaml`. Ne pas l'appliquer avec un budget nul.
+
 ## Ce qui entre en production
 
 Partir d'une **nouvelle base PostgreSQL**, sans importer la base locale ou les données de démonstration. Ne jamais lancer `migrate:fresh`, `migrate:refresh`, `db:wipe` ou le `DatabaseSeeder` sur une base de production.
@@ -19,7 +21,7 @@ Chaque nouvelle inscription crée sa chorale et ses référentiels dans une tran
 
 ## Architecture proposée et coût
 
-Le Blueprint `render.yaml` prépare, dans la région Frankfurt :
+Le Blueprint optionnel `deploy/render.production.yaml` prépare, dans la région Frankfurt :
 
 | Ressource | Rôle | Configuration initiale |
 | --- | --- | --- |
@@ -43,7 +45,7 @@ Le disque `/var/data/chorale` conserve partitions, archives, courriers et logos.
 
 ## 2. Créer le Blueprint
 
-Dans Render : **New → Blueprint**, choisir le dépôt puis la branche préparée et le fichier `render.yaml`. Examiner les ressources et l'estimation avant toute confirmation payante.
+Dans Render : **New → Blueprint**, choisir le dépôt puis la branche préparée et le fichier `deploy/render.production.yaml`. Examiner les ressources et l'estimation avant toute confirmation payante.
 
 Le formulaire demande : `APP_URL`, `TRUSTED_PROXIES`, `MAIL_HOST`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS` et les trois valeurs Chariow. Si la facturation n'est pas encore prête, laisser ses valeurs vides si le formulaire le permet, ou les ajouter seulement ensuite dans les variables ; ne pas inventer une clé ni un lien commercial.
 

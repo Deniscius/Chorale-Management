@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('member_invitations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-            $table->unsignedBigInteger('member_id');
+            $table->unsignedBigInteger('member_id')->index();
             $table->string('role', 50);
             $table->string('token_hash', 64)->unique();
             $table->timestamp('expires_at');

@@ -40,7 +40,19 @@ class ArchitectureTest extends TestCase
         'spaces.store',
         'platform.login',
         'platform.login.store',
+        'member-activation.show',
+        'member-activation.store',
     ];
+
+    public function test_les_routes_activation_publiques_restent_limitees_et_reservees_aux_invites(): void
+    {
+        foreach (['member-activation.show', 'member-activation.store'] as $name) {
+            $route = Route::getRoutes()->getByName($name);
+            $this->assertContains('guest', $route->middleware());
+            $this->assertTrue(collect($route->middleware())->contains(fn ($middleware) => str_starts_with($middleware, 'throttle:')));
+            $this->assertContains('token', $route->parameterNames());
+        }
+    }
 
     /**
      * Toute route applicative doit être protégée par le middleware d'authentification.

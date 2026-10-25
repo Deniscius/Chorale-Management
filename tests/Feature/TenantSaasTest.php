@@ -190,7 +190,7 @@ class TenantSaasTest extends TestCase
 
     private function license(User $user, array $override = []): array
     {
-        return array_replace(['id' => 'license_fictive', 'status' => 'active', 'is_active' => true, 'is_expired' => false, 'revoked_at' => null, 'expires_at' => now()->addDays(30)->toISOString(), 'product' => ['id' => 'prd_chorale'], 'customer' => ['email' => $user->email]], $override);
+        return array_replace(['id' => 'license_fictive', 'status' => 'active', 'is_active' => true, 'is_expired' => false, 'revoked_at' => null, 'expires_at' => now()->addDays(30)->toISOString(), 'product' => ['id' => 'prd_chorale', 'pricing' => ['price' => ['value' => 2000, 'currency' => 'XOF']]], 'customer' => ['email' => $user->email]], $override);
     }
 
     private function configureChariow(): void
@@ -359,18 +359,17 @@ class TenantSaasTest extends TestCase
         }
     }
 
-    public function test_lifetime_access_only_comes_from_an_explicit_valid_provider_license(): void
+    public function test_lifetime_license_cannot_bypass_the_monthly_subscription(): void
     {
         [$tenant, $admin] = $this->space();
         $tenant->forceFill(['trial_ends_at' => now()->subDay()])->save();
         $this->configureChariow();
         Http::fake(['api.chariow.com/*' => Http::response(['data' => $this->license($admin, ['expires_at' => null])])]);
-        $this->actingAs($admin)->post('/abonnement/activer', ['license_key' => 'LIFETIME-SYNTHETIC'])->assertRedirect(route('dashboard'));
-        $this->assertTrue($tenant->fresh()->paid_perpetual);
+        $this->actingAs($admin)->post('/abonnement/activer', ['license_key' => 'LIFETIME-SYNTHETIC'])->assertSessionHasErrors('license_key');
+        $this->assertFalse($tenant->fresh()->paid_perpetual);
         $this->assertNull($tenant->fresh()->paid_until);
-        $this->assertTrue($tenant->fresh()->hasAccess());
-        $tenant->refresh()->forceFill(['suspended_at' => now()])->save();
         $this->assertFalse($tenant->fresh()->hasAccess());
+        $this->assertDatabaseCount('tenant_licenses', 0);
     }
 
     public function test_expired_billing_does_not_load_a_private_logo_or_exempt_its_route(): void

@@ -17,6 +17,7 @@
     </p>
     <x-subscription-offer />
     @if(session('status'))<p role="status" class="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{{ session('status') }}</p>@endif
+    @if(session('billing_error'))<p role="alert" class="mt-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-800">{{ session('billing_error') }}</p>@endif
     @if(!$tenant->suspended_at)
         @if($canManage)
             <div class="mt-6 rounded-xl border border-slate-200 p-4">

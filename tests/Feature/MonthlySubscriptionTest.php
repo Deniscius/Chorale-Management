@@ -223,7 +223,7 @@ class MonthlySubscriptionTest extends TestCase
         [$tenant, $admin] = $this->space();
         $this->activate($tenant, $admin);
         $this->fake(['api.chariow.com/*' => Http::response([], 503)]);
-        $this->actingAs($admin)->post('/abonnement/actualiser')->assertRedirect(route('billing.show'));
+        $this->actingAs($admin)->post('/abonnement/actualiser')->assertRedirect(route('billing.show'))->assertSessionHas('billing_error');
         Http::assertSentCount(1);
         Http::assertSent(fn ($request) => $request->method() === 'GET');
     }

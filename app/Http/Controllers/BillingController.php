@@ -45,6 +45,6 @@ final class BillingController extends Controller
             }
         }
 
-        return redirect()->route('billing.show')->with('status', $success ? 'Votre abonnement a été actualisé depuis Chariow.' : 'L’abonnement n’a pas pu être actualisé. Réessayez ou contactez le responsable.');
+        return redirect()->route('billing.show')->with($success ? 'status' : 'billing_error', $success ? 'Votre abonnement a été actualisé depuis Chariow.' : 'L’abonnement n’a pas pu être actualisé. Réessayez ou contactez le responsable.');
     }
 }

@@ -1,3 +1,4 @@
+@inject('chorale', 'App\Services\ChoraleIdentity')
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
@@ -19,6 +20,8 @@
 
     @if ($chorale->hasLogo())
         <link rel="icon" href="{{ $chorale->logoUrl() }}">
+    @else
+        <link rel="icon" href="{{ asset('brand-icon.svg') }}" type="image/svg+xml">
     @endif
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])

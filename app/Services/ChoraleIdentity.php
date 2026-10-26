@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Choir;
 use App\Models\Setting;
 use App\Models\Tenant;
+use App\Tenancy\TenantContext;
 
 /**
  * Identité de la chorale : nom affiché, logo et informations de contact.
@@ -13,8 +14,8 @@ use App\Models\Tenant;
  * l'application (sidebar, topbar, layouts, page de connexion) ne dépende
  * pas directement du modèle Choir ni de la table settings.
  *
- * L'instance est un singleton et mémorise les valeurs lues pendant la
- * requête : la coque affiche l'identité plusieurs fois par page.
+ * L'instance est limitée à la requête et mémorise les valeurs du client actif :
+ * la coque affiche l'identité plusieurs fois par page.
  */
 class ChoraleIdentity
 {
@@ -38,6 +39,8 @@ class ChoraleIdentity
      * @var array<string, mixed>
      */
     protected array $memo = [];
+
+    protected ?string $memoScope = null;
 
     /**
      * Nom affiché de la chorale.
@@ -81,6 +84,9 @@ class ChoraleIdentity
      */
     public function logoPath(): ?string
     {
+        if (TenantContext::isolated() && app(TenantContext::class)->id() === null) {
+            return null;
+        }
         $tenant = request()->attributes->get('tenant');
         if (config('tenancy.enabled') && $tenant instanceof Tenant && ! $tenant->hasAccess()) {
             return null;
@@ -110,7 +116,7 @@ class ChoraleIdentity
     {
         $path = $this->logoPath();
 
-        return $path !== null ? substr(md5($path), 0, 10) : null;
+        return $path !== null ? substr(hash('sha256', app(TenantContext::class)->key($path)), 0, 16) : null;
     }
 
     /**
@@ -123,7 +129,7 @@ class ChoraleIdentity
 
         $publicTenant = request()->attributes->get('access_tenant');
 
-        return $version !== null ? ($publicTenant ? route('tenant.logo', ['slug' => $publicTenant->slug, 'v' => $version]) : route('chorale.logo', ['v' => $version])) : null;
+        return $version !== null ? ($publicTenant ? route('tenant.logo', ['slug' => $publicTenant->slug, 'v' => $version]) : route('chorale.logo', ['v' => $version, 'tenant' => app(TenantContext::class)->id()])) : null;
     }
 
     /**
@@ -151,6 +157,7 @@ class ChoraleIdentity
     public function forget(): void
     {
         $this->memo = [];
+        $this->memoScope = null;
     }
 
     /**
@@ -161,6 +168,11 @@ class ChoraleIdentity
      */
     protected function remember(string $key, callable $callback): mixed
     {
+        $scope = app(TenantContext::class)->key('identity');
+        if ($this->memoScope !== $scope) {
+            $this->forget();
+            $this->memoScope = $scope;
+        }
         if (! array_key_exists($key, $this->memo)) {
             $this->memo[$key] = $callback();
         }

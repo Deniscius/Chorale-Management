@@ -7,6 +7,8 @@
 /storage/pail
 /vendor
 .env
+.env.local
+.env.*.local
 .env.backup
 .env.production
 .phpactor.json
@@ -21,3 +23,7 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+.neon
+# Installed agent guidance stays local; sources are recorded in skills-lock.json.
+/.agents/skills/neon/
+/.agents/skills/neon-postgres/

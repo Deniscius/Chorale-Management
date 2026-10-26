@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\Cache;
  * Accès mémoire aux paramètres applicatifs.
  *
  * La table `settings` est chargée en une seule fois puis conservée en cache
- * et en mémoire pour la durée de la requête. L'instance étant un singleton,
- * une page qui affiche plusieurs paramètres (nom, slogan, coordonnées, logo)
+ * et en mémoire pour la durée de la requête et le client actif.
+ * Une page qui affiche plusieurs paramètres (nom, slogan, coordonnées, logo)
  * ne déclenche qu'une seule lecture de cache — et donc, avec le store
  * « database », une seule requête SQL.
  */
@@ -24,6 +24,8 @@ class SettingsStore
      */
     protected ?array $memo = null;
 
+    protected ?string $memoScope = null;
+
     /**
      * Tous les paramètres.
      *
@@ -31,8 +33,18 @@ class SettingsStore
      */
     public function all(): array
     {
+        $context = app(TenantContext::class);
+        if (TenantContext::isolated() && $context->id() === null) {
+            return [];
+        }
+        $scope = $context->key(Setting::CACHE_KEY);
+        if ($this->memoScope !== $scope) {
+            $this->forget();
+            $this->memoScope = $scope;
+        }
+
         return $this->memo ??= Cache::remember(
-            app(TenantContext::class)->key(Setting::CACHE_KEY),
+            $scope,
             Setting::CACHE_TTL,
             fn (): array => Setting::query()->pluck('value', 'key')->all(),
         );
@@ -52,6 +64,7 @@ class SettingsStore
     public function forget(): void
     {
         $this->memo = null;
+        $this->memoScope = null;
     }
 
     /**
@@ -61,6 +74,6 @@ class SettingsStore
     {
         Cache::forget(app(TenantContext::class)->key(Setting::CACHE_KEY));
 
-        $this->memo = null;
+        $this->forget();
     }
 }

@@ -5,6 +5,7 @@
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow"><meta name="theme-color" content="#13271f">
     <title>{{ $title }} · Gestion Chorale</title>
+    <link rel="icon" href="{{ asset('brand-icon.svg') }}" type="image/svg+xml">
     @vite(['resources/css/app.css', 'resources/css/platform.css', 'resources/js/platform.js'])
 </head>
 <body class="platform-body">

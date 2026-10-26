@@ -40,7 +40,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 
@@ -79,11 +78,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ChoraleAssistant::class);
 
         // Paramètres : une seule lecture de cache par requête.
-        $this->app->singleton(SettingsStore::class);
+        $this->app->scoped(SettingsStore::class);
         $this->app->singleton(FinancialCatalog::class);
 
         // Identité de la chorale : une instance par requête (valeurs mémorisées).
-        $this->app->singleton(ChoraleIdentity::class);
+        $this->app->scoped(ChoraleIdentity::class);
     }
 
     /**
@@ -140,9 +139,5 @@ class AppServiceProvider extends ServiceProvider
 
         // Paramètres de l'application (identité de la chorale) : administrateur uniquement.
         Gate::define('manage-settings', fn (User $user) => $user->role === UserRole::Admin);
-
-        // Identité de la chorale partagée avec toutes les vues (l'instance
-        // singleton mémorise les lectures : aucune requête supplémentaire).
-        View::share('chorale', $this->app->make(ChoraleIdentity::class));
     }
 }

@@ -16,6 +16,15 @@ try {
     }
     app(TenantContext::class)->set(1);
     $path = 'tenants/1/chorale/ci-proof.png';
+    if (($argv[1] ?? '') === 'fingerprint') {
+        $response = app(PrivateFiles::class)->response($path, 'ci-proof.png', true);
+        ob_start();
+        $response->sendContent();
+        $contents = ob_get_clean();
+        echo hash('sha256', $contents)."\n";
+
+        return;
+    }
     if (($argv[1] ?? '') === 'write') {
         app(PrivateFiles::class)->persist($path, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='), 'image/png');
         Setting::set(ChoraleIdentity::KEY_LOGO_PATH, $path);

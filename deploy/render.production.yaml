@@ -1,4 +1,5 @@
 # Paid resources: review the cost estimate before applying this Blueprint.
+# Neon is external; follow docs/MIGRATION-NEON.md before syncing an existing deployment.
 services:
   - type: web
     name: chorale-web
@@ -16,7 +17,9 @@ services:
     envVars:
       - fromGroup: chorale-production
       - key: DB_URL
-        fromDatabase: {name: chorale-postgres, property: connectionString}
+        sync: false
+      - key: APP_KEY
+        sync: false
       - key: PRIVATE_FILES_ROOT
         value: /var/data/chorale/private
       - key: APP_URL
@@ -49,7 +52,9 @@ services:
     envVars:
       - fromGroup: chorale-production
       - key: DB_URL
-        fromDatabase: {name: chorale-postgres, property: connectionString}
+        fromService: {type: web, name: chorale-web, envVarKey: DB_URL}
+      - key: APP_KEY
+        fromService: {type: web, name: chorale-web, envVarKey: APP_KEY}
       - key: APP_URL
         fromService: {type: web, name: chorale-web, envVarKey: APP_URL}
       - key: MAIL_HOST
@@ -71,7 +76,9 @@ services:
     envVars:
       - fromGroup: chorale-production
       - key: DB_URL
-        fromDatabase: {name: chorale-postgres, property: connectionString}
+        fromService: {type: web, name: chorale-web, envVarKey: DB_URL}
+      - key: APP_KEY
+        fromService: {type: web, name: chorale-web, envVarKey: APP_KEY}
       - key: APP_URL
         fromService: {type: web, name: chorale-web, envVarKey: APP_URL}
       - key: CHARIOW_PAYMENT_URL
@@ -80,25 +87,19 @@ services:
         fromService: {type: web, name: chorale-web, envVarKey: CHARIOW_API_KEY}
       - key: CHARIOW_PRODUCT_ID
         fromService: {type: web, name: chorale-web, envVarKey: CHARIOW_PRODUCT_ID}
-databases:
-  - name: chorale-postgres
-    region: frankfurt
-    plan: 0.5c-1g
-    postgresMajorVersion: '17'
-    databaseName: chorale
-    user: chorale
-    diskSizeGB: 5
-    ipAllowList: []
 envVarGroups:
   - name: chorale-production
     envVars:
-      - key: APP_KEY
-        generateValue: true
       - {key: APP_NAME, value: Chorale Management}
       - {key: APP_ENV, value: production}
       - {key: APP_DEBUG, value: 'false'}
       - {key: DB_CONNECTION, value: pgsql}
-      - {key: DB_SSLMODE, value: require}
+      - {key: DB_SSLMODE, value: verify-full}
+      - {key: DB_SSLROOTCERT, value: /etc/ssl/certs/ca-certificates.crt}
+      - {key: SESSION_CONNECTION, value: pgsql}
+      - {key: DB_CACHE_CONNECTION, value: pgsql}
+      - {key: DB_CACHE_LOCK_CONNECTION, value: pgsql}
+      - {key: DB_QUEUE_CONNECTION, value: pgsql}
       - {key: SESSION_DRIVER, value: database}
       - {key: SESSION_SECURE_COOKIE, value: 'true'}
       - {key: SESSION_HTTP_ONLY, value: 'true'}

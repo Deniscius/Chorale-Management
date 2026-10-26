@@ -3,8 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\Account;
+use App\Models\Contribution;
+use App\Models\Donation;
 use App\Models\FinancialType;
+use App\Models\Instrument;
+use App\Models\Member;
 use App\Models\Tenant;
+use App\Models\Transaction;
+use App\Services\InstrumentIdentity;
 use App\Services\TenantRegistration;
 use App\Tenancy\TenantContext;
 use Database\Seeders\ProductionSeeder;
@@ -62,5 +68,38 @@ class ProductionSeedTest extends TestCase
                 $this->assertStringContainsString('production', $exception->getMessage());
             }
         }
+    }
+
+    public function test_existing_business_rows_are_preserved_but_instrument_backfill_is_a_write(): void
+    {
+        config(['tenancy.enabled' => true]);
+        $user = app(TenantRegistration::class)->create(['organization' => 'Migration', 'name' => 'Responsable', 'username' => 'migration', 'email' => 'migration@example.test', 'password' => 'TestOnlySecret2026!']);
+        $instrument = app(TenantContext::class)->run($user->tenant_id, function () {
+            Transaction::factory()->recette()->create(['amount' => '12345.67']);
+            Donation::factory()->create(['amount' => '2500.50']);
+            Contribution::factory()->create(['member_id' => Member::factory()->create()->id, 'paid_amount' => 1000]);
+            $instrument = Instrument::factory()->create(['quantity' => 2]);
+            app(InstrumentIdentity::class)->synchronize($instrument->id);
+            $instrument->update(['quantity' => 3]);
+
+            return $instrument;
+        });
+        DB::table('tenant_licenses')->insert(['tenant_id' => $user->tenant_id, 'license_hash' => hash('sha256', 'test-only-license'), 'provider_id' => 'test-only-provider', 'expires_at' => now()->addMonth(), 'status' => 'active', 'sync_status' => 'verified']);
+        $tables = ['tenants', 'users', 'choirs', 'members', 'transactions', 'donations', 'contributions', 'tenant_licenses', 'instruments'];
+        $before = collect($tables)->mapWithKeys(fn ($table) => [$table => DB::table($table)->orderBy('id')->get()->toJson()]);
+        $units = DB::table('instrument_units')->orderBy('id')->get();
+        $auditCount = DB::table('audit_events')->count();
+        app()->instance('env', 'production');
+        $this->artisan('db:seed', ['--class' => ProductionSeeder::class, '--force' => true])->assertSuccessful();
+        foreach ($before as $table => $rows) {
+            $this->assertSame($rows, DB::table($table)->orderBy('id')->get()->toJson(), $table);
+        }
+        foreach ($units as $unit) {
+            $this->assertEquals($unit, DB::table('instrument_units')->where('id', $unit->id)->first());
+        }
+        $this->assertSame(3, DB::table('instrument_units')->where('instrument_id', $instrument->id)->count());
+        $this->assertSame($auditCount + 1, DB::table('audit_events')->count());
+        $this->artisan('db:seed', ['--class' => ProductionSeeder::class, '--force' => true])->assertSuccessful();
+        $this->assertSame($auditCount + 1, DB::table('audit_events')->count());
     }
 }

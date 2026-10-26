@@ -16,6 +16,7 @@ php artisan config:cache
 case "${1:-web}" in
     web)
         if [ "${RUN_MIGRATIONS_ON_START:-false}" = 'true' ]; then
+            # release.sh also honors RUN_MIGRATIONS_ON_RELEASE=false for a data-only move.
             sh docker/release.sh
         fi
         if [ "${PLATFORM_BOOTSTRAP_ENABLED:-false}" = 'true' ]; then

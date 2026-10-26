@@ -1,6 +1,6 @@
 <div>
     <x-page-header title="Informations de la chorale" icon="building"
-        subtitle="Nom, coordonnées et logo affichés dans toute l'application." />
+        subtitle="Nom, coordonnées et logo propres à votre espace chorale. Le logo reste réservé aux pages après connexion." />
 
     @if($logoMissing ?? false)<p class="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-950">L’ancien logo n’est plus disponible. Réimportez votre fichier original pour rétablir l’identité visuelle.</p>@endif
     <form wire:submit="save" class="grid gap-6 lg:grid-cols-3">

@@ -4,16 +4,17 @@
 
 ## Ce qui entre en production
 
-Partir d'une **nouvelle base PostgreSQL**, sans importer la base locale ou les données de démonstration. Ne jamais lancer `migrate:fresh`, `migrate:refresh`, `db:wipe` ou le `DatabaseSeeder` sur une base de production.
+La configuration cible utilise désormais une base externe Neon ; Laravel reste sur Render. Pour transférer les données existantes, suivre exclusivement [MIGRATION-NEON.md](MIGRATION-NEON.md) avant toute synchronisation. Aucun changement de fournisseur ne doit recréer une base ou régénérer APP_KEY.
+
+Pour une première installation seulement, partir d'une **nouvelle base Neon vide**, sans données de démonstration. Pour une migration d'hébergement, restaurer intégralement la base existante, y compris la table migrations, avant tout démarrage applicatif. Ne jamais lancer `migrate:fresh`, `migrate:refresh`, `db:wipe` ou le `DatabaseSeeder` sur une base de production.
 
 Le script `docker/release.sh` exécute :
 
 ```sh
 php artisan migrate --force --no-interaction
-php artisan db:seed --class=ProductionSeeder --force --no-interaction
 ```
 
-`ProductionSeeder` complète seulement les référentiels manquants des espaces ayant déjà des utilisateurs : comptes comptables, équipes de commission, verrou comptable et catégories financières. Il ne crée aucun utilisateur, choriste, don, paiement ou abonnement. Il ne réinitialise ni mot de passe, ni montant personnalisé, ni libellé, ni attribution des responsables, ni essai de 72 heures. Une seconde exécution conserve les données existantes.
+`RUN_MIGRATIONS_ON_RELEASE=false` désactive ces migrations pendant une bascule de fournisseur. Aucun seeder ne tourne automatiquement. `ProductionSeeder`, réservé à une maintenance examinée séparément, complète les référentiels manquants des espaces ayant déjà des utilisateurs : comptes comptables, équipes de commission, verrou comptable et catégories financières. Il ne crée aucun utilisateur, choriste, don, paiement ou abonnement. Il ne réinitialise ni mot de passe, ni montant personnalisé, ni libellé, ni attribution des responsables, ni essai de 72 heures. Il peut également créer des exemplaires d'instruments et des événements d'audit ; il n'est donc pas une opération de lecture seule ni une étape de migration à l'identique.
 
 Les huit seeders de démonstration refusent toute exécution avec `APP_ENV=production`, y compris un lancement direct avec `--class` et `--force`. Les factories et le code exécuté manuellement restent réservés aux environnements de test. La migration historique réserve un espace technique « Espace existant » ; il peut apparaître dans les métriques, sans constituer un client réel et sans compte de connexion. Ne pas le supprimer automatiquement.
 
@@ -28,9 +29,9 @@ Le Blueprint optionnel `deploy/render.production.yaml` prépare, dans la région
 | `chorale-web` | Site Laravel / Livewire | Docker PHP 8.4 Apache, Starter, disque privé 5 Go |
 | `chorale-worker` | Envois en arrière-plan | Docker Starter, file PostgreSQL |
 | `chorale-scheduler` | Rappels et licences | Cron chaque minute UTC |
-| `chorale-postgres` | Données clients | PostgreSQL 17, 0.5 CPU / 1 Go, stockage 5 Go |
+| Neon externe | Données clients | PostgreSQL 17, offre/rétention à choisir dans Neon ; aucune base Render créée |
 
-**Ce sont des ressources payantes.** Examiner l'estimation complète affichée par Render avant de valider : services, base, disque, cron, éventuel abonnement d'espace de travail, trafic et frais du prestataire e-mail. Aucun tarif fixe ni disponibilité d'une offre gratuite ne sont garantis. Les déploiements automatiques sont désactivés pour permettre une validation des tests avant chaque livraison.
+**Ce sont des ressources payantes.** Examiner l'estimation complète affichée par Render avant de valider : services, disque, cron, offre Neon séparée, éventuel abonnement d'espace de travail, trafic et frais du prestataire e-mail. Aucun tarif fixe ni disponibilité d'une offre gratuite ne sont garantis. Les déploiements automatiques sont désactivés pour permettre une validation des tests avant chaque livraison.
 
 Le disque `/var/data/chorale` conserve partitions, archives, courriers et logos. Il appartient seulement au service web ; le worker et le cron actuels n'utilisent pas ces pièces jointes. Une évolution vers des exports ou e-mails avec pièces jointes devra utiliser un stockage objet privé partagé. Ce choix initial impose **une instance web** et une brève interruption pendant ses redéploiements. Pour plusieurs instances ou des déploiements sans coupure, migrer d'abord les fichiers privés vers un stockage objet, avec autorisation applicative conservée.
 
@@ -43,19 +44,21 @@ Le disque `/var/data/chorale` conserve partitions, archives, courriers et logos.
 5. Obtenir et vérifier les adresses/CIDR réels des proxies de confiance utilisés devant le service. Renseigner `TRUSTED_PROXIES` avec une liste séparée par des virgules. **Ne pas utiliser `*`, `0.0.0.0/0` ou `::/0`**. Les adresses de sortie des services Render ne sont pas automatiquement les adresses des proxies entrants. Confirmer les adresses avec Render et vérifier la stabilité de cette liste avant ouverture.
 6. Ajouter plus tard le lien Chariow, la clé API et le produit de licence mensuelle 2 000 XOF. Sans cela, les essais peuvent fonctionner, mais l'achat/activation commercial ne peut pas être validé. La reconduction automatique dépend de la configuration et du fonctionnement réel du produit Chariow.
 
-## 2. Créer le Blueprint
+## 2. Créer le Blueprint (première installation seulement)
 
 Dans Render : **New → Blueprint**, choisir le dépôt puis la branche préparée et le fichier `deploy/render.production.yaml`. Examiner les ressources et l'estimation avant toute confirmation payante.
 
-Le formulaire demande : `APP_URL`, `TRUSTED_PROXIES`, `MAIL_HOST`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS` et les trois valeurs Chariow. Si la facturation n'est pas encore prête, laisser ses valeurs vides si le formulaire le permet, ou les ajouter seulement ensuite dans les variables ; ne pas inventer une clé ni un lien commercial.
+Le formulaire demande : `DB_URL` Neon, la valeur **existante** de `APP_KEY`, `APP_URL`, `TRUSTED_PROXIES`, `MAIL_HOST`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS` et les trois valeurs Chariow. Si la facturation n'est pas encore prête, laisser ses valeurs vides si le formulaire le permet, ou les ajouter seulement ensuite dans les variables ; ne pas inventer une clé ni un lien commercial.
 
-La clé `APP_KEY` est générée **une seule fois** dans le groupe d'environnement partagé. Render fournit 32 octets encodés en base64 ; les scripts ajoutent le préfixe Laravel `base64:` avant le cache de configuration. Tous les services utilisent la même clé. Ne jamais la régénérer à chaque déploiement : elle protège notamment les secrets d'authentification du propriétaire. Conserver une copie dans un gestionnaire de secrets.
+Pour une application existante, conserver exactement la valeur actuelle de `APP_KEY` et sa clé effective. Le Blueprint ne la génère plus : elle est fournie sur le web et référencée depuis worker et cron. Une première installation sans données doit provisionner sa propre clé Laravel dans un gestionnaire sécurisé ; jamais pendant une migration. La normalisation historique du préfixe `base64:` dans les scripts reste inchangée.
 
-La connexion PostgreSQL utilise l'URL interne et TLS. `ipAllowList: []` ferme les connexions externes à la base ; les services du même environnement utilisent le réseau privé. Ne pas ouvrir la base à Internet pour simplifier une connexion locale.
+La connexion utilise l'endpoint **direct Neon**, avec `sslmode=verify-full` dans l'URL et le bundle CA de l'image via `DB_SSLROOTCERT`. Worker et scheduler référencent `DB_URL` du web. Les services n'utilisent plus de référence `fromDatabase` ni le réseau PostgreSQL interne Render. Configurer les accès réseau Neon selon l'offre et les IP sortantes réelles des services.
 
-Les migrations et l'initialisation sont exécutées seulement par le pré-déploiement du web. **Premier lancement : attendre la réussite du web avant de relancer le worker et le cron si ceux-ci ont démarré avant la création des tables.** Les démarrages suivants n'exécutent aucune migration. À chaque mise à jour, déployer le web puis les deux services de traitement sur le même commit validé ; ne pas laisser le cron ou le worker sur un ancien code incompatible avec le schéma.
+Les migrations sont exécutées seulement par le pré-déploiement du web, sauf lorsque RUN_MIGRATIONS_ON_RELEASE=false. Aucun peuplement automatique n'est effectué. **Premier lancement : attendre la réussite du web avant de relancer le worker et le cron si ceux-ci ont démarré avant la création des tables.** Les démarrages suivants n'exécutent aucune migration. À chaque mise à jour, déployer le web puis les deux services de traitement sur le même commit validé ; ne pas laisser le cron ou le worker sur un ancien code incompatible avec le schéma.
 
 ## 3. Créer votre accès propriétaire
+
+Première installation seulement. Lors d'une migration, conserver le propriétaire et ses secrets restaurés ; ne pas recréer son compte ni réinitialiser ses identifiants.
 
 Dans **chorale-web → Shell**, exécuter :
 
@@ -89,7 +92,7 @@ Le contrôle de production est en lecture seule et n'affiche aucun secret. Il do
 
 ## Sauvegardes et mises à jour
 
-Activer/vérifier les sauvegardes et la rétention PostgreSQL proposées dans le compte Render. Le disque privé a ses propres snapshots, distincts des sauvegardes PostgreSQL. Prévoir aussi des exports chiffrés hors de l'hébergement et tester une restauration dans un environnement isolé. Sauvegarder ensemble la base, les fichiers et les secrets nécessaires à leur lecture ; ne jamais committer ces sauvegardes.
+Activer/vérifier les sauvegardes, la restauration et la rétention PostgreSQL dans Neon. Conserver la base PostgreSQL Render historique et ses sauvegardes jusqu’à validation et autorisation de suppression. Le disque privé a ses propres snapshots, distincts des sauvegardes PostgreSQL. Prévoir aussi des exports chiffrés hors de l'hébergement et tester une restauration dans un environnement isolé. Sauvegarder ensemble la base, les fichiers et les secrets nécessaires à leur lecture ; ne jamais committer ces sauvegardes.
 
 Avant chaque livraison : tests au vert sur le commit choisi, sauvegarde vérifiée, examen des migrations, livraison du web puis du worker/cron. Un retour à une ancienne image ne restaure pas le schéma ni les données. Certaines migrations financières sont volontairement irréversibles : une restauration doit être préparée et testée.
 

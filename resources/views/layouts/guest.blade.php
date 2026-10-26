@@ -1,3 +1,4 @@
+@inject('chorale', 'App\Services\ChoraleIdentity')
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
@@ -12,9 +13,7 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
 
-    @if ($chorale->hasLogo())
-        <link rel="icon" href="{{ $chorale->logoUrl() }}">
-    @endif
+    <link rel="icon" href="{{ asset('brand-icon.svg') }}" type="image/svg+xml">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -32,7 +31,7 @@
             <div class="relative">
                 <div class="flex items-center gap-3">
                     <span class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-amber-400 text-slate-900">
-                        <x-chorale-logo icon-class="h-6 w-6" />
+                        <x-icon name="music" class="h-6 w-6" />
                     </span>
                     <div>
                         <p class="text-sm font-semibold text-white">{{ $chorale->name() }}</p>
@@ -95,7 +94,7 @@
             <div class="mx-auto w-full max-w-md">
                 <div class="mb-8 flex items-center gap-3 lg:hidden">
                     <span class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-slate-900 text-amber-400">
-                        <x-chorale-logo icon-class="h-6 w-6" />
+                        <x-icon name="music" class="h-6 w-6" />
                     </span>
                     <div>
                         <p class="text-sm font-semibold text-slate-900">{{ $chorale->name() }}</p>

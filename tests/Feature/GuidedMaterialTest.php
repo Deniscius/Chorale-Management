@@ -63,7 +63,7 @@ class GuidedMaterialTest extends TestCase
         $admin = User::factory()->role(UserRole::Admin)->create();
         $instrument = Instrument::factory()->create(['quantity' => 2]);
         $this->actingAs($admin)->get(route('instruments.movements'))->assertOk()
-            ->assertSee('Suivre un prêt et son retour');
+            ->assertSee('Suivre les prêts et retours');
         Livewire::actingAs($admin)->test(MovementForm::class)
             ->assertSee('Choisir le matériel et l’action')->assertSee('Date du retour réel')
             ->set('instrument_id', (string) $instrument->id)->set('type', 'pret')

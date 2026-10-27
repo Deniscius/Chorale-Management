@@ -55,6 +55,37 @@ class Index extends Component
     #[Locked]
     public ?int $visibilityDocumentId = null;
 
+    #[Locked]
+    public ?int $previewDocumentId = null;
+
+    public function preview(int $id): void
+    {
+        $document = Document::findOrFail($id);
+        abort_unless($document->canView(auth()->user()), 403);
+        abort_unless($document->isPreviewable(), 415);
+        $this->previewDocumentId = $document->id;
+    }
+
+    #[On('close-preview')]
+    public function closePreview(): void
+    {
+        $this->previewDocumentId = null;
+    }
+
+    #[Computed]
+    public function previewDocument(): ?Document
+    {
+        if (! $this->previewDocumentId) {
+            return null;
+        }
+
+        $document = Document::findOrFail($this->previewDocumentId);
+        abort_unless($document->canView(auth()->user()), 403);
+        abort_unless($document->isPreviewable(), 415);
+
+        return $document;
+    }
+
     public function changeVisibility(int $id): void
     {
         $document = Document::findOrFail($id);

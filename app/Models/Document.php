@@ -79,6 +79,36 @@ class Document extends Model
         };
     }
 
+    public function previewMimeType(): ?string
+    {
+        return match (strtolower(pathinfo($this->original_name, PATHINFO_EXTENSION))) {
+            'pdf' => 'application/pdf',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+            'txt' => 'text/plain; charset=UTF-8',
+            'csv' => 'text/csv; charset=UTF-8',
+            default => null,
+        };
+    }
+
+    public function previewType(): ?string
+    {
+        $mime = $this->previewMimeType();
+
+        return match (true) {
+            $mime === 'application/pdf' => 'pdf',
+            str_starts_with((string) $mime, 'image/') => 'image',
+            str_starts_with((string) $mime, 'text/') => 'text',
+            default => null,
+        };
+    }
+
+    public function isPreviewable(): bool
+    {
+        return $this->previewMimeType() !== null;
+    }
+
     public function scopeReadable(Builder $query, ?User $user): Builder
     {
         if (! $user) {

@@ -3,15 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
-use App\Models\Member;
-use App\Observers\PersonalInformationObserver;
+use App\Models\ChoirCommission;
 use App\Services\AccountWriter;
+use App\Services\CommissionAccess;
+use App\Services\PersonalProfileWriter;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -23,8 +22,15 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $user = $request->user()->load('member');
+        $delegations = app(CommissionAccess::class)->assignments($user)->keyBy('id');
+        $commissions = ChoirCommission::inStatus('active')->where(fn ($q) => $q->whereIn('id', $delegations->keys())
+            ->when(! $user->member_id || $user->member, fn ($q) => $q->orWhere('associate_id', $user->id)))->orderBy('name')->get();
+
         return view('profile.edit', [
-            'user' => $request->user()->load('member'),
+            'user' => $user,
+            'commissions' => $commissions,
+            'delegations' => $delegations,
         ]);
     }
 
@@ -34,17 +40,7 @@ class ProfileController extends Controller
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         try {
-            DB::transaction(function () use ($request) {
-                $data = $request->validated();
-                $user = $request->user();
-                $member = $user->member_id ? Member::lockForUpdate()->findOrFail($user->member_id) : null;
-                if ($member) {
-                    $member->fill(Arr::only($data, PersonalInformationObserver::MEMBER_FIELDS));
-                    $member->save();
-                    $data['name'] = $member->first_name.' '.$member->last_name;
-                }
-                app(AccountWriter::class)->save($user, Arr::only($data, ['name', 'username', 'email']));
-            }, 3);
+            app(PersonalProfileWriter::class)->save($request->user(), $request->validated());
         } catch (UniqueConstraintViolationException $e) {
             throw ValidationException::withMessages(['email' => 'Cette adresse vient d’être utilisée par un autre compte. Choisissez une autre adresse.']);
         }

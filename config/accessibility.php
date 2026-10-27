@@ -3,6 +3,7 @@
 // Editorial instructions only: never include account or business data in speech.
 return [
     'guides' => [
+
         'works.*' => [
             'title' => 'Retrouver un chant',
             'steps' => [

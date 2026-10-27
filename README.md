@@ -332,6 +332,10 @@ php artisan schedule:list                          # vérifier la planification
 `REMINDERS_DAYS_BEFORE`, `REMINDERS_SEND_AT`, `REMINDERS_SMS_ENABLED`,
 `REMINDERS_SMS_DRIVER`, `SMS_ENDPOINT`, `SMS_TOKEN`.
 
+**D7 Networks** : le pilote natif `d7` utilise `D7_API_TOKEN` et
+`D7_SMS_ORIGINATOR`. Voir [la configuration et la validation D7](docs/D7-SMS.md).
+Les SMS restent désactivés par défaut.
+
 Le pilote SMS HTTP envoie un corps JSON `{ from, to, message }` authentifié par
 un jeton Bearer : la plupart des agrégateurs peuvent être branchés ainsi
 (`app/Services/Sms/HttpSmsSender.php`).

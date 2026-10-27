@@ -10,7 +10,7 @@ return [
      *
      * « days_before » : nombre de jours entre l'envoi et la répétition.
      * « sms_enabled » : active l'envoi par SMS (nécessite un fournisseur).
-     * « sms_driver »  : « log » (développement) ou « http » (fournisseur).
+     * « sms_driver »  : « log » (développement), « http » (passerelle) ou « d7 » (D7 Networks).
      */
     'reminders' => [
         'enabled' => (bool) env('REMINDERS_ENABLED', true),
@@ -27,6 +27,10 @@ return [
         'endpoint' => env('SMS_ENDPOINT'),
         'token' => env('SMS_TOKEN'),
         'timeout' => (int) env('SMS_TIMEOUT', 15),
+        'd7' => [
+            'token' => env('D7_API_TOKEN'),
+            'originator' => env('D7_SMS_ORIGINATOR', env('REMINDERS_SMS_FROM', 'CHORALE')),
+        ],
     ],
 
 ];

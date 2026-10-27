@@ -29,7 +29,8 @@
 
             <div>
                 <x-input-label for="members-form-phone" value="Téléphone" />
-                <x-text-input id="members-form-phone" type="text" name="phone" aria-describedby="members-form-phone-error" aria-invalid="{{ $errors->has('phone') ? 'true' : 'false' }}" wire:model="phone" :disabled="(bool) $member" class="mt-1 block w-full" />
+                <x-text-input id="members-form-phone" type="tel" name="phone" aria-describedby="members-form-phone-help members-form-phone-error" aria-invalid="{{ $errors->has('phone') ? 'true' : 'false' }}" wire:model="phone" :disabled="(bool) $member" class="mt-1 block w-full" />
+                <p id="members-form-phone-help" class="mt-1 text-sm text-slate-600">Pour les SMS, utilisez le format international : +228 suivi des 8 chiffres du numéro au Togo.</p>
                 <x-input-error id="members-form-phone-error" :messages="$errors->get('phone')" class="mt-1" />
             </div>
         </div>

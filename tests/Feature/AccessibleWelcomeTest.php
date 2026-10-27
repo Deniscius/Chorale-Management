@@ -54,7 +54,6 @@ class AccessibleWelcomeTest extends TestCase
         $this->assertSame(3, substr_count($html, 'data-speak='));
 
         $route = new Route('GET', '/profil', fn () => null);
-        $route->name('users.index');
         $request->setRouteResolver(fn () => $route);
         $this->assertStringNotContainsString('<details', Blade::render('<x-page-guide />'));
     }

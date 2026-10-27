@@ -18,13 +18,11 @@
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Documents accessibles" :value="$this->stats['total']" icon="archive" color="slate" :href="route($archiveRoute, $archiveParameters + ['commission'=>$commission]).'#resultats'" />
-        <x-stat-card label="Privés" :value="$this->stats['prives']" icon="folder" color="blue" :href="route($archiveRoute, $archiveParameters + ['commission'=>$commission,'visibilite'=>'private']).'#resultats'" />
-        <x-stat-card label="Partagés" :value="$this->stats['partages']" icon="users" color="green" :href="route($archiveRoute, $archiveParameters + ['commission'=>$commission,'visibilite'=>'published']).'#resultats'" />
+        <x-stat-card label="Responsables habilités" :value="$this->stats['prives']" icon="folder" color="blue" :href="route($archiveRoute, $archiveParameters + ['commission'=>$commission,'visibilite'=>'private']).'#resultats'" />
+        <x-stat-card label="Toute la chorale" :value="$this->stats['partages']" icon="users" color="green" :href="route($archiveRoute, $archiveParameters + ['commission'=>$commission,'visibilite'=>'published']).'#resultats'" />
         <x-stat-card label="Volume accessible" :value="\App\Support\Files::size($this->stats['octets'])" icon="folder" color="violet" :href="route($archiveRoute, $archiveParameters + ['commission'=>$commission]).'#resultats'" />
     </div>
-    @if (\App\Enums\Commission::from($commission)->hasPrivateArchive())
-        <p class="mt-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-900">Privé : responsable et associé désignés uniquement. Partagé : tous les utilisateurs connectés. Les compteurs affichent uniquement les documents qui vous sont accessibles.</p>
-    @endif
+    <p class="mt-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-950">Chaque document peut être réservé aux responsables habilités, accessible selon les droits de la commission ou partagé avec toute la chorale connectée. Aucun fichier n’est public sur Internet. Les compteurs ne montrent que les documents que vous pouvez consulter.</p>
 
     {{-- Onglets par commission --}}
     <div class="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Commissions">
@@ -75,7 +73,7 @@
 
         <div class="mt-3 grid gap-3 sm:grid-cols-2">
             <x-select name="visibility" label="Visibilité" wire:model.live="visibility">
-                <option value="">Toutes les visibilités</option><option value="private">Privés</option><option value="published">Partagés</option>
+                <option value="">Toutes les visibilités</option>@foreach(\App\Enums\DocumentVisibility::options() as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach
             </x-select>
             <x-input name="year" label="Année du document" type="number" min="1000" max="9999" wire:model.live.debounce.300ms="year" />
         </div>
@@ -118,9 +116,7 @@
                         </div>
                     </td>
                     <td class="whitespace-nowrap px-4 py-3">
-                        @if ($document->commission->hasPrivateArchive())
-                            <x-badge>{{ $document->visibility === 'published' ? 'Partagé' : 'Privé' }}</x-badge>
-                        @endif
+                        <x-badge>{{ \App\Enums\DocumentVisibility::tryFrom($document->visibility)?->label() ?? 'Visibilité inconnue' }}</x-badge>
                         @if ($document->category)
                             <x-badge>{{ $document->category }}</x-badge>
                         @else
@@ -148,11 +144,8 @@
                                 <span class="px-2 text-xs text-rose-500" title="Fichier introuvable">absent</span>
                             @endif
 
-                            @if ($document->commission->hasPrivateArchive() && $this->canUpload($document->commission))
-                                <button type="button" class="btn btn-soft btn-sm" wire:click="share({{ $document->id }}, {{ $document->visibility === 'published' ? 'false' : 'true' }})"
-                                    wire:confirm="{{ $document->visibility === 'published' ? 'Retirer le partage de ce document ?' : 'Partager ce fichier avec tous les utilisateurs connectés ?' }}">
-                                    {{ $document->visibility === 'published' ? 'Rendre privé' : 'Partager' }}
-                                </button>
+                            @if ($this->canUpload($document->commission))
+                                <button type="button" class="btn btn-soft btn-sm" wire:click="changeVisibility({{ $document->id }})">Visibilité</button>
                             @endif
                             @if ($this->canUpload($document->commission))
                                 <x-row-actions edit="edit" :id="$document->id" remove="delete"
@@ -178,6 +171,11 @@
         <x-modal-panel :title="$editingId ? 'Modifier le document' : 'Importer un document'"
             subtitle="Le document sera conservé dans l'archive de la commission sélectionnée.">
             <livewire:documents.form :document="$this->editingDocument" :commission="$this->commission" :correspondence-id="$this->correspondenceId" />
+        </x-modal-panel>
+    @endif
+    @if($visibilityDocumentId)
+        <x-modal-panel title="Modifier la visibilité" subtitle="Choisissez qui peut consulter ce document dans la chorale." close-event="close-visibility">
+            <livewire:documents.visibility-form :document="$this->visibilityDocument" :key="'visibility-'.$visibilityDocumentId" />
         </x-modal-panel>
     @endif
 </div>

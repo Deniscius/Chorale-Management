@@ -15,8 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * Document archivé pour une commission.
  *
- * Le fichier est stocké sur le disque privé et n'est consultable qu'à
- * travers une route protégée par les droits du module correspondant.
+ * Le fichier reste privé ; la route de consultation applique son niveau
+ * de visibilité et les droits de la commission dans la même chorale.
  */
 class Document extends Model
 {
@@ -71,9 +71,12 @@ class Document extends Model
             return false;
         }
 
-        return $this->commission->hasPrivateArchive()
-            ? ($this->visibility === 'published' || $this->canManage($user))
-            : $this->commission->canView($user);
+        return match ($this->visibility) {
+            'published' => true,
+            'commission' => $this->commission->canView($user) || $this->canManage($user),
+            'private' => $this->canManage($user),
+            default => false,
+        };
     }
 
     public function scopeReadable(Builder $query, ?User $user): Builder
@@ -81,15 +84,20 @@ class Document extends Model
         if (! $user) {
             return $query->whereRaw('1=0');
         }
-        $legacy = array_map(fn ($c) => $c->value, array_filter(Commission::forUser($user), fn ($c) => ! $c->hasPrivateArchive()));
+        $readable = array_map(fn ($c) => $c->value, Commission::forUser($user));
+        $manageable = array_map(fn ($c) => $c->value, array_filter(Commission::cases(),
+            fn ($c) => ! $c->hasPrivateArchive() && $c->canManageArchive($user)));
 
-        return $query->where(function (Builder $q) use ($user, $legacy) {
-            $q->whereIn('commission', $legacy)->orWhere(function (Builder $q) use ($user) {
-                $q->whereIn('commission', [Commission::Liturgique->value, Commission::Secretariat->value])
-                    ->where(fn ($q) => $q->where('visibility', 'published')->orWhereHas('team', function ($q) use ($user) {
-                        $q->allowing($user);
-                    }));
-            });
+        return $query->where($query->qualifyColumn('tenant_id'), $user->tenant_id)->where(function (Builder $q) use ($user, $readable, $manageable) {
+            $q->where('visibility', 'published')
+                ->orWhere(fn ($q) => $q->where('visibility', 'commission')->whereIn('commission', $readable))
+                ->orWhere(function ($q) use ($user, $manageable) {
+                    $q->whereIn('visibility', ['private', 'commission'])->where(function ($q) use ($user, $manageable) {
+                        $q->whereIn('commission', $manageable)->orWhere(fn ($q) => $q
+                            ->whereIn('commission', [Commission::Liturgique->value, Commission::Secretariat->value])
+                            ->whereHas('team', fn ($q) => $q->allowing($user)));
+                    });
+                });
         });
     }
 

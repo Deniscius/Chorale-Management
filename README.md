@@ -510,3 +510,5 @@ php artisan queue:work --tries=3 --timeout=90
 Projet interne. Tous droits réservés à la chorale.
 
 Les corrections de l’audit et les étapes de déploiement sont décrites dans [docs/AUDIT-CORRECTIONS.md](docs/AUDIT-CORRECTIONS.md).
+
+- [Visibilité des documents importés](docs/VISIBILITE-DOCUMENTS.md)

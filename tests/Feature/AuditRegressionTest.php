@@ -45,7 +45,7 @@ class AuditRegressionTest extends TestCase
         $doc = Document::factory()->create(['commission' => Commission::Direction, 'path' => 'documents/audit.txt', 'original_name' => 'audit.txt', 'mime_type' => 'text/plain']);
         Storage::disk('local')->put($doc->path, 'AUDIT SYNTHETIQUE');
         $this->actingAs(User::factory()->role(UserRole::Choriste)->create());
-        $this->get('/documents?commission=commission_direction')->assertForbidden();
+        $this->get('/documents?commission=commission_direction')->assertOk()->assertDontSee($doc->title);
         $this->get(route('documents.download', $doc))->assertForbidden();
     }
 

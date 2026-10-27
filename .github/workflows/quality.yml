@@ -1,7 +1,16 @@
 name: Qualité
 on:
   push:
+    branches: [main]
   pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -50,7 +59,7 @@ jobs:
     name: Parcours accessibles et contrôles axe
     runs-on: ubuntu-latest
     env:
-      APP_ENV: testing
+      APP_ENV: local
       APP_DEBUG: 'false'
       APP_URL: http://127.0.0.1:8091
       APP_CONFIG_CACHE: ${{ github.workspace }}/storage/framework/testing/accessibility/config.php
@@ -88,10 +97,12 @@ jobs:
           php artisan serve --host=127.0.0.1 --port=8091 --no-reload > "$RUNNER_TEMP/accessibility-server.log" 2>&1 &
           curl --fail --silent --output /dev/null --retry 20 --retry-connrefused --retry-delay 1 http://127.0.0.1:8091/login
       - run: npm run test:accessibility
-
+      - run: npm run test:material
+      - run: npm run test:profiles
+      - run: npm run test:documents
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: accessibility-reports
-
+          path: test-results
           if-no-files-found: ignore

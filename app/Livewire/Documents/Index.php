@@ -22,9 +22,9 @@ use Livewire\WithPagination;
 /**
  * Archives documentaires des commissions.
  *
- * Chaque commission dispose de son espace : la consultation est ouverte
- * aux rôles ayant accès au module, le dépôt et la suppression restent
- * réservés aux rôles disposant du droit d'écriture sur ce module.
+ * Chaque commission dispose de son espace. La visibilité du document
+ * limite la consultation ; les responsables habilités conservent seuls
+ * le dépôt, la modification, le partage et la suppression.
  */
 class Index extends Component
 {
@@ -51,6 +51,28 @@ class Index extends Component
     public ?int $correspondenceId = null;
 
     public bool $showTeam = false;
+
+    #[Locked]
+    public ?int $visibilityDocumentId = null;
+
+    public function changeVisibility(int $id): void
+    {
+        $document = Document::findOrFail($id);
+        abort_unless($document->canManage(auth()->user()), 403);
+        $this->visibilityDocumentId = $document->id;
+    }
+
+    #[On('close-visibility')]
+    public function closeVisibility(): void
+    {
+        $this->visibilityDocumentId = null;
+    }
+
+    #[Computed]
+    public function visibilityDocument(): ?Document
+    {
+        return $this->visibilityDocumentId ? Document::findOrFail($this->visibilityDocumentId) : null;
+    }
 
     public bool $showForm = false;
 
@@ -159,7 +181,9 @@ class Index extends Component
             return [Commission::Secretariat];
         }
 
-        return array_values(array_filter(Commission::cases(), fn ($c) => $c->hasPrivateArchive() || $c->canView($user)));
+        // Chaque espace peut contenir un document partagé avec toute la chorale.
+        // Le filtre readable protège les titres, compteurs et catégories.
+        return Commission::cases();
     }
 
     /**

@@ -28,13 +28,11 @@
 
         <div class="grid gap-4 sm:grid-cols-2">
             <x-input id="documents-form-document_date" name="document_date" label="Date du document / de la messe" type="date" wire:model="document_date" />
-            @if (\App\Enums\Commission::tryFrom($commission)?->hasPrivateArchive())
-                <x-select id="documents-form-visibility" name="visibility" label="Visibilité" wire:model="visibility">
-                    <option value="private">Privé — responsable et associé</option>
-                    <option value="published">Partagé — utilisateurs connectés</option>
-                </x-select>
-            @endif
+            <x-select id="documents-form-visibility" name="visibility" label="Qui peut consulter ce document ?" wire:model.live="visibility">
+                @foreach(\App\Enums\DocumentVisibility::options() as $value => $label)<option value="{{ $value }}">{{ $label }}</option>@endforeach
+            </x-select>
         </div>
+        <p class="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950">{{ \App\Enums\DocumentVisibility::tryFrom($visibility)?->description() }} Le choix protège le titre, la liste, l’aperçu et le téléchargement. Un fichier déjà téléchargé ne peut pas être rappelé.</p>
         <div>
             <x-input-label for="documents-form-title" value="Titre du document" />
             <x-text-input id="documents-form-title" type="text" name="title" aria-describedby="documents-form-title-error" aria-invalid="{{ $errors->has('title') ? 'true' : 'false' }}" wire:model="title" class="mt-1 block w-full" required autofocus />

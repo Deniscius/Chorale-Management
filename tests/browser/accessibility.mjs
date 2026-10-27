@@ -59,6 +59,14 @@ const overflow = async () =>
         false,
         'horizontal overflow',
     );
+const waitForFocus = async (locator) => {
+    const element = await locator.elementHandle();
+    assert.ok(element, 'focus target must exist');
+    await page.waitForFunction(
+        (target) => target === document.activeElement,
+        element,
+    );
+};
 const audit = async (name) => {
     await page.waitForLoadState('networkidle');
     // Audit the settled page, after Livewire's transient navigation indicator.
@@ -219,6 +227,9 @@ try {
             await page
                 .getByRole('dialog', { name: 'Navigation principale' })
                 .waitFor();
+            await waitForFocus(
+                page.getByRole('button', { name: 'Fermer le menu' }),
+            );
             assert.equal(
                 await page
                     .getByRole('button', { name: 'Fermer le menu' })
@@ -226,6 +237,7 @@ try {
                 true,
             );
             await page.keyboard.press('Shift+Tab');
+            await waitForFocus(page.locator('#sidebar a').last());
             assert.equal(
                 await page
                     .locator('#sidebar a')
@@ -234,6 +246,9 @@ try {
                 true,
             );
             await page.keyboard.press('Tab');
+            await waitForFocus(
+                page.getByRole('button', { name: 'Fermer le menu' }),
+            );
             assert.equal(
                 await page
                     .getByRole('button', { name: 'Fermer le menu' })
@@ -242,6 +257,12 @@ try {
             );
             await audit('mobile-menu');
             await page.keyboard.press('Escape');
+            await waitForFocus(
+                page.getByRole('button', {
+                    name: 'Ouvrir le menu',
+                    exact: true,
+                }),
+            );
             assert.equal(
                 await page
                     .getByRole('button', {

@@ -6,6 +6,7 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ChoraleLogoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentDownloadController;
+use App\Http\Controllers\DocumentPreviewController;
 use App\Http\Controllers\InstrumentLabelsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TenantAddressController;
@@ -98,6 +99,9 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
 
     Route::get('/documents/{document}/telecharger', DocumentDownloadController::class)
         ->name('documents.download');
+
+    Route::get('/documents/{document}/apercu', DocumentPreviewController::class)
+        ->name('documents.preview');
 
     // Rappels envoyés aux choristes (journal, lecture seule).
     Route::get('/rappels', RemindersHistory::class)

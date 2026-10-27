@@ -40,7 +40,7 @@ async function session(username) {
     return { page, context };
 }
 async function audit(name, page) {
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.locator('#nprogress').waitFor({ state: 'detached' });
     const result = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
@@ -74,10 +74,25 @@ try {
     await admin.getByRole('button', { name: 'Enregistrer', exact: true }).click();
     const row = admin.getByRole('row').filter({ hasText: title });
     await row.waitFor();
-    const download = await row.getByRole('link', { name: 'Consulter le document' }).getAttribute('href');
+    const download = await row.getByRole('link', { name: `Télécharger ${title}`, exact: true }).getAttribute('href');
+    await row.getByRole('button', { name: `Aperçu de ${title}`, exact: true }).click();
+    const previewDialog = admin.getByRole('dialog').filter({ hasText: title });
+    const previewFrame = previewDialog.locator(`iframe[title="Aperçu de ${title}"]`);
+    await previewFrame.waitFor();
+    const preview = await previewFrame.getAttribute('src');
+    assert.equal(await previewFrame.contentFrame().locator('body').innerText(), 'Document fictif de validation');
+    const previewResponse = await admin.request.get(preview);
+    assert.equal(previewResponse.status(), 200);
+    assert.match(previewResponse.headers()['content-disposition'], /^inline;/);
+    assert.match(previewResponse.headers()['cache-control'], /no-store/);
+    await audit('document-preview', admin);
+    await previewDialog.getByRole('button', { name: 'Fermer la fenêtre', exact: true }).click();
+    const downloadResponse = await admin.request.get(download);
+    assert.match(downloadResponse.headers()['content-disposition'], /^attachment;/);
     await member.goto(url);
     assert.equal(await member.getByText(title, { exact: true }).count(), 0);
     assert.equal((await member.request.get(download)).status(), 403);
+    assert.equal((await member.request.get(preview)).status(), 403);
     for (const close of await admin.getByRole('button', { name: 'Fermer la notification' }).all()) await close.click();
     await row.getByRole('button', { name: 'Visibilité', exact: true }).click();
     await admin.getByRole('radio', { name: /Toute la chorale/ }).check();
@@ -90,6 +105,7 @@ try {
     assert.equal(response.status(), 200);
     assert.match(response.headers()['cache-control'], /no-store/);
     assert.equal(await response.text(), 'Document fictif de validation');
+    assert.equal((await member.request.get(preview)).status(), 200);
     await audit('shared-list', member);
     for (const close of await admin.getByRole('button', { name: 'Fermer la notification' }).all()) await close.click();
     await row.getByRole('button', { name: 'Visibilité', exact: true }).click();
@@ -103,7 +119,7 @@ try {
     assert.ok(await member.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
     await audit('restricted-list-mobile', member);
     assert.deepEqual(errors, []);
-    console.log('Documents: import, partage, téléchargement et révocation vérifiés; 4 états sans violation axe.');
+    console.log('Documents: import, aperçu intégré, téléchargement, partage et révocation vérifiés; 5 états sans violation axe.');
 } finally {
     await browser.close();
 }

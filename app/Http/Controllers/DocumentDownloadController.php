@@ -8,11 +8,10 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Consultation d'un document archivé.
+ * Téléchargement explicite d'un document archivé.
  *
- * L'accès est conditionné au droit de consultation du module auquel la
- * commission du document est rattachée. Le fichier reste sur le disque
- * privé et n'est jamais exposé directement.
+ * L'accès respecte la visibilité du document et les responsabilités de
+ * l'utilisateur. Le fichier reste privé et n'est jamais exposé directement.
  */
 class DocumentDownloadController extends Controller
 {
@@ -26,7 +25,7 @@ class DocumentDownloadController extends Controller
 
         return app(PrivateFiles::class)->response(
             $document->path, $document->original_name,
-            in_array($document->mime_type, ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'], true),
+            false,
             $document->mime_type,
         );
     }

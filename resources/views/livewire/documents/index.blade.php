@@ -135,8 +135,15 @@
                     <td class="whitespace-nowrap px-4 py-3 text-right">
                         <div class="flex items-center justify-end gap-0.5">
                             @if ($document->fileExists())
-                                <a href="{{ route('documents.download', $document) }}" target="_blank"
-                                    rel="noopener" title="Consulter le document" aria-label="Consulter le document"
+                                @if($document->isPreviewable())
+                                    <button type="button" wire:click="preview({{ $document->id }})"
+                                        title="Aperçu sans téléchargement" aria-label="Aperçu de {{ $document->title }}"
+                                        class="rounded-lg p-2 text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-700">
+                                        <x-icon name="eye" class="h-4 w-4" />
+                                    </button>
+                                @endif
+                                <a href="{{ route('documents.download', $document) }}"
+                                    title="Télécharger le document" aria-label="Télécharger {{ $document->title }}"
                                     class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
                                     <x-icon name="download" class="h-4 w-4" />
                                 </a>
@@ -176,6 +183,29 @@
     @if($visibilityDocumentId)
         <x-modal-panel title="Modifier la visibilité" subtitle="Choisissez qui peut consulter ce document dans la chorale." close-event="close-visibility">
             <livewire:documents.visibility-form :document="$this->visibilityDocument" :key="'visibility-'.$visibilityDocumentId" />
+        </x-modal-panel>
+    @endif
+    @if($previewDocumentId && $this->previewDocument)
+        <x-modal-panel :title="$this->previewDocument->title"
+            subtitle="Aperçu sécurisé dans la plateforme — le téléchargement reste une action séparée."
+            close-event="close-preview" size="3xl">
+            @if($this->previewDocument->previewType() === 'image')
+                <div class="flex min-h-64 items-center justify-center rounded-xl bg-slate-100 p-3 sm:min-h-[60vh]">
+                    <img src="{{ route('documents.preview', $this->previewDocument) }}"
+                        alt="Aperçu de {{ $this->previewDocument->title }}"
+                        class="max-h-[70vh] max-w-full rounded-lg object-contain">
+                </div>
+            @else
+                <iframe src="{{ route('documents.preview', $this->previewDocument) }}"
+                    title="Aperçu de {{ $this->previewDocument->title }}"
+                    class="h-[65vh] min-h-80 w-full rounded-xl border border-slate-200 bg-white"></iframe>
+            @endif
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <p class="text-sm text-slate-600">{{ $this->previewDocument->original_name }} · {{ $this->previewDocument->humanSize() }}</p>
+                <a href="{{ route('documents.download', $this->previewDocument) }}" class="btn btn-secondary">
+                    <x-icon name="download" class="h-4 w-4" /> Télécharger une copie
+                </a>
+            </div>
         </x-modal-panel>
     @endif
 </div>

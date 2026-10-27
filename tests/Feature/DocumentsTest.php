@@ -128,6 +128,72 @@ class DocumentsTest extends TestCase
         $response->assertHeader('Content-Type', 'application/pdf');
     }
 
+    public function test_apercu_et_telechargement_sont_deux_actions_distinctes_et_privees(): void
+    {
+        Storage::fake('local');
+        $user = User::factory()->role(UserRole::Secretaire)->create();
+        CommissionTeam::where('commission', Commission::Secretariat->value)->update(['leader_id' => $user->id]);
+        $document = Document::factory()->create([
+            'commission' => Commission::Secretariat,
+            'path' => 'documents/notice.txt',
+            'original_name' => 'notice.txt',
+            'mime_type' => 'text/plain',
+        ]);
+        Storage::disk('local')->put($document->path, 'Contenu privé à visualiser');
+
+        $preview = $this->actingAs($user)->get(route('documents.preview', $document));
+        $preview->assertOk()
+            ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
+            ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertHeader('Content-Security-Policy', "frame-ancestors 'self'")
+            ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
+            ->assertHeader('Referrer-Policy', 'no-referrer')
+            ->assertStreamedContent('Contenu privé à visualiser');
+        $this->assertStringStartsWith('inline;', $preview->headers->get('Content-Disposition'));
+
+        $download = $this->get(route('documents.download', $document));
+        $download->assertOk()->assertStreamedContent('Contenu privé à visualiser');
+        $this->assertStringStartsWith('attachment;', $download->headers->get('Content-Disposition'));
+    }
+
+    public function test_apercu_refuse_les_formats_non_affichables_et_les_utilisateurs_non_autorises(): void
+    {
+        Storage::fake('local');
+        $manager = User::factory()->role(UserRole::Admin)->create();
+        $outsider = User::factory()->role(UserRole::Choriste)->create();
+        $office = Document::factory()->create([
+            'commission' => Commission::Direction,
+            'visibility' => 'private',
+            'path' => 'documents/rapport.docx',
+            'original_name' => 'rapport.docx',
+            'mime_type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ]);
+        Storage::disk('local')->put($office->path, 'fichier bureautique fictif');
+
+        $this->actingAs($manager)->get(route('documents.preview', $office))->assertStatus(415);
+        Livewire::actingAs($manager)->test(Index::class)->call('preview', $office->id)->assertStatus(415);
+        $this->actingAs($outsider)->get(route('documents.preview', $office))->assertForbidden();
+    }
+
+    public function test_la_fenetre_apercu_reverifie_les_droits_apres_une_restriction(): void
+    {
+        $reader = User::factory()->role(UserRole::Choriste)->create();
+        $document = Document::factory()->create([
+            'commission' => Commission::Direction,
+            'visibility' => 'published',
+            'original_name' => 'annonce.pdf',
+            'mime_type' => 'application/pdf',
+        ]);
+        $component = Livewire::actingAs($reader)->test(Index::class)
+            ->call('preview', $document->id)
+            ->assertSet('previewDocumentId', $document->id);
+
+        $document->update(['visibility' => 'private']);
+
+        $component->call('$refresh')->assertForbidden();
+        $this->actingAs($reader)->get(route('documents.preview', $document))->assertForbidden();
+    }
+
     public function test_un_role_sans_droit_ne_peut_pas_telecharger_le_document(): void
     {
         Storage::fake('local');

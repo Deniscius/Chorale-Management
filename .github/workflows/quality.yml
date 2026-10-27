@@ -50,7 +50,7 @@ jobs:
     name: Parcours accessibles et contrôles axe
     runs-on: ubuntu-latest
     env:
-      APP_ENV: testing
+      APP_ENV: local
       APP_DEBUG: 'false'
       APP_URL: http://127.0.0.1:8091
       APP_CONFIG_CACHE: ${{ github.workspace }}/storage/framework/testing/accessibility/config.php
@@ -90,6 +90,7 @@ jobs:
       - run: npm run test:accessibility
       - run: npm run test:material
       - run: npm run test:profiles
+      - run: npm run test:documents
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

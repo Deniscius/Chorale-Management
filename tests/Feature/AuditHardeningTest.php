@@ -43,7 +43,7 @@ class AuditHardeningTest extends TestCase
         Storage::disk('local')->put('audit.txt', 'Synthetic');
         $docs = [];
         foreach (Commission::cases() as $c) {
-            $docs[] = Document::factory()->create(['commission' => $c, 'path' => 'audit.txt', 'mime_type' => 'text/plain', 'original_name' => 'audit.txt']);
+            $docs[] = Document::factory()->create(['commission' => $c, 'visibility' => $c->hasPrivateArchive() ? 'private' : 'commission', 'path' => 'audit.txt', 'mime_type' => 'text/plain', 'original_name' => 'audit.txt']);
         }
         foreach (UserRole::cases() as $role) {
             $user = User::factory()->role($role)->create();

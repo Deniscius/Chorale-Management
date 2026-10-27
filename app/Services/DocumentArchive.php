@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\Commission;
+use App\Enums\DocumentVisibility;
 use App\Models\Choir;
 use App\Models\Document;
 use App\Tenancy\TenantContext;
@@ -16,11 +17,12 @@ use Throwable;
 
 final class DocumentArchive
 {
-    public function save(?Document $document, array $data, ?UploadedFile $file = null): Document
+    public function save(?Document $document, array $data, ?UploadedFile $file = null, ?string $expectedVisibility = null): Document
     {
+        $data['visibility'] ??= $document?->visibility ?? 'private';
         Validator::make($data, [
             'commission' => ['required', Rule::enum(Commission::class)],
-            'visibility' => ['sometimes', Rule::in(['private', 'published', 'commission'])],
+            'visibility' => ['sometimes', Rule::in(array_keys(DocumentVisibility::labels()))],
             'document_date' => ['nullable', 'date'],
             'correspondence_id' => ['nullable', Rule::exists('correspondences', 'id')->whereNull('deleted_at')],
         ])->validate();
@@ -32,14 +34,6 @@ final class DocumentArchive
             throw ValidationException::withMessages(['commission' => 'Une pièce de courrier reste au secrétariat.']);
         }
         abort_unless($commission->canManageArchive(auth()->user()), 403);
-        if ($commission->hasPrivateArchive()) {
-            $data['visibility'] ??= $document?->visibility ?? 'private';
-            if ($data['visibility'] === 'commission') {
-                $data['visibility'] = 'private';
-            }
-        } else {
-            $data['visibility'] = 'commission';
-        }
         $stored = null;
         try {
             if ($file) {
@@ -50,10 +44,13 @@ final class DocumentArchive
                 $data += ['path' => $stored, 'original_name' => $file->getClientOriginalName(), 'mime_type' => $file->getMimeType(), 'size' => $file->getSize()];
             }
 
-            return DB::transaction(function () use ($document, $data, $stored) {
+            return DB::transaction(function () use ($document, $data, $stored, $expectedVisibility) {
                 $entry = $document ? Document::query()->lockForUpdate()->findOrFail($document->id) : new Document;
                 if ($entry->exists) {
                     abort_unless($entry->canManage(auth()->user()), 403);
+                    if ($expectedVisibility !== null && $entry->visibility !== $expectedVisibility) {
+                        throw ValidationException::withMessages(['visibility' => 'La visibilité a changé. Rechargez le document avant de réessayer.']);
+                    }
                 }
                 $old = $entry->path;
                 if (! $entry->exists) {
@@ -85,13 +82,22 @@ final class DocumentArchive
         });
     }
 
+    public function setVisibility(int $id, string $visibility, ?string $expectedVisibility = null): void
+    {
+        Validator::make(['visibility' => $visibility], ['visibility' => ['required', Rule::in(array_keys(DocumentVisibility::labels()))]])->validate();
+        DB::transaction(function () use ($id, $visibility, $expectedVisibility) {
+            $entry = Document::query()->lockForUpdate()->findOrFail($id);
+            abort_unless($entry->canManage(auth()->user()), 403);
+            if ($expectedVisibility !== null && $entry->visibility !== $expectedVisibility) {
+                throw ValidationException::withMessages(['visibility' => 'La visibilité a changé. Rechargez le document avant de réessayer.']);
+            }
+            $entry->update(['visibility' => $visibility]);
+        });
+    }
+
     public function share(int $id, bool $published): void
     {
-        DB::transaction(function () use ($id, $published) {
-            $entry = Document::query()->lockForUpdate()->findOrFail($id);
-            abort_unless($entry->canManage(auth()->user()) && $entry->commission->hasPrivateArchive(), 403);
-            $entry->update(['visibility' => $published ? 'published' : 'private']);
-        });
+        $this->setVisibility($id, $published ? 'published' : 'private');
     }
 
     private function removeAfterCommit(string $path): void

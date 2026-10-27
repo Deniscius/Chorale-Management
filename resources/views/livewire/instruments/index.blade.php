@@ -1,20 +1,22 @@
 <div>
     <x-page-header title="Inventaire des instruments" icon="cube"
-        :subtitle="'Parc instrumental de la chorale — '.$this->stats['total'].' référence(s) pour '.$this->stats['quantite'].' pièce(s).'">
-        <x-slot name="actions"><a href="{{ route('instruments.units') }}" class="btn btn-secondary">Articles et étiquettes A4</a>
+        :subtitle="'Parc instrumental de la chorale — '.$this->stats['total'].' type(s) de matériel pour '.$this->stats['quantite'].' objet(s).'">
+        <x-slot name="actions"><a href="{{ route('instruments.units') }}" class="btn btn-secondary max-w-full whitespace-normal">Étiqueter les objets</a>
             @if ($this->canManage())
                 <button type="button" wire:click="create"
-                    class="btn btn-primary">
+                    class="btn btn-primary max-w-full whitespace-normal">
                     <x-icon name="plus" class="h-4 w-4" />
-                    Nouvel instrument
+                    Ajouter du matériel
                 </button>
             @endif
         </x-slot>
     </x-page-header>
 
+    <x-material-navigation />
+
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Références" :value="$this->stats['total']" icon="cube" color="slate" :href="route('instruments.index', []).'#resultats'" />
-        <x-stat-card label="Pièces" :value="$this->stats['quantite']" icon="folder" color="purple" :href="route('instruments.index', []).'#resultats'" />
+        <x-stat-card label="Types de matériel" :value="$this->stats['total']" icon="cube" color="slate" :href="route('instruments.index', []).'#resultats'" />
+        <x-stat-card label="Objets au total" :value="$this->stats['quantite']" icon="folder" color="purple" :href="route('instruments.index', []).'#resultats'" />
         <x-stat-card label="Valeur du parc" :value="\App\Support\Money::compact($this->stats['valeur'])" icon="banknotes" color="green" :href="route('instruments.index', []).'#resultats'" />
         <x-stat-card label="Hors service" :value="$this->stats['horsservice']" icon="wrench" color="red"
             :hint="$this->stats['sortis'].' instrument(s) sorti(s)'" :href="route('instruments.index', ['etat'=>'hors_service']).'#resultats'" />
@@ -23,7 +25,7 @@
     <x-filter-bar class="mt-6">
         <div class="grid gap-3 md:grid-cols-4">
             <div>
-                <label for="search" class="sr-only">Rechercher</label>
+                <label for="search" class="form-label">Rechercher</label>
                 <div class="relative">
                     <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                         <x-icon name="search" class="h-4 w-4" />
@@ -35,7 +37,7 @@
             </div>
 
             <div>
-                <label for="category" class="sr-only">Catégorie</label>
+                <label for="category" class="form-label">Catégorie</label>
                 <select id="category" wire:model.live="category"
                     class="form-select">
                     <option value="">Toutes les catégories</option>
@@ -46,7 +48,7 @@
             </div>
 
             <div>
-                <label for="condition" class="sr-only">État</label>
+                <label for="condition" class="form-label">État</label>
                 <select id="condition" wire:model.live="condition"
                     class="form-select">
                     <option value="">Tous les états</option>
@@ -57,7 +59,7 @@
             </div>
 
             <div>
-                <label for="borrowed" class="sr-only">Disponibilité</label>
+                <label for="borrowed" class="form-label">Disponibilité</label>
                 <select id="borrowed" wire:model.live="borrowed"
                     class="form-select">
                     <option value="">Disponibilité</option>
@@ -117,7 +119,7 @@
                     <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
                         <x-money :value="$instrument->current_value" />
                     </td>
-                    <td class="whitespace-nowrap px-4 py-3 text-right"><a href="{{ route('instruments.units', ['reference' => $instrument->id]) }}" class="mb-2 inline-block text-xs font-medium text-sky-700 underline">Articles / codes-barres</a>
+                    <td class="whitespace-nowrap px-4 py-3 text-right"><a href="{{ route('instruments.units', ['reference' => $instrument->id]) }}" class="mb-2 inline-block text-xs font-medium text-sky-700 underline">Voir les objets et leurs codes</a>
                         @if ($this->canManage())
                             <x-row-actions edit="edit" :id="$instrument->id" remove="delete"
                                 :confirm="'Retirer « '.$instrument->name.' » de l\'inventaire ?'" />
@@ -133,7 +135,7 @@
     </div>
 
     @if ($showForm)
-        <x-modal-panel :title="$editingId ? 'Modifier l\'instrument' : 'Nouvel instrument'"
+        <x-modal-panel :title="$editingId ? 'Modifier l\'instrument' : 'Ajouter du matériel'"
             subtitle="Renseignez la fiche d'inventaire et le responsable de l'instrument.">
             <livewire:instruments.form :instrument="$this->editingInstrument" />
         </x-modal-panel>

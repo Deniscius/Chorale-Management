@@ -4,13 +4,15 @@
         <x-slot name="actions">
             @if ($this->canManage())
                 <button type="button" wire:click="create"
-                    class="btn btn-primary">
+                    class="btn btn-primary max-w-full whitespace-normal">
                     <x-icon name="plus" class="h-4 w-4" />
-                    Nouveau mouvement
+                    Enregistrer un mouvement
                 </button>
             @endif
         </x-slot>
     </x-page-header>
+
+    <x-material-navigation />
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Mouvements" :value="$this->stats['total']" icon="cube" color="slate" :href="route('instruments.movements', []).'#resultats'" />
@@ -22,7 +24,7 @@
     <x-filter-bar class="mt-6">
         <div class="grid gap-3 md:grid-cols-3">
             <div>
-                <label for="search" class="sr-only">Rechercher</label>
+                <label for="search" class="form-label">Rechercher</label>
                 <div class="relative">
                     <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                         <x-icon name="search" class="h-4 w-4" />
@@ -34,7 +36,7 @@
             </div>
 
             <div>
-                <label for="type" class="sr-only">Type</label>
+                <label for="type" class="form-label">Type</label>
                 <select id="type" wire:model.live="type"
                     class="form-select">
                     <option value="">Tous les types</option>
@@ -45,7 +47,7 @@
             </div>
 
             <div>
-                <label for="status" class="sr-only">Statut</label>
+                <label for="status" class="form-label">Statut</label>
                 <select id="status" wire:model.live="status"
                     class="form-select">
                     <option value="">Tous les statuts</option>
@@ -104,7 +106,7 @@
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-sm">
                         @if ($movement->isClosed())
-                            <span class="text-emerald-600">Rendu le {{ $movement->actual_return_on->format('d/m/Y') }}</span>
+                            <span class="text-emerald-700">Rendu le {{ $movement->actual_return_on->format('d/m/Y') }}</span>
                         @elseif ($movement->isOverdue())
                             <span class="font-medium text-rose-600">En retard</span>
                             <p class="text-xs text-slate-500">prévu le {{ $movement->expected_return_on->format('d/m/Y') }}</p>
@@ -119,10 +121,10 @@
                             <div class="flex items-center justify-end gap-1">
                                 @unless ($movement->isClosed())
                                     <button type="button" wire:click="close({{ $movement->id }})"
-                                        wire:confirm="Clôturer ce mouvement comme rendu ?"
-                                        class="rounded-lg p-2 text-slate-500 transition hover:bg-emerald-50 hover:text-emerald-600"
-                                        title="Clôturer le mouvement">
-                                        <x-icon name="sparkles" class="h-4 w-4" />
+                                        wire:confirm="Confirmer que le matériel a été rendu aujourd’hui ? La date de retour sera enregistrée à aujourd’hui."
+                                        class="help-control inline-flex items-center gap-2 rounded-lg p-2 text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800"
+                                        title="Enregistrer le retour aujourd’hui">
+                                        <x-icon name="check-circle" class="h-5 w-5" /><span>Matériel rendu</span>
                                     </button>
                                 @endunless
                                 <x-row-actions edit="edit" :id="$movement->id" remove="delete"
@@ -140,7 +142,7 @@
     </div>
 
     @if ($showForm)
-        <x-modal-panel :title="$editingId ? 'Modifier le mouvement' : 'Nouveau mouvement'"
+        <x-modal-panel :title="$editingId ? 'Modifier le mouvement' : 'Enregistrer un mouvement'"
             subtitle="Tracez la sortie, le prêt ou le retour d'un instrument.">
             <livewire:instruments.movement-form :movement="$this->editingMovement" />
         </x-modal-panel>

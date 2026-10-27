@@ -1,23 +1,80 @@
 <div class="space-y-5">
-    <x-page-header title="Articles et étiquettes" subtitle="Un identifiant permanent pour chaque pièce physique de votre inventaire." icon="cube"><x-slot name="actions"><a href="{{ route('instruments.index') }}" class="btn btn-secondary">Retour à l’inventaire</a></x-slot></x-page-header>
+    <x-page-header title="Objets et étiquettes" subtitle="Une étiquette différente pour chaque objet, même quand plusieurs objets sont identiques." icon="cube">
+        <x-slot name="actions"><a href="{{ route('instruments.index') }}" wire:navigate class="btn btn-secondary max-w-full whitespace-normal">Retour au matériel</a></x-slot>
+    </x-page-header>
+    <x-material-navigation />
     <x-validation-summary />
-    <div class="rounded-xl border border-slate-200 bg-white p-4"><div class="grid gap-4 sm:grid-cols-3">
-        <div><label for="unit-reference" class="text-sm font-medium">Référence d’instrument</label><select id="unit-reference" wire:model.live="instrumentId" class="form-select mt-1"><option value="">Toutes les références</option>@foreach($references as $item)<option value="{{ $item->id }}">{{ $item->name }}</option>@endforeach</select></div>
-        <div><label for="unit-search" class="text-sm font-medium">Chercher ou scanner un code</label><input id="unit-search" type="search" wire:model.live.debounce.250ms="search" class="form-input mt-1 w-full" placeholder="CM00000001-0001" autocomplete="off" spellcheck="false"></div>
-        <label class="flex items-center gap-2 text-sm"><input type="checkbox" wire:model.live="retired" class="rounded border-slate-300">Articles retirés uniquement</label>
+    <x-material-step number="1" title="Retrouver les objets à étiqueter" icon="search"
+        help="Une fiche Microphone avec une quantité de trois représente trois objets : Microphone numéro un, numéro deux et numéro trois. Chacun possède son propre code. Le numéro de l’objet n’est pas sa quantité.">
+        <div class="grid gap-4 sm:grid-cols-3">
+            <div>
+                <label for="unit-reference" class="form-label">Quel matériel ?</label>
+                <select id="unit-reference" wire:model.live="instrumentId" class="form-select mt-1">
+                    <option value="">Tous les types de matériel</option>
+                    @foreach($references as $item)<option value="{{ $item->id }}">{{ $item->name }}</option>@endforeach
+                </select>
+            </div>
+            <div>
+                <label for="unit-search" class="form-label">Rechercher un nom ou un code</label>
+                <input id="unit-search" type="search" wire:model.live.debounce.250ms="search" class="form-input mt-1 w-full" placeholder="Microphone ou CM00000001-0001" autocomplete="off" spellcheck="false">
+            </div>
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" wire:model.live="retired" class="rounded border-slate-300">Voir uniquement les objets retirés</label>
+        </div>
+        @if($reference)
+            <p class="text-sm text-slate-700">{{ $reference->identified_count }} objet(s) avec un code pour {{ $reference->quantity }} objet(s) dans cette fiche.</p>
+            @if($this->canManage() && $reference->identified_count < $reference->quantity)
+                <button type="button" wire:click="generate" wire:loading.attr="disabled" class="btn btn-primary max-w-full whitespace-normal">Créer les codes manquants</button>
+            @endif
+        @endif
+        <p class="text-sm text-slate-700">Cochez les objets dans la liste ci-dessous. Les codes existants sont conservés.</p>
+    </x-material-step>
+    <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white" tabindex="0" role="region" aria-label="Liste des objets à étiqueter, défilement horizontal possible">
+        <table class="w-full text-left text-sm">
+            <caption class="sr-only">Un objet par ligne, avec son code permanent</caption>
+            <thead class="bg-slate-50"><tr><th scope="col" class="p-3">À imprimer</th><th scope="col" class="p-3">Code permanent</th><th scope="col" class="p-3">Objet</th><th scope="col" class="p-3">Présence à l’inventaire</th><th scope="col" class="p-3">Actions</th></tr></thead>
+            <tbody class="divide-y divide-slate-100">
+                @forelse($units as $unit)
+                    <tr wire:key="unit-{{ $unit->id }}">
+                        <td class="p-3">@unless($unit->retired_at)<input type="checkbox" wire:model.live="selected" wire:loading.attr="disabled" wire:target="instrumentId,search,retired" value="{{ $unit->id }}" aria-label="Sélectionner {{ $unit->instrument->name }} n° {{ $unit->ordinal }}, code {{ $unit->inventory_code }}" class="h-5 w-5 rounded border-slate-300">@endunless</td>
+                        <td class="p-3 font-mono font-semibold">{{ $unit->inventory_code }}</td>
+                        <td class="p-3"><span class="font-semibold">{{ $unit->instrument->name }} n° {{ $unit->ordinal }}</span><span class="block text-sm text-slate-600">Un seul objet physique</span></td>
+                        <td class="p-3">{{ $unit->retired_at ? 'Retiré de l’inventaire' : 'En inventaire' }}</td>
+                        <td class="p-3">
+                            @if($this->canManage())
+                                <button type="button" wire:click="retire({{ $unit->id }}, {{ $unit->retired_at ? 'false' : 'true' }})" wire:confirm="{{ $unit->retired_at ? 'Réintégrer cet objet avec son code d’origine et augmenter la quantité de 1 ?' : 'Retirer cet objet de l’inventaire et diminuer la quantité de 1 ? Son code sera conservé. Pour un prêt temporaire, annulez et utilisez Prêts et retours.' }}" class="help-control text-sm text-slate-700 underline">{{ $unit->retired_at ? 'Réintégrer cet objet' : 'Retirer de l’inventaire' }}</button>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="5" class="p-8 text-center text-slate-700">Aucun objet pour ces critères. Choisissez un type de matériel pour vérifier ses codes.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
-    @if($reference)<p class="mt-4 text-sm text-slate-600">{{ $reference->identified_count }} exemplaire(s) identifié(s) pour {{ $reference->quantity }} pièce(s) en inventaire.</p>@if($this->canManage() && $reference->identified_count < $reference->quantity)<button type="button" wire:click="generate" wire:loading.attr="disabled" class="btn btn-primary mt-3">Attribuer les identifiants manquants</button>@endif @endif
-    </div>
-    <form method="post" action="{{ route('instruments.labels') }}" target="_blank" class="rounded-xl border border-slate-200 bg-white p-4 space-y-4">
+    {{ $units->links() }}
+    <form method="post" action="{{ route('instruments.labels') }}" target="_blank" class="space-y-4">
         @csrf
         @foreach($selected as $id)<input type="hidden" name="units[]" value="{{ $id }}">@endforeach
-        <div class="flex flex-wrap items-end gap-3"><div><label for="label-start" class="block text-sm font-medium">Première case libre de la feuille</label><select id="label-start" name="start" wire:model="start" class="form-select mt-1">@for($i=1;$i<=24;$i++)<option value="{{ $i }}">{{ $i }}</option>@endfor</select></div><button type="submit" wire:loading.attr="disabled" wire:target="selected,selectPage,clearSelection" class="btn btn-primary" @disabled(count($selected) === 0 || count($selected) > 240)>Préparer {{ count($selected) }} étiquette(s) A4</button></div>
-        <p class="text-xs text-slate-500">24 étiquettes par feuille, format 63,5 × 33,9 mm. Maximum 240 étiquettes par impression. La case 1 est en haut à gauche ; la numérotation continue ligne par ligne. Imprimer ou enregistrer en PDF à 100 %.</p>
-        <div class="flex flex-wrap gap-3"><button type="button" wire:click="selectPage" class="text-sm font-medium text-sky-700 underline">Sélectionner cette page</button><button type="button" wire:click="clearSelection" class="text-sm text-slate-600 underline">Effacer la sélection</button><span class="text-sm text-slate-500" role="status">{{ count($selected) }} article(s) sélectionné(s)</span></div>
+        <x-material-step number="2" title="Préparer la feuille d’étiquettes" icon="archive"
+            help="Choisissez les objets à imprimer, puis la première case libre de votre feuille. Sur une feuille neuve, gardez la case un, en haut à gauche. La préparation ouvre un aperçu dans un nouvel onglet et n’imprime pas directement.">
+            <div class="flex flex-wrap gap-3">
+                <button type="button" wire:click="selectPage" wire:loading.attr="disabled" wire:target="instrumentId,search,retired" class="btn btn-secondary max-w-full whitespace-normal">Cocher les objets de cette page</button>
+                <button type="button" wire:click="clearSelection" class="btn btn-secondary max-w-full whitespace-normal">Tout décocher</button>
+                <span class="self-center text-sm text-slate-700" role="status" aria-live="polite">{{ count($selected) }} objet(s) sélectionné(s)</span>
+            </div>
+            <div class="flex flex-wrap items-end gap-3">
+                <div>
+                    <label for="label-start" class="form-label">Première case libre de la feuille</label>
+                    <select id="label-start" name="start" wire:model="start" class="form-select mt-1" aria-describedby="label-start-help">
+                        @for($i=1;$i<=24;$i++)<option value="{{ $i }}">{{ $i === 1 ? '1 — feuille neuve' : $i }}</option>@endfor
+                    </select>
+                </div>
+                <button type="submit" wire:loading.attr="disabled" wire:target="selected,selectPage,clearSelection,instrumentId,search,retired" class="btn btn-primary max-w-full whitespace-normal" @disabled(count($selected) === 0 || count($selected) > 240)>Voir {{ count($selected) }} étiquette(s) avant impression</button>
+            </div>
+            <p id="label-start-help" class="text-sm text-slate-700">La case 1 est en haut à gauche. Comptez ensuite de gauche à droite, ligne par ligne. Feuille A4 de 24 étiquettes, format 63,5 × 33,9 mm. Maximum 240 étiquettes par préparation.</p>
+            <p class="text-sm text-slate-700">Dans l’aperçu, imprimez ou enregistrez en PDF à taille réelle (100 %). Faites d’abord un essai sur papier ordinaire.</p>
+        </x-material-step>
     </form>
-    <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white"><table class="w-full text-left text-sm"><caption class="sr-only">Identifiants individuels des articles</caption><thead class="bg-slate-50"><tr><th class="p-3">Sélection</th><th class="p-3">Identifiant permanent</th><th class="p-3">Instrument</th><th class="p-3">État d’inventaire</th><th class="p-3">Actions</th></tr></thead><tbody class="divide-y divide-slate-100">
-        @forelse($units as $unit)<tr wire:key="unit-{{ $unit->id }}"><td class="p-3">@unless($unit->retired_at)<input type="checkbox" wire:model.live="selected" value="{{ $unit->id }}" aria-label="Sélectionner {{ $unit->inventory_code }}" class="rounded border-slate-300">@endunless</td><td class="p-3 font-mono font-semibold">{{ $unit->inventory_code }}</td><td class="p-3">{{ $unit->instrument->name }}<span class="block text-xs text-slate-500">Exemplaire {{ $unit->ordinal }}</span></td><td class="p-3">{{ $unit->retired_at ? 'Retiré' : 'En inventaire' }}</td><td class="p-3">@if($this->canManage())<button type="button" wire:click="retire({{ $unit->id }}, {{ $unit->retired_at ? 'false' : 'true' }})" wire:confirm="{{ $unit->retired_at ? 'Réintégrer cet article avec son identifiant d’origine et augmenter la quantité de 1 ?' : 'Retirer cet article et diminuer la quantité de 1 ? Son identifiant sera conservé et pourra être réactivé.' }}" class="text-sm text-slate-700 underline">{{ $unit->retired_at ? 'Réintégrer' : 'Retirer cet exemplaire' }}</button>@endif</td></tr>@empty<tr><td colspan="5" class="p-8 text-center text-slate-500">Aucun article pour ces critères. Sélectionnez une référence pour vérifier ses identifiants.</td></tr>@endforelse
-    </tbody></table></div>
-    {{ $units->links() }}
-    <p class="text-xs text-slate-500">Pour ajouter des pièces, modifiez la quantité de la référence dans l’inventaire. Les nouveaux identifiants sont attribués automatiquement ; un code retiré n’est jamais réattribué.</p>
+
+    <p class="text-sm text-slate-700">Pour ajouter des objets identiques, augmentez la quantité dans leur fiche de matériel. Un objet prêté reste dans l’inventaire : ne le retirez pas pour enregistrer un prêt.</p>
 </div>

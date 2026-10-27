@@ -62,6 +62,8 @@ interactions de la coque (menus, notifications, fenêtres modales).
 Chaque écran de liste propose la recherche, des filtres, la pagination en français
 et les actions adaptées aux droits de l'utilisateur.
 
+Pour le matériel, voir [le guide illustré des fiches, étiquettes et prêts](docs/MATERIEL-GUIDE.md).
+
 Deux fonctions transverses complètent les modules : les **rappels de répétition**
 (e-mail / SMS, écran `/rappels`) et l'**assistant IA** de rédaction des comptes
 rendus (facultatif, désactivé par défaut).

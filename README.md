@@ -62,6 +62,8 @@ interactions de la coque (menus, notifications, fenêtres modales).
 Chaque écran de liste propose la recherche, des filtres, la pagination en français
 et les actions adaptées aux droits de l'utilisateur.
 
+Pour le matériel, voir [le guide illustré des fiches, étiquettes et prêts](docs/MATERIEL-GUIDE.md).
+
 Deux fonctions transverses complètent les modules : les **rappels de répétition**
 (e-mail / SMS, écran `/rappels`) et l'**assistant IA** de rédaction des comptes
 rendus (facultatif, désactivé par défaut).
@@ -331,6 +333,10 @@ php artisan schedule:list                          # vérifier la planification
 **Configuration** (voir `.env.example`) : `REMINDERS_ENABLED`,
 `REMINDERS_DAYS_BEFORE`, `REMINDERS_SEND_AT`, `REMINDERS_SMS_ENABLED`,
 `REMINDERS_SMS_DRIVER`, `SMS_ENDPOINT`, `SMS_TOKEN`.
+
+**D7 Networks** : le pilote natif `d7` utilise `D7_API_TOKEN` et
+`D7_SMS_ORIGINATOR`. Voir [la configuration et la validation D7](docs/D7-SMS.md).
+Les SMS restent désactivés par défaut.
 
 Le pilote SMS HTTP envoie un corps JSON `{ from, to, message }` authentifié par
 un jeton Bearer : la plupart des agrégateurs peuvent être branchés ainsi

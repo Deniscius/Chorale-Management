@@ -2,6 +2,11 @@
     <x-page-header title="Rappels de répétition" icon="bell"
         :subtitle="'Journal des messages envoyés aux choristes — '.$this->stats['total'].' envoi(s) enregistré(s).'" />
 
+    <p class="mb-4 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+        Pour les SMS, « Envoyé » signifie que le fournisseur a accepté le message ; la réception sur le téléphone n’est pas confirmée ici.
+        Pour un envoi « À vérifier », consultez le fournisseur avant toute relance afin d’éviter un doublon.
+    </p>
+
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Rappels journalisés" :value="$this->stats['total']" icon="bell" color="slate" :href="route('reminders.index', []).'#resultats'" />
         <x-stat-card label="Envoyés" :value="$this->stats['envoyes']" icon="check" color="green" :href="route('reminders.index', ['statut'=>'envoye']).'#resultats'" />

@@ -23,6 +23,11 @@ class ChoirCommission extends Model
         return $this->belongsTo(User::class, 'leader_id');
     }
 
+    public function associate()
+    {
+        return $this->belongsTo(User::class, 'associate_id');
+    }
+
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(Member::class, 'choir_commission_member');

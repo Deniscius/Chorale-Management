@@ -3,6 +3,14 @@
 // Editorial instructions only: never include account or business data in speech.
 return [
     'guides' => [
+        'profile.*' => [
+            'title' => 'Modifier mes informations',
+            'steps' => [
+                ['icon' => 'user', 'text' => 'Modifiez vos prénom, nom, date de naissance ou coordonnées. Ces informations concernent uniquement votre propre fiche.'],
+                ['icon' => 'check-circle', 'text' => 'Choisissez Enregistrer mes informations pour conserver vos changements. Votre identifiant sert à votre prochaine connexion.'],
+                ['icon' => 'users', 'text' => 'Vous êtes choriste. Vos responsabilités dans les commissions sont complémentaires et attribuées par un administrateur, pas depuis vos informations personnelles.'],
+            ],
+        ],
         'works.*' => [
             'title' => 'Retrouver un chant',
             'steps' => [

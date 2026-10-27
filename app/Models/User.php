@@ -20,6 +20,31 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    private ?int $approvedInitialMemberId = null;
+
+    /** Only the signed-in owner can attach a newly created, same-tenant personal record. */
+    public function attachNewPersonalMember(Member $member): void
+    {
+        abort_unless(auth()->check() && $this->exists && auth()->id() === $this->id
+            && array_key_exists('member_id', $this->getRawOriginal()) && ! $this->member_id
+            && $member->exists && $member->wasRecentlyCreated
+            && (int) $member->tenant_id === (int) $this->tenant_id, 403);
+        $this->approvedInitialMemberId = $member->id;
+        try {
+            $this->member_id = $member->id;
+            $this->save();
+        } finally {
+            $this->approvedInitialMemberId = null;
+        }
+    }
+
+    public function isCompletingOwnMemberProfile(): bool
+    {
+        return auth()->id() === $this->id && $this->getRawOriginal('member_id') === null
+            && $this->approvedInitialMemberId !== null
+            && (int) $this->member_id === $this->approvedInitialMemberId;
+    }
+
     /**
      * The attributes that are mass assignable.
      *

@@ -29,7 +29,7 @@
             </div>
 
             <div>
-                <x-input-label for="users-form-role" value="Rôle" />
+                <x-input-label for="users-form-role" value="Rôle général du compte" />
                 <select id="users-form-role" aria-describedby="users-form-role-error" aria-invalid="{{ $errors->has('role') ? 'true' : 'false' }}" wire:model="role"
                     class="form-select mt-1">
                     @foreach ($this->roleOptions as $value => $label)
@@ -38,13 +38,13 @@
                 </select>
                 <x-input-error id="users-form-role-error" :messages="$errors->get('role')" class="mt-1" />
                 <p class="mt-1 text-xs text-slate-500">
-                    Le rôle détermine les modules consultables et les modules modifiables.
+                    Les anciens rôles généraux sont conservés. Pour un choriste sans privilège global, choisissez Choriste puis utilisez Commissions et accès pour cocher ses responsabilités.
                 </p>
             </div>
         </div>
 
         <div>
-            <x-input-label for="users-form-member_id" value="Choriste rattaché" />
+            <x-input-label for="users-form-member_id" value="Fiche de choriste" />
             <select id="users-form-member_id" aria-describedby="users-form-member_id-error" aria-invalid="{{ $errors->has('member_id') ? 'true' : 'false' }}" wire:model="member_id" @disabled($user)
                 class="form-select mt-1">
                 <option value="">—</option>
@@ -52,6 +52,7 @@
                     <option value="{{ $member->id }}">{{ $member->full_name }}</option>
                 @endforeach
             </select>
+            @unless($user)<p class="mt-2 text-sm text-slate-700">Chaque compte représente un choriste. Choisissez sa fiche si elle existe. Sinon, le titulaire complétera son identité depuis Mon profil avant toute affectation supplémentaire.</p>@endunless
             <x-input-error id="users-form-member_id-error" :messages="$errors->get('member_id')" class="mt-1" />
         </div>
 

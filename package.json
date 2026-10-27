@@ -6,7 +6,8 @@
         "dev": "vite",
         "test:ui": "node --test tests/js/*.test.js",
         "test:accessibility": "node tests/browser/accessibility.mjs",
-        "test:material": "node tests/browser/material.mjs"
+        "test:material": "node tests/browser/material.mjs",
+        "test:profiles": "node tests/browser/profiles.mjs"
     },
     "devDependencies": {
         "@axe-core/playwright": "^4.14.0",

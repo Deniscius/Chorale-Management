@@ -63,6 +63,7 @@ Chaque écran de liste propose la recherche, des filtres, la pagination en fran�
 et les actions adaptées aux droits de l'utilisateur.
 
 Pour le matériel, voir [le guide illustré des fiches, étiquettes et prêts](docs/MATERIEL-GUIDE.md).
+Pour les identités et les responsabilités cumulables, voir [Profils personnels et accès par commission](docs/PROFILS-ET-ACCES.md).
 
 Deux fonctions transverses complètent les modules : les **rappels de répétition**
 (e-mail / SMS, écran `/rappels`) et l'**assistant IA** de rédaction des comptes

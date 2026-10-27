@@ -242,6 +242,11 @@ try {
             );
             await audit('mobile-menu');
             await page.keyboard.press('Escape');
+            await page.waitForFunction(
+                () =>
+                    document.activeElement?.getAttribute('aria-label') ===
+                    'Ouvrir le menu',
+            );
             assert.equal(
                 await page
                     .getByRole('button', {

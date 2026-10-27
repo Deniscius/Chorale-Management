@@ -99,7 +99,8 @@ return [
             'prefix_indexes' => true,
             'search_path' => env('DB_SEARCH_PATH', 'public'),
             'sslmode' => env('DB_SSLMODE', 'prefer'),
-            'sslrootcert' => env('DB_SSLROOTCERT'),
+            // Omit an unset certificate path instead of appending an empty libpq option.
+            'sslrootcert' => env('DB_SSLROOTCERT') ?: null,
         ],
 
         'sqlsrv' => [

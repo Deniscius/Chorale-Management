@@ -31,6 +31,32 @@ class RenderNeonConfigurationTest extends TestCase
         }
     }
 
+    public function test_blank_optional_certificate_path_is_omitted_from_the_postgres_dsn(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $code = 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $config = require "config/database.php"; echo json_encode($config["connections"]["pgsql"]);';
+        foreach (['' => null, '/etc/ssl/certs/ca-certificates.crt' => '/etc/ssl/certs/ca-certificates.crt'] as $value => $expected) {
+            $process = new Process([PHP_BINARY, '-r', $code], $root, [
+                'DB_SSLROOTCERT' => $value, 'DB_URL' => '', 'DATABASE_URL' => '', 'DATABASE_URL_UNPOOLED' => '',
+            ]);
+            $process->mustRun();
+            $config = json_decode($process->getOutput(), true, flags: JSON_THROW_ON_ERROR);
+            $this->assertSame($expected, $config['sslrootcert']);
+            $connector = new class extends PostgresConnector
+            {
+                public function dsn(array $config): string
+                {
+                    return $this->getDsn($config);
+                }
+            };
+            if ($expected === null) {
+                $this->assertStringNotContainsString('sslrootcert=', $connector->dsn($config));
+            } else {
+                $this->assertStringContainsString('sslrootcert='.$expected, $connector->dsn($config));
+            }
+        }
+    }
+
     public function test_blueprints_retain_laravel_services_without_managing_a_database(): void
     {
         foreach (['render.yaml' => ['chorale-management'], 'deploy/render.production.yaml' => ['chorale-web', 'chorale-worker', 'chorale-scheduler']] as $path => $names) {

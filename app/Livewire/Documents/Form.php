@@ -3,6 +3,7 @@
 namespace App\Livewire\Documents;
 
 use App\Enums\Commission;
+use App\Enums\DocumentVisibility;
 use App\Models\Correspondence;
 use App\Models\Document;
 use App\Models\User;
@@ -39,8 +40,11 @@ class Form extends Component
     #[Validate('nullable|string|max:80')]
     public ?string $category = null;
 
-    #[Validate('required|in:private,published')]
+    #[Validate('required|in:private,commission,published')]
     public string $visibility = 'private';
+
+    #[Locked]
+    public ?string $originalVisibility = null;
 
     #[Validate('nullable|date')]
     public ?string $document_date = null;
@@ -56,7 +60,7 @@ class Form extends Component
 
     public function mount(?Document $document = null, ?string $commission = null, ?int $correspondenceId = null): void
     {
-        $document = $document?->exists ? $document : null;
+        $document = $document?->exists ? $document->fresh() : null;
         $this->document = $document;
         $this->correspondenceId = $document?->correspondence_id ?? $correspondenceId;
         if ($this->correspondenceId) {
@@ -65,13 +69,14 @@ class Form extends Component
 
         if ($document) {
             $this->assertCanUpload($document->commission);
+            $this->originalVisibility = $document->visibility;
 
             $this->fill([
                 'commission' => $document->commission->value,
                 'title' => $document->title,
                 'description' => $document->description,
                 'category' => $document->category,
-                'visibility' => $document->visibility === 'published' ? 'published' : 'private',
+                'visibility' => DocumentVisibility::tryFrom($document->visibility)?->value ?? 'private',
                 'document_date' => $document->document_date?->format('Y-m-d'),
             ]);
 
@@ -100,6 +105,11 @@ class Form extends Component
             $this->assertCanUpload($source->commission);
         }
 
+        if ($this->document && $this->originalVisibility === null) {
+            $this->addError('visibility', 'Rechargez le document avant de réessayer.');
+
+            return;
+        }
         $this->validate();
 
         if (! $this->document && ! $this->file) {
@@ -118,7 +128,8 @@ class Form extends Component
             'correspondence_id' => $this->correspondenceId,
         ];
 
-        $this->document = app(DocumentArchive::class)->save($this->document, $data, $this->file);
+        $this->document = app(DocumentArchive::class)->save($this->document, $data, $this->file, $this->originalVisibility);
+        $this->originalVisibility = $this->document->visibility;
         $message = 'Document archivé.';
 
         $this->reset('file');

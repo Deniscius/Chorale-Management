@@ -34,7 +34,7 @@ return [
                 ['icon' => 'warning', 'text' => 'Avant tout enregistrement, vérifiez le montant et la date. Demandez l’aide du trésorier si vous avez un doute. Écouter cette aide ne crée aucune opération.'],
             ],
         ],
-<
+
         'instruments.*' => [
             'title' => 'Retrouver du matériel',
             'steps' => [

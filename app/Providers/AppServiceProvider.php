@@ -29,6 +29,7 @@ use App\Services\CommissionAccess;
 use App\Services\FinancialCatalog;
 use App\Services\PrivateFiles;
 use App\Services\SettingsStore;
+use App\Services\Sms\D7SmsSender;
 use App\Services\Sms\HttpSmsSender;
 use App\Services\Sms\LogSmsSender;
 use App\Services\Sms\SmsSender;
@@ -59,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
             SmsSender::class,
             fn () => match (config('chorale.reminders.sms_driver')) {
                 'http' => new HttpSmsSender,
+                'd7' => new D7SmsSender,
                 default => new LogSmsSender,
             }
         );

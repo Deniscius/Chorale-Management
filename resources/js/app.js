@@ -1,4 +1,8 @@
 import './bootstrap';
+import { accessibilityHelp } from './accessibility';
+const registerAccessibility = () => window.Alpine.data('accessibilityHelp', accessibilityHelp);
+document.addEventListener('alpine:init', registerAccessibility, { once: true });
+if (window.Alpine) registerAccessibility();
 import './access-expiry';
 
 // Alpine est fourni et démarré par Livewire : ne pas l'importer ni le démarrer ici,

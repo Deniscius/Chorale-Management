@@ -6,6 +6,8 @@
         </x-slot>
     </x-page-header>
 
+    <x-welcome-actions />
+
     {{-- Indicateurs --}}
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         @can('view-module', \App\Enums\UserRole::MODULE_MEMBERS)

@@ -27,7 +27,10 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="min-h-screen bg-slate-50 font-sans antialiased">
+<body x-data="accessibilityHelp"
+    @click.window="const button = $event.target.closest('[data-speak]'); if (button) read(button.dataset.speak)"
+    x-on:livewire:navigating.document="stop()" @pagehide.window="stop()"
+    class="min-h-screen bg-slate-50 font-sans antialiased">
     <a href="#contenu"
         class="sr-only z-[200] rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-lg focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:outline-none focus:ring-2 focus:ring-slate-900">
         Aller au contenu principal
@@ -41,6 +44,7 @@
 
             <main id="contenu" tabindex="-1"
                 class="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 focus:outline-none sm:px-6 lg:px-8 lg:py-8">
+                <x-accessibility-help />
                 @if(config('tenancy.enabled') && !request()->attributes->get('tenant')?->paid_perpetual && request()->attributes->get('tenant')?->trial_ends_at?->isFuture() && !request()->attributes->get('tenant')?->paid_until?->isFuture())
                     <div class="mb-5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
                         <span>Essai gratuit · fin le {{ request()->attributes->get('tenant')->trial_ends_at->timezone(config('app.timezone'))->format('d/m/Y à H:i') }}</span>

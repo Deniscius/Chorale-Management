@@ -331,3 +331,12 @@
         animation: fade-in 0.15s ease-out both;
     }
 }
+
+/* A bounded, reversible preference: rem-based typography grows without hiding content. */
+html.comfortable-text { font-size: 125%; }
+.help-control { min-height: 48px; }
+.help-control:focus-visible,
+#contenu a:focus-visible {
+    outline: 3px solid #4338ca;
+    outline-offset: 3px;
+}

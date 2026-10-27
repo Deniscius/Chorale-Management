@@ -18,7 +18,10 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="min-h-screen bg-slate-50 font-sans antialiased">
+<body x-data="accessibilityHelp"
+    @click.window="const button = $event.target.closest('[data-speak]'); if (button) read(button.dataset.speak)"
+    x-on:livewire:navigating.document="stop()" @pagehide.window="stop()"
+    class="min-h-screen bg-slate-50 font-sans antialiased">
     <div class="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
 
         {{-- Panneau de marque (desktop) --}}
@@ -103,6 +106,7 @@
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+                    <x-accessibility-help :guest="true" />
                     {{ $slot }}
                 </div>
 

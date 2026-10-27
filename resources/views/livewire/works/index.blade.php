@@ -29,7 +29,7 @@
     <x-filter-bar class="mt-6">
         <div class="grid gap-3 md:grid-cols-5">
             <div class="md:col-span-2">
-                <label for="search" class="sr-only">Rechercher</label>
+                <label for="search" class="form-label">Rechercher un chant</label>
                 <div class="relative">
                     <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                         <x-icon name="search" class="h-4 w-4" />
@@ -41,7 +41,7 @@
             </div>
 
             <div>
-                <label for="type" class="sr-only">Type</label>
+                <label for="type" class="form-label">Type</label>
                 <select id="type" wire:model.live="type"
                     class="form-select">
                     <option value="">Tous les types</option>
@@ -52,7 +52,7 @@
             </div>
 
             <div>
-                <label for="seasonId" class="sr-only">Temps liturgique</label>
+                <label for="seasonId" class="form-label">Temps liturgique</label>
                 <select id="seasonId" wire:model.live="seasonId"
                     class="form-select">
                     <option value="">Tous les temps</option>
@@ -63,20 +63,23 @@
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-                <select id="difficulty" wire:model.live="difficulty"
-                    class="form-select">
-                    <option value="">Niveau</option>
-                    @foreach ($this->difficultyOptions as $value => $label)
-                        <option value="{{ $value }}">{{ $label }}</option>
-                    @endforeach
-                </select>
-
-                <select id="repertoire" wire:model.live="repertoire"
-                    class="form-select">
-                    <option value="">Répertoire</option>
-                    <option value="oui">Oui</option>
-                    <option value="non">Non</option>
-                </select>
+                <div>
+                    <label for="difficulty" class="form-label">Difficulté</label>
+                    <select id="difficulty" wire:model.live="difficulty" class="form-select">
+                        <option value="">Niveau</option>
+                        @foreach ($this->difficultyOptions as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="repertoire" class="form-label">Au répertoire</label>
+                    <select id="repertoire" wire:model.live="repertoire" class="form-select">
+                        <option value="">Répertoire</option>
+                        <option value="oui">Oui</option>
+                        <option value="non">Non</option>
+                    </select>
+                </div>
             </div>
         </div>
 

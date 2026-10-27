@@ -2,22 +2,57 @@
 export function accessibilityHelp(browser = window) {
     let utterance = null;
     let generation = 0;
+    let activeText = '';
     return {
-        available: Boolean(browser.speechSynthesis && browser.SpeechSynthesisUtterance),
+        available: Boolean(
+            browser.speechSynthesis && browser.SpeechSynthesisUtterance,
+        ),
         large: false,
+        slow: false,
         speaking: false,
         message: '',
         init() {
-            try { this.large = browser.localStorage.getItem('chorale-large-text') === 'true'; } catch { /* Optional storage. */ }
+            try {
+                this.large =
+                    browser.localStorage.getItem('chorale-large-text') ===
+                    'true';
+                this.slow =
+                    browser.localStorage.getItem('chorale-slow-speech') ===
+                    'true';
+            } catch {
+                /* Optional storage. */
+            }
             this.applySize();
         },
         applySize() {
-            browser.document.documentElement.classList.toggle('comfortable-text', this.large);
+            browser.document.documentElement.classList.toggle(
+                'comfortable-text',
+                this.large,
+            );
         },
         toggleSize() {
             this.large = !this.large;
             this.applySize();
-            try { browser.localStorage.setItem('chorale-large-text', String(this.large)); } catch { /* Still works without storage. */ }
+            try {
+                browser.localStorage.setItem(
+                    'chorale-large-text',
+                    String(this.large),
+                );
+            } catch {
+                /* Still works without storage. */
+            }
+        },
+        toggleSlow() {
+            this.slow = !this.slow;
+            try {
+                browser.localStorage.setItem(
+                    'chorale-slow-speech',
+                    String(this.slow),
+                );
+            } catch {
+                /* Optional storage. */
+            }
+            if (this.speaking) this.read(activeText);
         },
         stop() {
             generation++;
@@ -32,21 +67,28 @@ export function accessibilityHelp(browser = window) {
         read(text) {
             this.stop();
             if (!this.available || !text) return;
+            activeText = text;
             const current = generation;
             try {
                 utterance = new browser.SpeechSynthesisUtterance(text);
                 utterance.lang = 'fr-FR';
-                utterance.rate = 0.85;
-                const voice = browser.speechSynthesis.getVoices().find(v => v.lang?.startsWith('fr'));
+                utterance.rate = this.slow ? 0.65 : 0.85;
+                const voice = browser.speechSynthesis
+                    .getVoices()
+                    .find((v) => v.lang?.startsWith('fr'));
                 if (voice) utterance.voice = voice;
                 utterance.onend = () => {
-                    if (current === generation) { this.speaking = false; utterance = null; }
+                    if (current === generation) {
+                        this.speaking = false;
+                        utterance = null;
+                    }
                 };
                 utterance.onerror = () => {
                     if (current === generation) {
                         this.speaking = false;
                         utterance = null;
-                        this.message = 'La lecture audio est indisponible. Vous pouvez demander de l’aide à un proche.';
+                        this.message =
+                            'La lecture audio est indisponible. Vous pouvez demander de l’aide à un proche.';
                     }
                 };
                 this.message = '';
@@ -54,9 +96,12 @@ export function accessibilityHelp(browser = window) {
                 browser.speechSynthesis.speak(utterance);
             } catch {
                 this.stop();
-                this.message = 'La lecture audio est indisponible sur cet appareil.';
+                this.message =
+                    'La lecture audio est indisponible sur cet appareil.';
             }
         },
-        destroy() { this.stop(); },
+        destroy() {
+            this.stop();
+        },
     };
 }

@@ -27,3 +27,5 @@ yarn-error.log
 # Installed agent guidance stays local; sources are recorded in skills-lock.json.
 /.agents/skills/neon/
 /.agents/skills/neon-postgres/
+
+/test-results/

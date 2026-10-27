@@ -45,3 +45,52 @@ jobs:
       - run: php vendor/phpunit/phpunit/phpunit
       - run: composer audit
       - run: php vendor/bin/pint --test app/Services/ReceiptLedger.php app/Services/ReferenceSequence.php app/Services/TransactionWriter.php app/Support/CalendarYears.php tests/Feature/PostgreSqlAndLedgerTest.php
+
+  accessibility:
+    name: Parcours accessibles et contrôles axe
+    runs-on: ubuntu-latest
+    env:
+      APP_ENV: testing
+      APP_DEBUG: 'false'
+      APP_URL: http://127.0.0.1:8091
+      APP_CONFIG_CACHE: ${{ github.workspace }}/storage/framework/testing/accessibility/config.php
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ${{ github.workspace }}/storage/framework/testing/accessibility/review.sqlite
+      DB_URL: ''
+      DATABASE_URL: ''
+      DATABASE_URL_UNPOOLED: ''
+      CACHE_STORE: array
+      SESSION_DRIVER: file
+      SESSION_COOKIE: chorale_accessibility_review
+      SESSION_SECURE_COOKIE: 'false'
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: array
+      TENANCY_ENABLED: 'true'
+      ACCESSIBILITY_CREDENTIALS_FILE: ${{ github.workspace }}/storage/framework/testing/accessibility/credentials.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_sqlite, pdo_pgsql
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: composer install --no-interaction --prefer-dist
+      - run: cp .env.example .env && php artisan key:generate
+      - run: npm ci && npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: php tests/browser/prepare.php
+      - name: Démarrer l’application sur la base locale de test
+        run: |
+          php artisan serve --host=127.0.0.1 --port=8091 --no-reload > "$RUNNER_TEMP/accessibility-server.log" 2>&1 &
+          curl --fail --silent --output /dev/null --retry 20 --retry-connrefused --retry-delay 1 http://127.0.0.1:8091/login
+      - run: npm run test:accessibility
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: accessibility-reports
+          path: test-results/accessibility
+          if-no-files-found: ignore

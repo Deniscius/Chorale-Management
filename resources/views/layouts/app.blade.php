@@ -36,10 +36,10 @@
         Aller au contenu principal
     </a>
 
-    <div x-data="{ sidebar: false }" @keydown.escape.window="sidebar = false" class="min-h-screen">
+    <div x-data="navigationDrawer" @keydown.escape.window="close()" class="min-h-screen">
         @include('layouts.sidebar')
 
-        <div class="flex min-h-screen flex-col lg:pl-64">
+        <div :inert="sidebar && !desktop" class="flex min-h-screen flex-col lg:pl-64">
             @include('layouts.topbar')
 
             <main id="contenu" tabindex="-1"
@@ -58,7 +58,7 @@
                 {{ $slot }}
             </main>
 
-            <footer class="mx-auto w-full max-w-[1600px] px-4 pb-6 text-xs text-slate-400 sm:px-6 lg:px-8">
+            <footer class="mx-auto w-full max-w-[1600px] px-4 pb-6 text-xs text-slate-600 sm:px-6 lg:px-8">
                 <div class="border-t border-slate-200 pt-4">
                     &copy; {{ date('Y') }} {{ $chorale->name() }} — Espace de gestion interne.
                 </div>

@@ -13,23 +13,33 @@
         <div>
             <x-input-label for="login" value="Identifiant" />
             <x-text-input id="login" class="mt-1 block w-full" type="text" name="login"
-                :value="old('login')" required autofocus autocomplete="username"
+                :value="old('login')" required autocomplete="username"
+                aria-describedby="login-help{{ $errors->has('login') ? ' login-error' : '' }}"
                 autocapitalize="none" spellcheck="false" />
-            <x-input-error :messages="$errors->get('login')" class="mt-2" />
+            <p id="login-help" class="mt-2 text-sm text-slate-600">Utilisez l’identifiant fourni par votre responsable.</p>
+            <x-input-error id="login-error" :messages="$errors->get('login')" class="mt-2" />
         </div>
 
-        <div>
+        <div x-data="{ passwordVisible: false }">
             <x-input-label for="password" value="Mot de passe" />
 
             <x-text-input id="password" class="mt-1 block w-full"
-                type="password"
+                type="password" x-bind:type="passwordVisible ? 'text' : 'password'"
+                aria-describedby="password-help{{ $errors->has('password') ? ' password-error' : '' }}"
                 name="password"
                 required autocomplete="current-password" />
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+            <button type="button" x-cloak @click="passwordVisible = !passwordVisible"
+                :aria-pressed="passwordVisible.toString()" aria-controls="password"
+                class="help-control mt-2 inline-flex items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800">
+                <x-icon name="eye" class="h-5 w-5" />
+                <span x-text="passwordVisible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">Afficher le mot de passe</span>
+            </button>
+            <p id="password-help" class="mt-2 text-sm text-slate-600">Gardez ce mot de passe secret. Sur un appareil partagé, ne cochez pas « Se souvenir de moi ».</p>
+            <x-input-error id="password-error" :messages="$errors->get('password')" class="mt-2" />
         </div>
 
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-4">
             <label for="remember_me" class="inline-flex items-center">
                 <input id="remember_me" type="checkbox"
                     class="rounded border-slate-300 text-slate-900 shadow-sm focus:ring-slate-500" name="remember">

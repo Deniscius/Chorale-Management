@@ -14,7 +14,7 @@
                 aria-hidden="true"></div>
         @endif
 
-        <div class="overflow-x-auto scrollbar-slim">
+        <div class="overflow-x-auto scrollbar-slim" tabindex="0" role="region" aria-label="Tableau de résultats, défilement horizontal possible">
             <table class="table transition-opacity duration-150" wire:loading.delay.class="opacity-60"
                 wire:loading.delay.attr="aria-busy">
                 @if ($caption)

@@ -334,9 +334,26 @@
 
 /* A bounded, reversible preference: rem-based typography grows without hiding content. */
 html.comfortable-text { font-size: 125%; }
-.help-control { min-height: 48px; }
+.help-control { min-height: 48px; min-width: 44px; }
 .help-control:focus-visible,
 #contenu a:focus-visible {
     outline: 3px solid #4338ca;
     outline-offset: 3px;
 }
+
+/* Keyboard focus must remain visible on links, fields and native disclosures. */
+:where(a, button, input, select, textarea, summary):focus-visible {
+    outline: 3px solid #4338ca;
+    outline-offset: 3px;
+}
+.form-input, .form-select, .btn, .nav-item { min-height: 44px; }
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+@media (max-width: 1023px) { html.mobile-menu-open { overflow: hidden; } }

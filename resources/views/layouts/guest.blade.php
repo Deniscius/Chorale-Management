@@ -110,7 +110,7 @@
                     {{ $slot }}
                 </div>
 
-                <p class="mt-6 text-center text-xs text-slate-400 lg:hidden">
+                <p class="mt-6 text-center text-xs text-slate-600 lg:hidden">
                     &copy; {{ date('Y') }} {{ $chorale->name() }}
                 </p>
             </div>

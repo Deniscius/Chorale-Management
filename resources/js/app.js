@@ -4,6 +4,10 @@ const registerAccessibility = () => window.Alpine.data('accessibilityHelp', acce
 document.addEventListener('alpine:init', registerAccessibility, { once: true });
 if (window.Alpine) registerAccessibility();
 import './access-expiry';
+import { navigationDrawer } from './navigation-drawer';
+const registerNavigation = () => window.Alpine.data('navigationDrawer', navigationDrawer);
+document.addEventListener('alpine:init', registerNavigation, { once: true });
+if (window.Alpine) registerNavigation();
 
 // Alpine est fourni et démarré par Livewire : ne pas l'importer ni le démarrer ici,
 // sinon deux instances se disputent le DOM et les directives wire:* ne sont plus liées.

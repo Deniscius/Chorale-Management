@@ -4,9 +4,11 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "test:ui": "node --test tests/js/*.test.js"
+        "test:ui": "node --test tests/js/*.test.js",
+        "test:accessibility": "node tests/browser/accessibility.mjs"
     },
     "devDependencies": {
+        "@axe-core/playwright": "^4.14.0",
         "@tailwindcss/forms": "^0.5.2",
         "@tailwindcss/vite": "^4.0.0",
         "alpinejs": "^3.4.2",
@@ -14,11 +16,16 @@
         "axios": "^1.7.4",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^1.2.0",
+        "playwright": "^1.64.1",
         "postcss": "^8.4.31",
         "tailwindcss": "^3.1.0",
         "vite": "^6.0.11"
     },
     "overrides": {
         "postcss-selector-parser": "^7.1.6"
+    },
+    "dependencies": {
+        "@neon/config": "^1.9.4",
+        "@neon/env": "^1.6.5"
     }
 }

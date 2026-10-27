@@ -33,6 +33,10 @@
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
+        <!-- Never let Neon CLI credentials from .env override a disposable test DB. -->
+        <env name="DB_URL" value="" force="true"/>
+        <env name="DATABASE_URL" value="" force="true"/>
+        <env name="DATABASE_URL_UNPOOLED" value="" force="true"/>
 
         <!--
             Isolation vis-à-vis des caches de production.

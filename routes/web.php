@@ -42,7 +42,7 @@ require __DIR__.'/platform.php';
 Route::prefix('c/{slug}')->where(['slug' => '[a-z0-9]+(?:-[a-z0-9]+)*'])
     ->middleware([TenantAddress::class, 'chorale.session'])->group(function () {
         Route::get('/', [TenantAddressController::class, 'show'])->name('tenant.entry');
-        Route::get('/logo', [TenantAddressController::class, 'logo'])->name('tenant.logo');
+        Route::get('/logo', [TenantAddressController::class, 'logo'])->middleware('auth')->name('tenant.logo');
         Route::post('/connexion', [AuthenticatedSessionController::class, 'store'])->middleware(['guest', 'throttle:60,1,chorale-login:'])->name('tenant.login');
     });
 
@@ -51,9 +51,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/creer-un-espace', [TenantRegistrationController::class, 'store'])->middleware('throttle:3,60,space-registration:')->name('spaces.store');
 });
 
-// Logo de la chorale : affiché sur les pages publiques (connexion).
+// Logos réservés à la session de la chorale ; aucune exposition sur la connexion.
 Route::get('/chorale/logo', ChoraleLogoController::class)
-    ->middleware(['web'])
+    ->middleware(['auth', 'chorale.session'])
     ->name('chorale.logo');
 
 Route::middleware(['auth', 'chorale.session'])->group(function () {

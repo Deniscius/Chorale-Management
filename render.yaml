@@ -1,4 +1,5 @@
-# Offre gratuite : ancien web renommé chorale-initial ; nouvelle adresse, même base et même clé.
+# Web conservé sur Render ; base externe Neon configurée manuellement après validation.
+# Ne pas synchroniser avant la procédure docs/MIGRATION-NEON.md.
 services:
   - type: web
     name: chorale-management
@@ -16,7 +17,7 @@ services:
       - {key: PLATFORM_BOOTSTRAP_ENABLED, value: 'true'}
       - {key: PLATFORM_SETUP_TOKEN, generateValue: true}
       - {key: FILES_EPHEMERAL, value: 'true'}
-      - {key: DATABASE_FREE_PLAN, value: 'true'}
+      - {key: DATABASE_FREE_PLAN, value: 'false'}
       - {key: RUN_MIGRATIONS_ON_START, value: 'true'}
       - key: APP_KEY
         fromService: {type: web, name: chorale-initial, envVarKey: APP_KEY}
@@ -24,9 +25,10 @@ services:
         fromService: {type: web, name: chorale-management, envVarKey: RENDER_EXTERNAL_URL}
       - {key: TRUSTED_PROXIES, value: ''}
       - key: DB_URL
-        fromDatabase: {name: chorale-demo-postgres, property: connectionString}
+        sync: false
       - {key: DB_CONNECTION, value: pgsql}
-      - {key: DB_SSLMODE, value: require}
+      - {key: DB_SSLMODE, value: verify-full}
+      - {key: DB_SSLROOTCERT, value: /etc/ssl/certs/ca-certificates.crt}
       - {key: CACHE_STORE, value: database}
       - {key: SESSION_DRIVER, value: database}
       - {key: SESSION_SECURE_COOKIE, value: 'true'}
@@ -39,11 +41,3 @@ services:
       - {key: REMINDERS_ENABLED, value: 'false'}
       - {key: REMINDERS_SMS_ENABLED, value: 'false'}
       - {key: AI_ENABLED, value: 'false'}
-databases:
-  - name: chorale-demo-postgres
-    region: frankfurt
-    plan: free
-    postgresMajorVersion: '17'
-    databaseName: chorale_demo
-    user: chorale
-    ipAllowList: []

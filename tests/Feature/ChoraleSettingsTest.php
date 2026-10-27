@@ -99,7 +99,7 @@ class ChoraleSettingsTest extends TestCase
         $this->assertStringContainsString('?v=', (string) $identity->logoUrl());
     }
 
-    public function test_le_logo_est_servi_publiquement_avec_un_cache_long(): void
+    public function test_le_logo_est_servi_uniquement_en_session_sans_cache_partage(): void
     {
         Storage::fake('local');
 
@@ -114,11 +114,12 @@ class ChoraleSettingsTest extends TestCase
         $identity = app(ChoraleIdentity::class);
         $identity->forget();
 
-        // Le logo est public : il s'affiche aussi sur la page de connexion.
+        // Le logo appartient à la session de cette chorale, jamais à la page de connexion.
         $response = $this->get($identity->logoUrl());
 
         $response->assertOk();
-        $response->assertHeader('Cache-Control', 'immutable, max-age=31536000, public');
+        $response->assertHeader('Cache-Control', 'no-store, private');
+        $this->assertContains('Cookie', $response->getVary());
         $this->assertStringContainsString($identity->logoVersion(), (string) $response->headers->get('ETag'));
     }
 

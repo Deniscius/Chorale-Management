@@ -1,3 +1,5 @@
+> Base Neon avec application sur Render : [audit et procédure de migration sans perte](docs/MIGRATION-NEON.md). Aucune bascule automatique.
+
 > Migration PostgreSQL, démarrage sur une base neuve et règles comptables : [guide détaillé](docs/POSTGRESQL.md).
 
 # Gestion Chorale
@@ -251,7 +253,7 @@ sont indexées — voir `2026_01_01_000027_add_performance_indexes.php`.
 
 ### 6. Paramètres et tableau de bord mis en cache
 
-- **Paramètres** : `SettingsStore` (singleton) effectue **une seule lecture** de
+- **Paramètres** : `SettingsStore` (limité à la requête et au client actif) effectue **une seule lecture** de
   la table `settings` par requête, partagée par la coque, les layouts et les
   composants. Nom, logo et coordonnées sont lus une fois au lieu d'une requête
   par affichage. Toute écriture (`Setting::set`) invalide immédiatement le cache
@@ -262,9 +264,11 @@ sont indexées — voir `2026_01_01_000027_add_performance_indexes.php`.
   en fin de requête (aucune attente pour l'utilisateur).
   `withCount('works')` supprime un N+1 : **19 → 15 requêtes**.
 - **Identité de la chorale** : `ChoraleIdentity` mémorise les valeurs pendant la
-  requête ; le logo est exposé par une route dédiée avec une URL versionnée
-  (`?v=…`), un `ETag` et `Cache-Control: public, max-age=31536000, immutable`.
-  Le navigateur ne le retélécharge que lorsqu'il change.
+  requête et par espace client. Le logo est réservé aux utilisateurs connectés
+  de cette chorale, avec une URL versionnée et propre au client, un `ETag` et
+  `Cache-Control: private, no-store`. Il n'apparaît pas sur les pages de connexion,
+  même à l'adresse personnelle d'une chorale. Une icône commune y remplace le
+  favicon personnalisé, également réinitialisé pour une chorale sans logo.
 
 ### 7. Assets et CSS
 

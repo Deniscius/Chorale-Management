@@ -1,9 +1,9 @@
 <header
-    class="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur sm:px-6 lg:px-8">
-    <button type="button" @click="sidebar = true" aria-controls="sidebar" :aria-expanded="sidebar ? 'true' : 'false'"
+    class="sticky top-0 z-30 flex min-h-16 flex-wrap items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur sm:px-6 lg:px-8">
+    <button type="button" @click="open()" aria-controls="sidebar" :aria-expanded="sidebar ? 'true' : 'false'"
         aria-label="Ouvrir le menu"
-        class="-ml-1.5 rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 lg:hidden">
-        <x-icon name="menu" class="h-6 w-6" />
+        class="help-control -ml-1.5 inline-flex items-center gap-2 rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 lg:hidden">
+        <x-icon name="menu" class="h-6 w-6" /><span class="text-sm font-semibold">Menu</span>
     </button>
 
     <div class="hidden min-w-0 items-baseline gap-2 sm:flex">
@@ -12,6 +12,10 @@
         <span class="text-xs font-medium text-slate-500">{{ now()->translatedFormat('l j F Y') }}</span>
     </div>
 
+    <a href="{{ route('dashboard') }}" wire:navigate aria-label="Revenir à l’accueil"
+        class="help-control inline-flex items-center gap-2 rounded-xl px-3 py-2 font-semibold text-slate-800 hover:bg-slate-100">
+        <x-icon name="home" class="h-6 w-6" /><span>Accueil</span>
+    </a>
     <div class="flex-1"></div>
 
     <x-dropdown align="right" width="48">

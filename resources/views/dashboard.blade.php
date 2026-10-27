@@ -6,6 +6,11 @@
         </x-slot>
     </x-page-header>
 
+    <x-welcome-actions />
+
+    <details class="rounded-2xl border border-slate-200 bg-white p-4">
+        <summary class="help-control cursor-pointer rounded-lg px-2 py-3 text-lg font-semibold text-slate-900">Voir les détails de la chorale</summary>
+        <div class="mt-4">
     {{-- Indicateurs --}}
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         @can('view-module', \App\Enums\UserRole::MODULE_MEMBERS)
@@ -44,7 +49,7 @@
                             <li class="flex items-start gap-4 px-5 py-3">
                                 <div class="w-14 shrink-0 rounded-lg bg-slate-100 py-1.5 text-center">
                                     <p class="text-lg font-semibold leading-none text-slate-900">{{ $rehearsal->date->format('d') }}</p>
-                                    <p class="mt-0.5 text-[10px] font-semibold uppercase text-slate-500">{{ $rehearsal->date->translatedFormat('M') }}</p>
+                                    <p class="mt-0.5 text-xs font-semibold uppercase text-slate-600">{{ $rehearsal->date->translatedFormat('M') }}</p>
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <p class="truncate text-sm font-medium text-slate-900">
@@ -163,4 +168,6 @@
             </section>
         @endcan
     </div>
+        </div>
+    </details>
 </x-app-layout>

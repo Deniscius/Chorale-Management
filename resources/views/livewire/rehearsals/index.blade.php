@@ -25,7 +25,7 @@
     <x-filter-bar class="mt-6">
         <div class="grid gap-3 md:grid-cols-4">
             <div>
-                <label for="search" class="sr-only">Rechercher</label>
+                <label for="search" class="form-label">Rechercher une répétition</label>
                 <div class="relative">
                     <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                         <x-icon name="search" class="h-4 w-4" />
@@ -37,7 +37,7 @@
             </div>
 
             <div>
-                <label for="type" class="sr-only">Type</label>
+                <label for="type" class="form-label">Type</label>
                 <select id="type" wire:model.live="type"
                     class="form-select">
                     <option value="">Tous les types</option>
@@ -48,7 +48,7 @@
             </div>
 
             <div>
-                <label for="status" class="sr-only">Statut</label>
+                <label for="status" class="form-label">Statut</label>
                 <select id="status" wire:model.live="status"
                     class="form-select">
                     <option value="">Tous les statuts</option>
@@ -59,7 +59,7 @@
             </div>
 
             <div>
-                <label for="period" class="sr-only">Période</label>
+                <label for="period" class="form-label">Période</label>
                 <select id="period" wire:model.live="period"
                     class="form-select">
                     <option value="">Toutes les périodes</option>
@@ -97,7 +97,7 @@
                         <div class="flex items-center gap-3">
                             <span class="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-lg bg-slate-100 text-center">
                                 <span class="text-sm font-bold leading-none text-slate-900">{{ $rehearsal->date->format('d') }}</span>
-                                <span class="mt-0.5 text-[10px] font-semibold uppercase text-slate-500">{{ $rehearsal->date->translatedFormat('M') }}</span>
+                                <span class="mt-0.5 text-xs font-semibold uppercase text-slate-600">{{ $rehearsal->date->translatedFormat('M') }}</span>
                             </span>
                             <span class="text-xs text-slate-500">{{ $rehearsal->date->translatedFormat('Y') }}</span>
                         </div>

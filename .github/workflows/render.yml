@@ -17,6 +17,8 @@ jobs:
           for path in ['render.yaml', 'deploy/render.production.yaml']:
               jsonschema.validate(yaml.safe_load(open(path)), schema)
           PY
+      - name: Check read-only migration manifest tooling
+        run: python -B -m unittest discover -s tests/deployment -v
       - name: Build production image
         run: docker build -t chorale-production .
       - name: Start disposable PostgreSQL
@@ -72,7 +74,8 @@ jobs:
             --data-urlencode "code=$code")" = '302'
           test "$(docker exec postgres psql -U chorale -d chorale_ci -tAc 'SELECT count(*) FROM platform_admins')" = '1'
           docker exec hosted php docker/verify-private-storage.php write
-          curl --fail --silent http://localhost:10001/c/espace-existant/logo > /tmp/logo-before.png
+          test "$(curl --silent -o /dev/null -w '%{http_code}' http://localhost:10001/c/espace-existant/logo)" = '302'
+          docker exec hosted php docker/verify-private-storage.php fingerprint > /tmp/logo-before.sha256
           docker rm -f hosted
           docker run -d --name hosted --network chorale-ci --env-file /tmp/chorale-ci.env -p 10001:10000 \
             -e APP_DEMO_MODE=false -e RUN_MIGRATIONS_ON_START=true \
@@ -83,8 +86,9 @@ jobs:
           curl --fail --silent http://localhost:10001/up > /dev/null
           test "$(docker exec postgres psql -U chorale -d chorale_ci -tAc 'SELECT count(*) FROM platform_admins')" = '1'
           docker exec hosted php docker/verify-private-storage.php verify
-          curl --fail --silent http://localhost:10001/c/espace-existant/logo > /tmp/logo-after.png
-          cmp /tmp/logo-before.png /tmp/logo-after.png
+          test "$(curl --silent -o /dev/null -w '%{http_code}' http://localhost:10001/c/espace-existant/logo)" = '302'
+          docker exec hosted php docker/verify-private-storage.php fingerprint > /tmp/logo-after.sha256
+          cmp /tmp/logo-before.sha256 /tmp/logo-after.sha256
       - name: Logs on failure
         if: failure()
         run: |

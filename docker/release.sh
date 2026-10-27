@@ -6,5 +6,11 @@ case "${APP_KEY:-}" in
     base64:*) ;;
     *) export APP_KEY="base64:$APP_KEY" ;;
 esac
-php artisan migrate --force --no-interaction
-php artisan db:seed --class=ProductionSeeder --force --no-interaction
+# A database-provider move must not also change the restored schema/data.
+# Disable migrations during that controlled cutover, then re-enable for later releases.
+case "${RUN_MIGRATIONS_ON_RELEASE:-true}" in
+    true) php artisan migrate --force --no-interaction ;;
+    false) echo 'Migrations skipped for this release' ;;
+    *) echo 'RUN_MIGRATIONS_ON_RELEASE must be true or false' >&2; exit 1 ;;
+esac
+# No automatic seeding: ProductionSeeder can add reference data and instrument units.

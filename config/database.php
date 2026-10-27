@@ -86,7 +86,9 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => env('DB_URL'),
+            // Explicit Render configuration wins. Neon CLI pulls both standard URLs;
+            // use the direct one for this long-running PHP runtime and migrations.
+            'url' => env('DB_URL') ?: (env('DATABASE_URL_UNPOOLED') ?: env('DATABASE_URL')),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '5432'),
             'database' => env('DB_DATABASE', 'laravel'),
@@ -97,6 +99,8 @@ return [
             'prefix_indexes' => true,
             'search_path' => env('DB_SEARCH_PATH', 'public'),
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            // Omit an unset certificate path instead of appending an empty libpq option.
+            'sslrootcert' => env('DB_SSLROOTCERT') ?: null,
         ],
 
         'sqlsrv' => [

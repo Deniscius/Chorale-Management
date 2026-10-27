@@ -89,6 +89,7 @@ jobs:
           curl --fail --silent --output /dev/null --retry 20 --retry-connrefused --retry-delay 1 http://127.0.0.1:8091/login
       - run: npm run test:accessibility
       - run: npm run test:material
+      - run: npm run test:profiles
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

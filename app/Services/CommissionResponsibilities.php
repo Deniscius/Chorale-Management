@@ -24,7 +24,7 @@ final class CommissionResponsibilities
             'module_key' => ['nullable', Rule::in(UserRole::allModules())],
         ])->validate();
         DB::transaction(function () use ($id, $leaderId, $associateId, $module, $instrumentAssociateIds) {
-            DB::table('tenants')->where('id', app(TenantContext::class)->requireId())->lockForUpdate()->first();
+            app(TenantContext::class)->lockForAccountChanges();
             $entry = ChoirCommission::lockForUpdate()->findOrFail($id);
             $code = $entry->archive_commission ? Commission::from($entry->archive_commission) : null;
             $effectiveModule = $code?->module() ?? $module;

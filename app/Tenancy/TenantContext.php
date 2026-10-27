@@ -52,6 +52,14 @@ final class TenantContext
         return self::isolated() ? 'tenant:'.($this->id() ?? 'guest').':'.$key : $key;
     }
 
+    /** Serialize account/delegation changes without blocking PostgreSQL foreign-key checks. */
+    public function lockForAccountChanges(): void
+    {
+        $query = DB::table('tenants')->where('id', $this->requireId());
+        $row = $query->lock(DB::getDriverName() === 'pgsql' ? 'for no key update' : true)->first();
+        abort_unless($row, 404);
+    }
+
     public function table(string $table): Builder
     {
         $query = DB::table($table);

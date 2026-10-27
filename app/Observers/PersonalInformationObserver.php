@@ -25,7 +25,7 @@ final class PersonalInformationObserver
         }
         // An account cannot be reassigned to another person's membership record.
         if ($model instanceof User && $model->isDirty('member_id')) {
-            abort(403, 'Le rattachement d’un compte existant ne peut pas être modifié.');
+            abort_unless($model->isCompletingOwnMemberProfile(), 403, 'Le rattachement d’un compte existant ne peut pas être modifié.');
         }
     }
 }

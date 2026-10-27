@@ -97,6 +97,7 @@
                         {{ $user->updated_at?->diffForHumans() ?? '—' }}
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-right">
+                        <a href="{{ route('users.commissions', $user) }}" wire:navigate class="help-control mb-2 inline-flex items-center rounded-lg px-2 text-sm font-semibold text-indigo-700 underline">Commissions et accès</a>
                         <x-row-actions edit="edit" :id="$user->id" remove="delete"
                             :confirm="'Supprimer le compte de '.$user->name.' ?'" />
                     </td>

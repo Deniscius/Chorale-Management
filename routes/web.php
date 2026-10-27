@@ -31,6 +31,7 @@ use App\Livewire\Seasons\Index as SeasonsIndex;
 use App\Livewire\Settings\Chorale as SettingsChorale;
 use App\Livewire\Settings\FinancialTypes;
 use App\Livewire\Transactions\Index as TransactionsIndex;
+use App\Livewire\Users\CommissionAssignments;
 use App\Livewire\Users\Index as UsersIndex;
 use App\Livewire\Works\Index as WorksIndex;
 use Illuminate\Support\Facades\Route;
@@ -162,6 +163,8 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
         ->middleware('can:manage-users')->name('audit.index');
 
     // Profil
+    Route::get('/utilisateurs/{user}/commissions', CommissionAssignments::class)->middleware('can:manage-users')->name('users.commissions');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

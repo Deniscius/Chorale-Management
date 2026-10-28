@@ -106,7 +106,7 @@ envVarGroups:
       - {key: SESSION_SAME_SITE, value: lax}
       - {key: CACHE_STORE, value: database}
       - {key: QUEUE_CONNECTION, value: database}
-      - {key: DB_QUEUE_RETRY_AFTER, value: '120'}
+      - {key: DB_QUEUE_RETRY_AFTER, value: '240'}
       - {key: LOG_CHANNEL, value: stderr}
       - {key: LOG_LEVEL, value: warning}
       - {key: MAIL_MAILER, value: smtp}

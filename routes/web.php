@@ -9,6 +9,8 @@ use App\Http\Controllers\DocumentDownloadController;
 use App\Http\Controllers\DocumentPreviewController;
 use App\Http\Controllers\InstrumentImageController;
 use App\Http\Controllers\InstrumentLabelsController;
+use App\Http\Controllers\LetterheadFileController;
+use App\Http\Controllers\LetterheadSampleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TenantAddressController;
 use App\Http\Controllers\TenantRegistrationController;
@@ -164,6 +166,11 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/parametres/chorale', SettingsChorale::class)
         ->middleware('can:manage-settings')
         ->name('settings.chorale');
+    Route::get('/parametres/chorale/papier-entete/exemple', LetterheadSampleController::class)
+        ->middleware('can:manage-settings')->name('settings.letterheads.sample');
+    Route::get('/parametres/chorale/papier-entete/{template}/{kind}', LetterheadFileController::class)
+        ->where('kind', 'original|preview|header')
+        ->middleware('can:manage-settings')->name('settings.letterheads.file');
 
     Route::get('/administration/journal', Index::class)
         ->middleware('can:manage-users')->name('audit.index');

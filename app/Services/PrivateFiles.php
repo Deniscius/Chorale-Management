@@ -73,6 +73,39 @@ final class PrivateFiles
         return $path;
     }
 
+    public function storeContents(string $path, string $contents, string $mime): string
+    {
+        $this->assertPath($path);
+        if ($this->persistent()) {
+            $this->persist($path, $contents, $mime);
+
+            return $path;
+        }
+        if (config('deployment.ephemeral_files')) {
+            throw ValidationException::withMessages(['file' => 'Le stockage temporaire ne permet pas de conserver ce fichier.']);
+        }
+        abort_unless(Storage::disk('local')->put($path, $contents), 500, 'Le fichier n’a pas pu être enregistré.');
+
+        return $path;
+    }
+
+    public function contents(string $path, int $maxBytes = 10_485_760): string
+    {
+        $this->assertPath($path);
+        $row = $this->persistent() ? $this->query()->where('path', $path)->first() : null;
+        if ($row) {
+            abort_if((int) $row->size > $maxBytes, 413, 'Fichier trop volumineux.');
+            $contents = Crypt::decryptString($row->payload);
+            abort_unless(hash_equals($row->sha256, hash('sha256', $contents)), 500, 'Le fichier n’a pas pu être vérifié.');
+
+            return $contents;
+        }
+        abort_unless(Storage::disk('local')->exists($path), 404, 'Fichier introuvable.');
+        abort_if(Storage::disk('local')->size($path) > $maxBytes, 413, 'Fichier trop volumineux.');
+
+        return Storage::disk('local')->get($path);
+    }
+
     public function persist(string $path, string $contents, string $mime): void
     {
         $this->assertPath($path);

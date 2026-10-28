@@ -33,6 +33,14 @@ final class Letterheads extends Component
         $this->dispatch('toast', type: 'success', message: 'Ce papier à en-tête est désormais utilisé pour les documents générés.');
     }
 
+    public function delete(int $id, LetterheadManager $manager): void
+    {
+        $this->authorizeManage();
+        $manager->delete(LetterheadTemplate::query()->findOrFail($id));
+        unset($this->heights[$id]);
+        $this->dispatch('toast', type: 'success', message: 'Le fichier et ses aperçus ont été supprimés.');
+    }
+
     private function authorizeManage(): void
     {
         abort_unless(auth()->user()?->can('manage-settings'), 403);

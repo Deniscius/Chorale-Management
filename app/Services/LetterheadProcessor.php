@@ -64,18 +64,24 @@ final class LetterheadProcessor
                 throw new RuntimeException('Aperçu incomplet.');
             }
             $base = $this->tenant->path("letterheads/{$template->id}");
-            $template->update([
-                'preview_path' => $this->files->storeContents($base.'/preview.png', File::get($preview), 'image/png'),
-                'header_path' => $this->files->storeContents($base.'/header.png', File::get($header), 'image/png'),
+            $previewPath = $this->files->storeContents($base.'/preview.png', File::get($preview), 'image/png');
+            $headerPath = $this->files->storeContents($base.'/header.png', File::get($header), 'image/png');
+            $updated = LetterheadTemplate::query()->whereKey($template->id)->update([
+                'preview_path' => $previewPath,
+                'header_path' => $headerPath,
                 'status' => LetterheadTemplate::STATUS_READY,
                 'error_message' => null,
             ]);
+            if ($updated === 0) {
+                $this->files->delete($previewPath);
+                $this->files->delete($headerPath);
+            }
         } catch (\Throwable $exception) {
             Log::warning('Échec du traitement du papier à en-tête.', [
                 'tenant_id' => $this->tenant->id(), 'template_id' => $template->id,
                 'exception' => $exception::class,
             ]);
-            $template->update([
+            LetterheadTemplate::query()->whereKey($template->id)->update([
                 'status' => LetterheadTemplate::STATUS_ERROR,
                 'error_message' => 'Le document n’a pas pu être préparé. Vérifiez qu’il s’ouvre correctement dans Word ou dans un lecteur PDF, puis réessayez.',
             ]);

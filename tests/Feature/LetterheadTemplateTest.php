@@ -172,6 +172,73 @@ class LetterheadTemplateTest extends TestCase
         Bus::assertDispatchedAfterResponse(ProcessLetterheadTemplate::class, fn ($job) => $job->templateId === $replacement->id);
     }
 
+    public function test_an_administrator_can_delete_the_active_template_and_its_private_files(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->role(UserRole::Admin)->create();
+        $base = app(TenantContext::class)->path('letterheads/42');
+        $files = app(PrivateFiles::class);
+        foreach (['original.docx', 'preview.png', 'header.png'] as $name) {
+            $files->storeContents($base.'/'.$name, $name, 'application/octet-stream');
+        }
+        $template = LetterheadTemplate::create([
+            'original_name' => 'ancien.docx',
+            'original_path' => $base.'/original.docx',
+            'preview_path' => $base.'/preview.png',
+            'header_path' => $base.'/header.png',
+            'status' => LetterheadTemplate::STATUS_ACTIVE,
+            'activated_at' => now(),
+            'uploaded_by' => $admin->id,
+        ]);
+
+        Livewire::actingAs($admin)->test(Letterheads::class)
+            ->assertSee('Supprimer')
+            ->call('delete', $template->id)
+            ->assertDispatched('toast', type: 'success', message: 'Le fichier et ses aperçus ont été supprimés.');
+
+        $this->assertDatabaseMissing('letterhead_templates', ['id' => $template->id]);
+        foreach (['original.docx', 'preview.png', 'header.png'] as $name) {
+            Storage::disk('local')->assertMissing($base.'/'.$name);
+        }
+    }
+
+    public function test_deleting_a_recalculated_version_preserves_the_shared_active_original(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->role(UserRole::Admin)->create();
+        $files = app(PrivateFiles::class);
+        $shared = app(TenantContext::class)->path('letterheads/1/original.docx');
+        $replacementPreview = app(TenantContext::class)->path('letterheads/2/preview.png');
+        $files->storeContents($shared, 'original', 'application/octet-stream');
+        $files->storeContents($replacementPreview, 'preview', 'image/png');
+        LetterheadTemplate::create([
+            'original_name' => 'officiel.docx', 'original_path' => $shared,
+            'status' => LetterheadTemplate::STATUS_ACTIVE, 'uploaded_by' => $admin->id,
+        ]);
+        $replacement = LetterheadTemplate::create([
+            'original_name' => 'officiel.docx', 'original_path' => $shared,
+            'preview_path' => $replacementPreview, 'status' => LetterheadTemplate::STATUS_READY,
+            'uploaded_by' => $admin->id,
+        ]);
+        $this->actingAs($admin);
+
+        app(LetterheadManager::class)->delete($replacement);
+
+        $this->assertTrue($files->exists($shared));
+        $this->assertFalse($files->exists($replacementPreview));
+        $this->assertDatabaseCount('letterhead_templates', 1);
+    }
+
+    public function test_a_queued_conversion_quietly_stops_if_the_template_was_deleted(): void
+    {
+        (new ProcessLetterheadTemplate(1, 999999))->handle(
+            app(TenantContext::class),
+            app(LetterheadProcessor::class),
+        );
+
+        $this->addToAssertionCount(1);
+    }
+
     private function docx(string $relationship = ''): UploadedFile
     {
         $path = tempnam(sys_get_temp_dir(), 'letterhead-docx-');

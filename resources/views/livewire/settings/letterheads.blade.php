@@ -45,7 +45,21 @@
                             </div>
                             <p class="mt-1 text-xs text-slate-500">Importé {{ $template->created_at->diffForHumans() }}{{ $template->uploader ? ' par '.$template->uploader->name : '' }}</p>
                         </div>
-                        <a class="btn btn-secondary" href="{{ route('settings.letterheads.file', [$template, 'original']) }}"><x-icon name="download" class="h-4 w-4" />Original</a>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <a class="btn btn-secondary" href="{{ route('settings.letterheads.file', [$template, 'original']) }}"><x-icon name="download" class="h-4 w-4" />Original</a>
+                            <button
+                                type="button"
+                                wire:click="delete({{ $template->id }})"
+                                wire:confirm="{{ $template->status === 'active' ? 'Supprimer l’en-tête actif ? Les prochains documents utiliseront l’en-tête standard de la chorale jusqu’à l’activation d’un autre fichier.' : 'Supprimer définitivement ce fichier et tous ses aperçus ?' }}"
+                                wire:loading.attr="disabled"
+                                wire:target="delete({{ $template->id }})"
+                                class="btn btn-secondary text-red-700 hover:border-red-300 hover:bg-red-50"
+                                aria-label="Supprimer {{ $template->original_name }}"
+                            >
+                                <x-icon name="trash" class="h-4 w-4" />
+                                Supprimer
+                            </button>
+                        </div>
                     </div>
 
                     @if($template->error_message)

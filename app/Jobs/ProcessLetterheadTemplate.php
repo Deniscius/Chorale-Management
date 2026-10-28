@@ -21,7 +21,10 @@ final class ProcessLetterheadTemplate implements ShouldQueue
     public function handle(TenantContext $tenant, LetterheadProcessor $processor): void
     {
         $tenant->run($this->tenantId, function () use ($processor): void {
-            $processor->process(LetterheadTemplate::query()->findOrFail($this->templateId));
+            $template = LetterheadTemplate::query()->find($this->templateId);
+            if ($template) {
+                $processor->process($template);
+            }
         });
     }
 }

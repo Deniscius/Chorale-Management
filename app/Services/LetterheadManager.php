@@ -8,7 +8,9 @@ use App\Models\User;
 use App\Tenancy\TenantContext;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 final class LetterheadManager
 {
@@ -88,5 +90,47 @@ final class LetterheadManager
                 'activated_at' => now(),
             ]);
         }, 3);
+    }
+
+    public function delete(LetterheadTemplate $template): void
+    {
+        $paths = DB::transaction(function () use ($template): array {
+            $selected = LetterheadTemplate::query()->whereKey($template->id)->lockForUpdate()->firstOrFail();
+            $candidates = array_values(array_unique(array_filter([
+                $selected->original_path,
+                $selected->preview_path,
+                $selected->header_path,
+            ])));
+
+            // A recalculated version can share its original with the active
+            // version. Never remove a file that another template still uses.
+            $paths = array_values(array_filter($candidates, function (string $path) use ($selected): bool {
+                return ! LetterheadTemplate::query()
+                    ->whereKeyNot($selected->id)
+                    ->where(function ($query) use ($path): void {
+                        $query->where('original_path', $path)
+                            ->orWhere('preview_path', $path)
+                            ->orWhere('header_path', $path);
+                    })
+                    ->exists();
+            }));
+
+            $selected->delete();
+
+            return $paths;
+        }, 3);
+
+        foreach ($paths as $path) {
+            try {
+                $this->files->delete($path);
+            } catch (Throwable $exception) {
+                Log::warning('Papier à en-tête supprimé, fichier privé à nettoyer.', [
+                    'tenant_id' => $this->tenant->id(),
+                    'template_id' => $template->id,
+                    'path' => $path,
+                    'exception' => $exception::class,
+                ]);
+            }
+        }
     }
 }

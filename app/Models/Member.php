@@ -102,6 +102,11 @@ class Member extends Model
         return $this->hasMany(Reminder::class);
     }
 
+    public function attendanceIncidents(): HasMany
+    {
+        return $this->hasMany(AttendanceIncident::class);
+    }
+
     /**
      * Le choriste peut-il recevoir un rappel par e-mail ?
      */

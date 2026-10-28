@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Http\Controllers\ApiIntegrationController;
 use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BillingController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\InstrumentLabelsController;
 use App\Http\Controllers\LetterheadFileController;
 use App\Http\Controllers\LetterheadSampleController;
 use App\Http\Controllers\LetterheadUploadController;
+use App\Http\Controllers\MemberDossierController;
 use App\Http\Controllers\MemberPhotoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TenantAddressController;
@@ -20,6 +22,7 @@ use App\Http\Controllers\TenantRegistrationController;
 use App\Http\Controllers\VoiceResourceAudioController;
 use App\Http\Controllers\VoiceSpaceController;
 use App\Http\Middleware\TenantAddress;
+use App\Livewire\Accounting\MemberOverview as AccountingMemberOverview;
 use App\Livewire\Activities\Index as ActivitiesIndex;
 use App\Livewire\Attendance\FinancialReport as AttendanceFinancialReport;
 use App\Livewire\Attendance\Sheet as AttendanceSheet;
@@ -81,6 +84,7 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/membres', MembersIndex::class)
         ->middleware('module:'.UserRole::MODULE_MEMBERS)
         ->name('members.index');
+    Route::get('/membres/{member}/dossier', MemberDossierController::class)->name('members.show');
 
     // Commission liturgique
     Route::get('/oeuvres', WorksIndex::class)
@@ -183,6 +187,9 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/comptabilite/presences', AttendanceFinancialReport::class)
         ->middleware('can:view-attendance-finance')
         ->name('attendance.financial-report');
+    Route::get('/comptabilite/choristes', AccountingMemberOverview::class)
+        ->middleware('can:view-attendance-finance')
+        ->name('accounting.members');
 
     Route::get('/presences/{eventType}/{event}/rapport', AttendanceReportController::class)
         ->where(['eventType' => 'repetition|activite', 'event' => '[0-9]+'])
@@ -196,6 +203,12 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/parametres/chorale', SettingsChorale::class)
         ->middleware('can:manage-settings')
         ->name('settings.chorale');
+    Route::get('/parametres/integrations-api', [ApiIntegrationController::class, 'index'])
+        ->middleware('can:manage-settings')->name('settings.api-integrations');
+    Route::post('/parametres/integrations-api', [ApiIntegrationController::class, 'store'])
+        ->middleware(['can:manage-settings', 'throttle:5,1'])->name('settings.api-integrations.store');
+    Route::delete('/parametres/integrations-api/{apiClient}', [ApiIntegrationController::class, 'destroy'])
+        ->middleware(['can:manage-settings', 'throttle:10,1'])->name('settings.api-integrations.destroy');
     Route::get('/parametres/chorale/papier-entete/exemple', LetterheadSampleController::class)
         ->middleware('can:manage-settings')->name('settings.letterheads.sample');
     Route::post('/parametres/chorale/papier-entete', LetterheadUploadController::class)

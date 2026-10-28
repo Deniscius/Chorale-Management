@@ -56,6 +56,7 @@
                 ['route' => 'contributions.index', 'label' => app(\App\Services\FinancialCatalog::class)->section('contribution'), 'icon' => 'users', 'module' => UserRole::MODULE_COMPTABILITE],
                 ['route' => 'donations.index', 'label' => app(\App\Services\FinancialCatalog::class)->section('donation'), 'icon' => 'sparkles', 'module' => UserRole::MODULE_COMPTABILITE],
                 ['route' => 'attendance.financial-report', 'label' => 'Rapport des présences', 'icon' => 'clock', 'ability' => 'view-attendance-finance'],
+                ['route' => 'accounting.members', 'label' => 'Vue des choristes', 'icon' => 'users', 'ability' => 'view-attendance-finance'],
             ],
         ],
         [
@@ -65,6 +66,7 @@
                 ['route' => 'users.index', 'label' => 'Utilisateurs', 'icon' => 'cog', 'admin' => true],
                 ['route' => 'settings.financial-types', 'label' => 'Types de contribution', 'icon' => 'banknotes', 'admin' => true],
                 ['route' => 'settings.chorale', 'label' => 'Informations de la chorale', 'icon' => 'building', 'admin' => true],
+                ['route' => 'settings.api-integrations', 'label' => 'Intégrations API', 'icon' => 'cog', 'admin' => true],
             ],
         ],
     ];

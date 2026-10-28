@@ -96,7 +96,10 @@
                                         {{ $member->initials }}
                                     </span>
                                     <div>
-                                        <p class="text-sm font-semibold text-slate-900">{{ $member->full_name }}</p>
+                                        <a href="{{ route('members.show', $member) }}" wire:navigate
+                                            class="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-blue-700 hover:decoration-blue-400">
+                                            {{ $member->full_name }}
+                                        </a>
                                         @if ($member->choir)
                                             <p class="text-xs text-slate-500">{{ $member->choir->name }}</p>
                                         @endif

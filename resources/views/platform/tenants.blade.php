@@ -3,7 +3,7 @@
     <section class="p-panel" aria-label="Liste des chorales">
         <form method="GET" class="p-toolbar" role="search">
             <div class="p-field p-field-grow"><label for="q">Rechercher une chorale</label><div class="p-search-wrap"><x-icon name="search" /><input id="q" name="q" value="{{ $filters['q'] ?? '' }}" maxlength="120" placeholder="Nom de la chorale…" type="search"></div></div>
-            <div class="p-field"><label for="status">Statut de l’espace</label><select id="status" name="status">@foreach(['' => 'Tous les statuts', 'trial' => 'En essai', 'paid' => 'Accès payants', 'expired' => 'Expirés', 'suspended' => 'Suspendus'] as $value => $label)<option value="{{ $value }}" @selected(($filters['status'] ?? '') === $value)>{{ $label }}</option>@endforeach</select></div>
+            <div class="p-field"><label for="status">Statut de l’espace</label><select id="status" name="status">@foreach(['' => 'Tous les statuts', 'free' => 'Accès gratuits', 'trial' => 'En essai', 'paid' => 'Accès payants', 'expired' => 'Expirés', 'suspended' => 'Suspendus'] as $value => $label)<option value="{{ $value }}" @selected(($filters['status'] ?? '') === $value)>{{ $label }}</option>@endforeach</select></div>
             <button class="p-btn p-btn-primary" type="submit"><x-icon name="filter" />Filtrer</button>
             @if(filled($filters['q'] ?? '') || filled($filters['status'] ?? ''))<a href="{{ route('platform.tenants') }}" class="p-btn" aria-label="Effacer les filtres"><x-icon name="x" /></a>@endif
         </form>

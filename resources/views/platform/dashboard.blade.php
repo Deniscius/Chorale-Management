@@ -1,7 +1,7 @@
 <x-platform-layout title="Vue d’ensemble">
     <div class="p-page-head"><div><p class="p-kicker">Votre activité, en un regard</p><h1>Vue d’ensemble</h1><p class="p-description">Gardez le fil de vos chorales et accompagnez leur développement.</p></div><p class="p-date"><x-icon name="calendar" class="w-4 h-4" />{{ now()->format('d/m/Y') }} · {{ now()->format('H:i') }}</p></div>
     <div class="p-kpis">
-        @foreach([['Toutes les chorales', $stats->total, '', 'users', 'Espaces créés sur la plateforme'], ['En essai', $stats->trial ?? 0, 'trial', 'clock', 'Découverte de l’application'], ['Accès payants actifs', $stats->paid ?? 0, 'paid', 'check-circle', 'Droits d’accès en cours'], ['Essais expirés', $stats->expired ?? 0, 'expired', 'calendar', 'En attente d’activation']] as [$label, $number, $status, $icon, $hint])
+        @foreach([['Toutes les chorales', $stats->total, '', 'users', 'Espaces créés sur la plateforme'], ['Accès gratuits', $stats->free ?? 0, 'free', 'check-circle', 'Espaces offerts par la plateforme'], ['En essai', $stats->trial ?? 0, 'trial', 'clock', 'Découverte de l’application'], ['Accès payants actifs', $stats->paid ?? 0, 'paid', 'check-circle', 'Droits d’accès en cours'], ['Essais expirés', $stats->expired ?? 0, 'expired', 'calendar', 'En attente d’activation']] as [$label, $number, $status, $icon, $hint])
             <a class="p-kpi" href="{{ route('platform.tenants', array_filter(['status' => $status])) }}"><div class="p-kpi-top"><span>{{ $label }}</span><span class="p-icon-box"><x-icon :name="$icon" /></span></div><p class="p-kpi-value">{{ number_format($number, 0, ',', ' ') }}</p><p class="p-kpi-foot">{{ $hint }}<x-icon name="arrow-right" /></p></a>
         @endforeach
     </div>
@@ -14,7 +14,7 @@
         </div>
         <div class="p-stack">
             <section class="p-panel"><div class="p-panel-head"><div><h2>Répartition des espaces</h2><p>Statut actuel de vos chorales</p></div><x-icon name="chart" class="w-5 h-5 text-slate-400" /></div><div class="p-panel-body">
-                @foreach(['trial' => 'En essai', 'paid' => 'Accès payants', 'expired' => 'Expirés', 'suspended' => 'Suspendus'] as $key => $label)
+                @foreach(['free' => 'Accès gratuits', 'trial' => 'En essai', 'paid' => 'Accès payants', 'expired' => 'Expirés', 'suspended' => 'Suspendus'] as $key => $label)
                     <div style="margin-bottom:17px"><div class="p-summary-row" style="margin-bottom:0"><span>{{ $label }}</span><strong>{{ $stats->$key ?? 0 }} <span class="p-muted">/ {{ $stats->total }}</span></strong></div><meter class="p-meter" min="0" max="{{ max(1, $stats->total) }}" value="{{ $stats->$key ?? 0 }}" aria-label="{{ $label }}">{{ $stats->$key ?? 0 }} sur {{ $stats->total }}</meter></div>
                 @endforeach
             </div></section>

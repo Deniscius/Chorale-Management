@@ -15,6 +15,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\ChoraleIdentity;
 use App\Services\InstrumentIdentity;
+use App\Services\PrivateFiles;
 use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -59,18 +60,21 @@ class InstrumentLabelsTest extends TestCase
 
     public function test_print_uses_the_current_tenants_logo_as_a_watermark(): void
     {
-        Storage::fake('local');
-        config(['private-files.driver' => 'local']);
+        config(['private-files.driver' => 'database']);
         $this->actingAs(User::factory()->role(UserRole::Admin)->create());
-        $path = 'chorale/logo.png';
-        Storage::disk('local')->put($path, 'logo-fictif');
+        $path = 'tenants/'.app(TenantContext::class)->requireId().'/chorale/logo.png';
+        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZrC8AAAAASUVORK5CYII=');
+        app(PrivateFiles::class)->persist($path, $png, 'image/png');
         Setting::set(ChoraleIdentity::KEY_LOGO_PATH, $path);
+        $this->assertSame($path, app(ChoraleIdentity::class)->logoPath());
         $instrument = Instrument::factory()->create(['quantity' => 1]);
         app(InstrumentIdentity::class)->generate($instrument->id);
 
         $this->post(route('instruments.labels'), ['units' => [$instrument->units()->value('id')], 'start' => 1])
             ->assertOk()
             ->assertSee('class="watermark"', false)
+            ->assertSee('src="data:image/png;base64,', false)
+            ->assertSee('opacity:.18', false)
             ->assertDontSee('Un objet · un code permanent');
     }
 

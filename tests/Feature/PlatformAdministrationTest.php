@@ -168,6 +168,27 @@ class PlatformAdministrationTest extends TestCase
         $this->get('/plateforme/journal')->assertOk()->assertSee('Essai commercial')->assertSee('Prolongation');
     }
 
+    public function test_owner_can_grant_and_revoke_a_distinct_free_access(): void
+    {
+        [$tenant] = $this->client('offerte');
+        $tenant->forceFill(['trial_ends_at' => now()->subDay()])->save();
+        $this->loginOwner();
+        $url = '/plateforme/chorales/'.$tenant->id;
+
+        $this->post($url, ['action' => 'enable_free', 'reason' => 'Partenariat associatif', 'current_password' => self::PASSWORD])->assertRedirect($url);
+        $this->assertTrue($tenant->fresh()->is_free);
+        $this->assertTrue($tenant->fresh()->hasAccess());
+        $this->assertSame('Accès gratuit', $tenant->fresh()->accessLabel());
+        $this->assertNull($tenant->fresh()->accessEndsAt());
+        $this->get('/plateforme/chorales?status=free')->assertOk()->assertSee('Chorale offerte');
+        $this->assertDatabaseHas('platform_audit_events', ['tenant_id' => $tenant->id, 'action' => 'enable_free']);
+
+        $this->post($url, ['action' => 'disable_free', 'reason' => 'Fin du partenariat', 'current_password' => self::PASSWORD])->assertRedirect($url);
+        $this->assertFalse($tenant->fresh()->is_free);
+        $this->assertFalse($tenant->fresh()->hasAccess());
+        $this->assertDatabaseHas('platform_audit_events', ['tenant_id' => $tenant->id, 'action' => 'disable_free']);
+    }
+
     public function test_access_mutations_require_password_reason_and_bounded_days(): void
     {
         [$tenant] = $this->client();

@@ -20,9 +20,10 @@ final class DashboardController extends Controller
         $now = now();
         $stats = $this->customerSpaces()->selectRaw('COUNT(*) as total')
             ->selectRaw('SUM(CASE WHEN suspended_at IS NOT NULL THEN 1 ELSE 0 END) as suspended')
-            ->selectRaw('SUM(CASE WHEN suspended_at IS NULL AND (paid_perpetual = ? OR paid_until > ?) THEN 1 ELSE 0 END) as paid', [true, $now])
-            ->selectRaw('SUM(CASE WHEN suspended_at IS NULL AND paid_perpetual = ? AND (paid_until IS NULL OR paid_until <= ?) AND trial_ends_at > ? THEN 1 ELSE 0 END) as trial', [false, $now, $now])
-            ->selectRaw('SUM(CASE WHEN suspended_at IS NULL AND paid_perpetual = ? AND (paid_until IS NULL OR paid_until <= ?) AND trial_ends_at <= ? THEN 1 ELSE 0 END) as expired', [false, $now, $now])->first();
+            ->selectRaw('SUM(CASE WHEN suspended_at IS NULL AND is_free = ? THEN 1 ELSE 0 END) as free', [true])
+            ->selectRaw('SUM(CASE WHEN suspended_at IS NULL AND is_free = ? AND (paid_perpetual = ? OR paid_until > ?) THEN 1 ELSE 0 END) as paid', [false, true, $now])
+            ->selectRaw('SUM(CASE WHEN suspended_at IS NULL AND is_free = ? AND paid_perpetual = ? AND (paid_until IS NULL OR paid_until <= ?) AND trial_ends_at > ? THEN 1 ELSE 0 END) as trial', [false, false, $now, $now])
+            ->selectRaw('SUM(CASE WHEN suspended_at IS NULL AND is_free = ? AND paid_perpetual = ? AND (paid_until IS NULL OR paid_until <= ?) AND trial_ends_at <= ? THEN 1 ELSE 0 END) as expired', [false, false, $now, $now])->first();
         $usage = $this->usage();
         $signups = $this->customerSpaces()->where('created_at', '>=', now()->subDays(30))->count();
         $recent = Tenant::whereIn('id', $this->customerSpaces()->select('tenants.id'))->orderByDesc('id')->limit(5)->get();
@@ -32,7 +33,7 @@ final class DashboardController extends Controller
 
     public function tenants(Request $request)
     {
-        $filters = $request->validate(['q' => ['nullable', 'string', 'max:120'], 'status' => ['nullable', Rule::in(['trial', 'paid', 'expired', 'suspended'])]]);
+        $filters = $request->validate(['q' => ['nullable', 'string', 'max:120'], 'status' => ['nullable', Rule::in(['trial', 'free', 'paid', 'expired', 'suspended'])]]);
         $query = Tenant::whereIn('id', $this->customerSpaces()->select('tenants.id'));
         if (filled($filters['q'] ?? null)) {
             $query->where('name', 'like', '%'.$filters['q'].'%');
@@ -40,11 +41,13 @@ final class DashboardController extends Controller
         switch ($filters['status'] ?? '') {
             case 'suspended': $query->whereNotNull('suspended_at');
                 break;
-            case 'paid': $query->whereNull('suspended_at')->where(fn ($q) => $q->where('paid_perpetual', true)->orWhere('paid_until', '>', now()));
+            case 'paid': $query->whereNull('suspended_at')->where('is_free', false)->where(fn ($q) => $q->where('paid_perpetual', true)->orWhere('paid_until', '>', now()));
+                break;
+            case 'free': $query->whereNull('suspended_at')->where('is_free', true);
                 break;
             case 'trial':
             case 'expired':
-                $query->whereNull('suspended_at')->where('paid_perpetual', false)->where(fn ($q) => $q->whereNull('paid_until')->orWhere('paid_until', '<=', now()))->where('trial_ends_at', ($filters['status'] === 'trial' ? '>' : '<='), now());
+                $query->whereNull('suspended_at')->where('is_free', false)->where('paid_perpetual', false)->where(fn ($q) => $q->whereNull('paid_until')->orWhere('paid_until', '<=', now()))->where('trial_ends_at', ($filters['status'] === 'trial' ? '>' : '<='), now());
                 break;
         }
         $tenants = $query->orderByDesc('id')->paginate(20)->withQueryString();
@@ -69,13 +72,13 @@ final class DashboardController extends Controller
 
     public function update(Request $request, Tenant $tenant)
     {
-        $data = $request->validate(['action' => ['required', Rule::in(['suspend', 'resume', 'extend_trial'])], 'reason' => ['required', 'string', 'min:5', 'max:500'], 'days' => ['required_if:action,extend_trial', 'nullable', 'integer', 'min:1', 'max:30'], 'current_password' => ['required', 'string']]);
+        $data = $request->validate(['action' => ['required', Rule::in(['suspend', 'resume', 'extend_trial', 'enable_free', 'disable_free'])], 'reason' => ['required', 'string', 'min:5', 'max:500'], 'days' => ['required_if:action,extend_trial', 'nullable', 'integer', 'min:1', 'max:30'], 'current_password' => ['required', 'string']]);
         if (! Hash::check($data['current_password'], Auth::guard('platform')->user()->password)) {
             throw ValidationException::withMessages(['current_password' => 'Le mot de passe est incorrect.']);
         }
         DB::transaction(function () use ($tenant, $data) {
             $locked = Tenant::lockForUpdate()->findOrFail($tenant->id);
-            $before = $locked->only(['suspended_at', 'trial_ends_at']);
+            $before = $locked->only(['suspended_at', 'trial_ends_at', 'is_free']);
             switch ($data['action']) {
                 case 'suspend': $locked->forceFill(['suspended_at' => $locked->suspended_at ?? now()]);
                     break;
@@ -87,9 +90,13 @@ final class DashboardController extends Controller
                     }
                     $locked->forceFill(['trial_ends_at' => ($locked->trial_ends_at->isFuture() ? $locked->trial_ends_at : now())->addDays((int) $data['days'])]);
                     break;
+                case 'enable_free': $locked->forceFill(['is_free' => true]);
+                    break;
+                case 'disable_free': $locked->forceFill(['is_free' => false]);
+                    break;
             }
             $locked->save();
-            Audit::record($data['action'], $locked->id, $data['reason'], ['before' => $before, 'after' => $locked->only(['suspended_at', 'trial_ends_at'])]);
+            Audit::record($data['action'], $locked->id, $data['reason'], ['before' => $before, 'after' => $locked->only(['suspended_at', 'trial_ends_at', 'is_free'])]);
         });
 
         return redirect()->route('platform.tenants.show', $tenant)->with('status', 'La modification a été enregistrée dans le journal.');

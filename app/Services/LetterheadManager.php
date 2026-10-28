@@ -22,7 +22,7 @@ final class LetterheadManager
     {
         $this->inspector->inspect($document);
 
-        return DB::transaction(function () use ($document, $height, $user): LetterheadTemplate {
+        $template = DB::transaction(function () use ($document, $height, $user): LetterheadTemplate {
             $template = LetterheadTemplate::create([
                 'original_name' => $document->getClientOriginalName(),
                 'status' => LetterheadTemplate::STATUS_PENDING,
@@ -32,10 +32,16 @@ final class LetterheadManager
             $template->update([
                 'original_path' => $this->files->store($document, $this->tenant->path("letterheads/{$template->id}")),
             ]);
-            ProcessLetterheadTemplate::dispatch($this->tenant->requireId(), $template->id)->afterCommit();
 
             return $template;
         });
+
+        // Répondre à Livewire avant de lancer LibreOffice. Sur Render Free la file
+        // est synchrone : sans ce report, le navigateur semble bloqué jusqu'à la
+        // fin de la conversion et peut atteindre la limite PHP de 60 secondes.
+        ProcessLetterheadTemplate::dispatchAfterResponse($this->tenant->requireId(), $template->id);
+
+        return $template;
     }
 
     public function reprocess(LetterheadTemplate $template, int $height): void
@@ -49,7 +55,7 @@ final class LetterheadManager
                 'status' => LetterheadTemplate::STATUS_PENDING,
                 'uploaded_by' => auth()->id() ?: $template->uploaded_by,
             ]);
-            ProcessLetterheadTemplate::dispatch($this->tenant->requireId(), $template->id)->afterCommit();
+            ProcessLetterheadTemplate::dispatchAfterResponse($this->tenant->requireId(), $template->id);
 
             return;
         }
@@ -58,7 +64,7 @@ final class LetterheadManager
             'status' => LetterheadTemplate::STATUS_PENDING,
             'error_message' => null,
         ]);
-        ProcessLetterheadTemplate::dispatch($this->tenant->requireId(), $template->id)->afterCommit();
+        ProcessLetterheadTemplate::dispatchAfterResponse($this->tenant->requireId(), $template->id);
     }
 
     public function activate(LetterheadTemplate $template): void

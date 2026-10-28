@@ -14,7 +14,7 @@ use App\Services\PrivateFiles;
 use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
@@ -30,7 +30,7 @@ class LetterheadTemplateTest extends TestCase
     public function test_an_administrator_imports_a_safe_docx_for_background_processing(): void
     {
         Storage::fake('local');
-        Queue::fake();
+        Bus::fake();
         $admin = User::factory()->role(UserRole::Admin)->create();
 
         Livewire::actingAs($admin)->test(Letterheads::class)
@@ -43,7 +43,7 @@ class LetterheadTemplateTest extends TestCase
         $this->assertSame(52, $template->header_height_mm);
         $this->assertSame(LetterheadTemplate::STATUS_PENDING, $template->status);
         Storage::disk('local')->assertExists($template->original_path);
-        Queue::assertPushed(ProcessLetterheadTemplate::class, fn ($job) => $job->templateId === $template->id && $job->tenantId === 1);
+        Bus::assertDispatchedAfterResponse(ProcessLetterheadTemplate::class, fn ($job) => $job->templateId === $template->id && $job->tenantId === 1);
     }
 
     public function test_external_resources_are_rejected_before_any_storage(): void
@@ -107,7 +107,7 @@ class LetterheadTemplateTest extends TestCase
             $this->markTestSkipped('LibreOffice et Poppler sont validés dans l’image de production.');
         }
         Storage::fake('local');
-        Queue::fake();
+        Bus::fake();
         $admin = User::factory()->role(UserRole::Admin)->create();
         $template = app(LetterheadManager::class)->upload($this->docx(), 45, $admin);
 
@@ -121,7 +121,7 @@ class LetterheadTemplateTest extends TestCase
 
     public function test_recalculating_an_active_template_keeps_it_active_until_the_new_version_is_approved(): void
     {
-        Queue::fake();
+        Bus::fake();
         $admin = User::factory()->role(UserRole::Admin)->create();
         $active = LetterheadTemplate::create([
             'original_name' => 'officiel.docx', 'original_path' => 'letterheads/original.docx',
@@ -136,7 +136,7 @@ class LetterheadTemplateTest extends TestCase
         $replacement = LetterheadTemplate::query()->whereKeyNot($active->id)->sole();
         $this->assertSame(LetterheadTemplate::STATUS_PENDING, $replacement->status);
         $this->assertSame(60, $replacement->header_height_mm);
-        Queue::assertPushed(ProcessLetterheadTemplate::class, fn ($job) => $job->templateId === $replacement->id);
+        Bus::assertDispatchedAfterResponse(ProcessLetterheadTemplate::class, fn ($job) => $job->templateId === $replacement->id);
     }
 
     private function docx(string $relationship = ''): UploadedFile

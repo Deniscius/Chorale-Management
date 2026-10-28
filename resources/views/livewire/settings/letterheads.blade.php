@@ -1,6 +1,6 @@
 <section class="mt-8" @if($isProcessing) wire:poll.3s @endif>
     <x-card title="Papier à en-tête officiel" subtitle="Importez un document Word vierge. L’en-tête est isolé pour cette chorale et appliqué aux documents générés.">
-        <form wire:submit="upload" class="grid gap-4 md:grid-cols-[1fr_12rem_auto] md:items-end">
+        <div class="grid gap-4 md:grid-cols-[1fr_12rem_auto] md:items-end">
             <div>
                 <x-input-label for="letterhead-document" value="Document Word (.docx)" />
                 <input id="letterhead-document" type="file" wire:model="document" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="mt-1 block w-full rounded-lg border border-slate-300 bg-white p-2 text-sm" />
@@ -15,11 +15,11 @@
                 <div class="mt-1 flex items-center gap-2"><x-text-input id="header-height" type="number" min="20" max="100" wire:model="header_height_mm" class="w-full" /><span class="text-sm text-slate-500">mm</span></div>
                 <x-input-error :messages="$errors->get('header_height_mm')" class="mt-1" />
             </div>
-            <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" wire:target="document,upload">
+            <button type="button" wire:click="upload" class="btn btn-primary" wire:loading.attr="disabled" wire:target="document,upload">
                 <x-icon name="upload" class="h-4 w-4" />
                 <span wire:loading.remove wire:target="upload">Importer</span><span wire:loading wire:target="upload">Envoi…</span>
             </button>
-        </form>
+        </div>
         <div wire:loading.flex wire:target="upload" class="mt-4 items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm font-medium text-blue-900"><span class="h-4 w-4 animate-spin rounded-full border-2 border-blue-700 border-t-transparent" aria-hidden="true"></span>Import et préparation de l’aperçu en cours. Gardez cette page ouverte.</div>
         <x-input-error :messages="$errors->get('activation')" class="mt-3" />
 

@@ -60,6 +60,15 @@ class LetterheadTemplateTest extends TestCase
         $this->assertDatabaseCount('letterhead_templates', 0);
     }
 
+    public function test_a_safe_text_hyperlink_in_the_letterhead_is_allowed(): void
+    {
+        $file = $this->docx('<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="https://chorale.example" TargetMode="External"/>');
+
+        app(DocxSecurityInspector::class)->inspect($file);
+
+        $this->addToAssertionCount(1);
+    }
+
     public function test_activation_is_atomic_and_keeps_the_previous_version(): void
     {
         Storage::fake('local');

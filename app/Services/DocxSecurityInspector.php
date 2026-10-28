@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use DOMDocument;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
 use ZipArchive;
@@ -31,13 +32,36 @@ final class DocxSecurityInspector
                 }
                 if (str_ends_with(strtolower($name), '.rels')) {
                     $xml = $zip->getFromIndex($index);
-                    if (is_string($xml) && preg_match('/TargetMode\s*=\s*["\']External["\']/i', $xml)) {
-                        $this->reject('Les liens vers des ressources externes ne sont pas autorisés.');
+                    if (is_string($xml)) {
+                        $this->inspectRelationships($xml);
                     }
                 }
             }
         } finally {
             $zip->close();
+        }
+    }
+
+    /** Les hyperliens textuels sont sûrs ; les ressources distantes restent bloquées. */
+    private function inspectRelationships(string $xml): void
+    {
+        $document = new DOMDocument;
+        if (! $document->loadXML($xml, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING)) {
+            $this->reject('Le document Word contient des relations illisibles.');
+        }
+
+        foreach ($document->getElementsByTagName('Relationship') as $relationship) {
+            if (strcasecmp($relationship->getAttribute('TargetMode'), 'External') !== 0) {
+                continue;
+            }
+            $type = $relationship->getAttribute('Type');
+            $target = trim($relationship->getAttribute('Target'));
+            $scheme = strtolower((string) parse_url($target, PHP_URL_SCHEME));
+            if (str_ends_with($type, '/hyperlink') && in_array($scheme, ['http', 'https', 'mailto', 'tel'], true)) {
+                continue;
+            }
+
+            $this->reject('Les images, modèles et autres ressources externes ne sont pas autorisés. Incorporez-les directement dans le document Word.');
         }
     }
 

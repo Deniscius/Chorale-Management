@@ -5,6 +5,9 @@
                 <x-input-label for="letterhead-document" value="Document Word (.docx)" />
                 <input id="letterhead-document" type="file" wire:model="document" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="mt-1 block w-full rounded-lg border border-slate-300 bg-white p-2 text-sm" />
                 <x-input-error :messages="$errors->get('document')" class="mt-1" />
+                <x-input-error :messages="$errors->get('file')" class="mt-1" />
+                <p wire:loading wire:target="document" class="mt-2 text-sm font-medium text-blue-700">Téléversement du document en cours…</p>
+                @if($document)<p wire:loading.remove wire:target="document" class="mt-2 text-sm font-medium text-emerald-700">Document sélectionné : {{ $document->getClientOriginalName() }}</p>@endif
                 <p class="mt-1 text-xs text-slate-500">Document vierge, sans macro ni objet incorporé — 10 Mo maximum.</p>
             </div>
             <div>
@@ -17,6 +20,7 @@
                 <span wire:loading.remove wire:target="upload">Importer</span><span wire:loading wire:target="upload">Envoi…</span>
             </button>
         </form>
+        <div wire:loading.flex wire:target="upload" class="mt-4 items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm font-medium text-blue-900"><span class="h-4 w-4 animate-spin rounded-full border-2 border-blue-700 border-t-transparent" aria-hidden="true"></span>Import et préparation de l’aperçu en cours. Gardez cette page ouverte.</div>
         <x-input-error :messages="$errors->get('activation')" class="mt-3" />
 
         @if($activeTemplate)

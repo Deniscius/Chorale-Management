@@ -34,17 +34,21 @@ class LetterheadTemplateTest extends TestCase
         Bus::fake();
         $admin = User::factory()->role(UserRole::Admin)->create();
 
-        Livewire::actingAs($admin)->test(Letterheads::class)
-            ->set('document', $this->docx())
-            ->set('header_height_mm', 52)
-            ->call('upload')
-            ->assertHasNoErrors();
+        $this->actingAs($admin)->post(route('settings.letterheads.upload'), [
+            'document' => $this->docx(),
+            'header_height_mm' => 52,
+        ])->assertRedirect(route('settings.chorale').'#papier-entete');
 
         $template = LetterheadTemplate::sole();
         $this->assertSame(52, $template->header_height_mm);
         $this->assertSame(LetterheadTemplate::STATUS_PENDING, $template->status);
         Storage::disk('local')->assertExists($template->original_path);
         Bus::assertDispatchedAfterResponse(ProcessLetterheadTemplate::class, fn ($job) => $job->templateId === $template->id && $job->tenantId === 1);
+
+        $this->actingAs($admin)->get(route('settings.chorale'))
+            ->assertOk()
+            ->assertSee('enctype="multipart/form-data"', false)
+            ->assertSee('action="'.route('settings.letterheads.upload').'"', false);
     }
 
     public function test_external_resources_are_rejected_before_any_storage(): void
@@ -76,10 +80,10 @@ class LetterheadTemplateTest extends TestCase
         Bus::fake();
         $admin = User::factory()->role(UserRole::Admin)->create();
 
-        Livewire::actingAs($admin)->test(Letterheads::class)
-            ->set('document', $this->pdf())
-            ->call('upload')
-            ->assertHasNoErrors();
+        $this->actingAs($admin)->post(route('settings.letterheads.upload'), [
+            'document' => $this->pdf(),
+            'header_height_mm' => 45,
+        ])->assertRedirect(route('settings.chorale').'#papier-entete');
 
         $template = LetterheadTemplate::sole();
         $this->assertSame('papier-entete.pdf', $template->original_name);
@@ -124,6 +128,9 @@ class LetterheadTemplateTest extends TestCase
         $template = LetterheadTemplate::create(['original_name' => 'secret.docx', 'original_path' => $path]);
 
         Livewire::actingAs($member)->test(Letterheads::class)->assertForbidden();
+        $this->actingAs($member)->post(route('settings.letterheads.upload'), [
+            'document' => $this->docx(), 'header_height_mm' => 45,
+        ])->assertForbidden();
         $this->actingAs($member)->get(route('settings.letterheads.file', [$template, 'original']))->assertForbidden();
     }
 

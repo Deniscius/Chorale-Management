@@ -1,26 +1,28 @@
-<section class="mt-8" @if($isProcessing) wire:poll.3s @endif>
+<section id="papier-entete" class="mt-8 scroll-mt-20" @if($isProcessing) wire:poll.3s @endif>
     <x-card title="Papier à en-tête officiel" subtitle="Importez un document Word ou PDF. L’en-tête est isolé pour cette chorale et appliqué aux documents générés.">
-        <div class="grid gap-4 md:grid-cols-[1fr_12rem_auto] md:items-end">
+        @if(session('letterhead_success'))
+            <div role="status" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-900">{{ session('letterhead_success') }}</div>
+        @endif
+        <form method="POST" action="{{ route('settings.letterheads.upload') }}" enctype="multipart/form-data" class="grid gap-4 md:grid-cols-[1fr_12rem_auto] md:items-end" x-data="{ fileName: '' }">
+            @csrf
             <div>
                 <x-input-label for="letterhead-document" value="Document Word ou PDF (.docx, .pdf)" />
-                <input id="letterhead-document" type="file" wire:model="document" accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf" class="mt-1 block w-full rounded-lg border border-slate-300 bg-white p-2 text-sm" />
+                <input id="letterhead-document" name="document" type="file" required accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf" @change="fileName = $event.target.files[0]?.name || ''" class="mt-1 block w-full cursor-pointer rounded-lg border border-slate-300 bg-white p-2 text-sm" />
                 <x-input-error :messages="$errors->get('document')" class="mt-1" />
                 <x-input-error :messages="$errors->get('file')" class="mt-1" />
-                <p wire:loading wire:target="document" class="mt-2 text-sm font-medium text-blue-700">Téléversement du document en cours…</p>
-                @if($document)<p wire:loading.remove wire:target="document" class="mt-2 text-sm font-medium text-emerald-700">Document sélectionné : {{ $document->getClientOriginalName() }}</p>@endif
+                <p x-cloak x-show="fileName" class="mt-2 text-sm font-medium text-emerald-700">Document sélectionné : <span x-text="fileName"></span></p>
                 <p class="mt-1 text-xs text-slate-500">DOCX sans macro, ou PDF statique sans script ni pièce jointe — 10 Mo maximum.</p>
             </div>
             <div>
                 <x-input-label for="header-height" value="Hauteur à conserver" />
-                <div class="mt-1 flex items-center gap-2"><x-text-input id="header-height" type="number" min="20" max="100" wire:model="header_height_mm" class="w-full" /><span class="text-sm text-slate-500">mm</span></div>
+                <div class="mt-1 flex items-center gap-2"><x-text-input id="header-height" name="header_height_mm" type="number" min="20" max="100" :value="old('header_height_mm', 45)" required class="w-full" /><span class="text-sm text-slate-500">mm</span></div>
                 <x-input-error :messages="$errors->get('header_height_mm')" class="mt-1" />
             </div>
-            <button type="button" wire:click="upload" class="btn btn-primary" wire:loading.attr="disabled" wire:target="document,upload">
+            <button type="submit" class="btn btn-primary cursor-pointer">
                 <x-icon name="upload" class="h-4 w-4" />
-                <span wire:loading.remove wire:target="upload">Importer</span><span wire:loading wire:target="upload">Envoi…</span>
+                Importer
             </button>
-        </div>
-        <div wire:loading.flex wire:target="upload" class="mt-4 items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm font-medium text-blue-900"><span class="h-4 w-4 animate-spin rounded-full border-2 border-blue-700 border-t-transparent" aria-hidden="true"></span>Import et préparation de l’aperçu en cours. Gardez cette page ouverte.</div>
+        </form>
         <x-input-error :messages="$errors->get('activation')" class="mt-3" />
 
         @if($activeTemplate)

@@ -6,33 +6,14 @@ use App\Models\LetterheadTemplate;
 use App\Services\LetterheadManager;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
-use Livewire\WithFileUploads;
 
 final class Letterheads extends Component
 {
-    use WithFileUploads;
-
-    public $document = null;
-
-    public int $header_height_mm = 45;
-
     public array $heights = [];
 
     public function mount(): void
     {
         $this->authorizeManage();
-    }
-
-    public function upload(LetterheadManager $manager): void
-    {
-        $this->authorizeManage();
-        $data = $this->validate([
-            'document' => ['required', 'file', 'mimes:docx,pdf', 'max:10240'],
-            'header_height_mm' => ['required', 'integer', 'min:20', 'max:100'],
-        ], [], ['document' => 'document Word', 'header_height_mm' => 'hauteur de l’en-tête']);
-        $manager->upload($data['document'], (int) $data['header_height_mm'], auth()->user());
-        $this->reset('document');
-        $this->dispatch('toast', type: 'success', message: 'Document reçu. Son aperçu est en cours de préparation.');
     }
 
     public function reprocess(int $id, LetterheadManager $manager): void

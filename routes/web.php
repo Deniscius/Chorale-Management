@@ -12,6 +12,7 @@ use App\Http\Controllers\InstrumentImageController;
 use App\Http\Controllers\InstrumentLabelsController;
 use App\Http\Controllers\LetterheadFileController;
 use App\Http\Controllers\LetterheadSampleController;
+use App\Http\Controllers\LetterheadUploadController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TenantAddressController;
 use App\Http\Controllers\TenantRegistrationController;
@@ -183,6 +184,8 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
         ->name('settings.chorale');
     Route::get('/parametres/chorale/papier-entete/exemple', LetterheadSampleController::class)
         ->middleware('can:manage-settings')->name('settings.letterheads.sample');
+    Route::post('/parametres/chorale/papier-entete', LetterheadUploadController::class)
+        ->middleware(['can:manage-settings', 'throttle:10,1'])->name('settings.letterheads.upload');
     Route::get('/parametres/chorale/papier-entete/{template}/{kind}', LetterheadFileController::class)
         ->where('kind', 'original|preview|header')
         ->middleware('can:manage-settings')->name('settings.letterheads.file');

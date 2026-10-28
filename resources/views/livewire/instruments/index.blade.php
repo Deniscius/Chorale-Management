@@ -94,11 +94,18 @@
             @forelse ($this->instruments as $instrument)
                 <tr wire:key="instrument-{{ $instrument->id }}" class="transition hover:bg-slate-50">
                     <td class="px-4 py-3">
-                        <p class="text-sm font-semibold text-slate-900">{{ $instrument->name }}</p>
+                        <div class="flex items-center gap-3">
+                        @if($instrument->image_path)
+                            <img src="{{ route('instruments.image', $instrument) }}" alt="" class="h-12 w-12 shrink-0 rounded-lg object-cover">
+                        @else
+                            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-400"><x-icon name="image" class="h-5 w-5" /></span>
+                        @endif
+                        <div class="min-w-0"><p class="text-sm font-semibold text-slate-900">{{ $instrument->name }}</p>
                         <p class="mt-0.5 text-xs text-slate-500">
                             @if ($instrument->serial_number) N° {{ $instrument->serial_number }} @endif
                             · {{ $instrument->availableQuantity() }} / {{ $instrument->quantity }} unité(s) disponible(s)
                         </p>
+                        </div></div>
                     </td>
                     <td class="whitespace-nowrap px-4 py-3">
                         <x-enum-badge :enum="$instrument->category" />

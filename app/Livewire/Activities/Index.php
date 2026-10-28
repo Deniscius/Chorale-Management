@@ -8,7 +8,6 @@ use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Activity;
 use App\Models\Choir;
-use App\Models\Member;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -159,7 +158,7 @@ class Index extends Component
     public function activities()
     {
         return Activity::query()
-            ->with('organizer')
+            ->with('commission:id,name')
             ->withCount('participants')
             ->when($this->search !== '', function (Builder $query) {
                 $like = '%'.$this->search.'%';
@@ -198,16 +197,6 @@ class Index extends Component
     public function choirs()
     {
         return Choir::orderBy('name')->get();
-    }
-
-    #[Computed]
-    public function organizers()
-    {
-        return Member::query()
-            ->where('status', 'actif')
-            ->orderBy('last_name')
-            ->orderBy('first_name')
-            ->get();
     }
 
     #[Computed]

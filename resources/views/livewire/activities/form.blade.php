@@ -61,15 +61,16 @@
             </div>
 
             <div>
-                <x-input-label for="activities-form-organizer_id" value="Organisateur" />
-                <select id="activities-form-organizer_id" aria-describedby="activities-form-organizer_id-error" aria-invalid="{{ $errors->has('organizer_id') ? 'true' : 'false' }}" wire:model="organizer_id"
+                <x-input-label for="activities-form-choir_commission_id" value="Commission organisatrice" />
+                <select id="activities-form-choir_commission_id" aria-describedby="activities-form-choir_commission_id-help activities-form-choir_commission_id-error" aria-invalid="{{ $errors->has('choir_commission_id') ? 'true' : 'false' }}" wire:model="choir_commission_id"
                     class="form-select mt-1">
-                    <option value="">—</option>
-                    @foreach ($this->organizers as $member)
-                        <option value="{{ $member->id }}">{{ $member->full_name }}</option>
+                    <option value="">Choisir une commission</option>
+                    @foreach ($this->commissions as $commission)
+                        <option value="{{ $commission->id }}">{{ $commission->name }}</option>
                     @endforeach
                 </select>
-                <x-input-error id="activities-form-organizer_id-error" :messages="$errors->get('organizer_id')" class="mt-1" />
+                <p id="activities-form-choir_commission_id-help" class="mt-1 text-xs text-slate-600">La commission porte l’organisation ; ses membres peuvent ensuite être ajoutés comme participants.</p>
+                <x-input-error id="activities-form-choir_commission_id-error" :messages="$errors->get('choir_commission_id')" class="mt-1" />
             </div>
 
             <div>

@@ -18,6 +18,10 @@ Il n’y a **aucun traitement automatique des anciens comptes en production**. S
 
 L’écran affiche aussi les responsabilités actives et le rôle général en lecture seule. Modifier ses préférences de rappels n’accorde aucun droit supplémentaire et n’active pas globalement un fournisseur SMS.
 
+La direction conserve la gestion des informations d’organisation de la fiche : voix, pupitre, statut, chorale et date d’adhésion. Ces champs ne permettent pas de changer le nom, la date de naissance ou les coordonnées personnelles du choriste.
+
+Après la préparation d’un compte, le lien personnel est affiché une seule fois avec un bouton **Copier le lien** et une confirmation accessible. La fenêtre rappelle explicitement de copier le lien avant de la fermer ; le jeton n’est jamais conservé en clair dans le journal.
+
 ## Cases à cocher administrées
 
 Dans **Utilisateurs**, l’administrateur choisit **Commissions et accès** sur le compte concerné. La fiche de choriste doit être disponible avant de nouvelles affectations.

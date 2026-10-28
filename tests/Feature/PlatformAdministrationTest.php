@@ -142,7 +142,8 @@ class PlatformAdministrationTest extends TestCase
         $expired->forceFill(['trial_ends_at' => now()])->save();
         $suspended->forceFill(['suspended_at' => now()])->save();
         $this->loginOwner();
-        $this->get('/plateforme')->assertOk()->assertViewHas('stats', fn ($stats) => (int) $stats->total === 4 && (int) $stats->trial === 1 && (int) $stats->paid === 1 && (int) $stats->expired === 1 && (int) $stats->suspended === 1);
+        $this->get('/plateforme')->assertOk()->assertSee('Suspendu')->assertViewHas('stats', fn ($stats) => (int) $stats->total === 4 && (int) $stats->trial === 1 && (int) $stats->paid === 1 && (int) $stats->expired === 1 && (int) $stats->suspended === 1);
+        $this->assertFalse($suspended->fresh()->isTrialing());
         $this->get('/plateforme/chorales?status=expired')->assertOk()->assertSee('Chorale expired')->assertDontSee('Chorale trial');
         $this->get('/plateforme/chorales?q=paid')->assertOk()->assertSee('Chorale paid')->assertDontSee('Chorale trial');
     }

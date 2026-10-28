@@ -30,7 +30,13 @@ final class InstrumentLabelsController extends Controller
         });
         $slots = collect(array_fill(0, (int) $data['start'] - 1, null))->concat($labels);
 
-        return response()->view('instruments.labels', ['pages' => $slots->chunk(24), 'chorale' => app(ChoraleIdentity::class)->name()])
+        $identity = app(ChoraleIdentity::class);
+
+        return response()->view('instruments.labels', [
+            'pages' => $slots->chunk(24),
+            'chorale' => $identity->name(),
+            'logo' => $identity->logoUrl(),
+        ])
             ->header('Cache-Control', 'private, no-store')->header('X-Content-Type-Options', 'nosniff');
     }
 }

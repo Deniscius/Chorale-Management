@@ -33,6 +33,7 @@ class Instrument extends Model
         'location',
         'custodian_id',
         'is_borrowed',
+        'image_path',
         'notes',
     ];
 

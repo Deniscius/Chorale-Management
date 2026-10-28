@@ -144,7 +144,7 @@ class Index extends Component
 
     public function render()
     {
-        $query = ChoirCommission::query()->with('leader:id,name')->withCount('members');
+        $query = ChoirCommission::query()->with('leader:id,name')->withCount(['members', 'activities']);
         if (trim($this->search) !== '') {
             $search = '%'.mb_strtolower(trim($this->search)).'%';
             $query->where(fn ($q) => $q->whereRaw('LOWER(name) LIKE ?', [$search])->orWhereRaw('LOWER(mission) LIKE ?', [$search]));
@@ -164,7 +164,10 @@ class Index extends Component
             'commissions' => $query->inStatus($this->status)->orderBy('name')->paginate(12),
             'counts' => $counts,
             'members' => $members,
-            'detail' => $this->viewingId ? ChoirCommission::with(['members' => fn ($q) => $q->orderBy('last_name')->orderBy('first_name')])->findOrFail($this->viewingId) : null,
+            'detail' => $this->viewingId ? ChoirCommission::with([
+                'members' => fn ($q) => $q->orderBy('last_name')->orderBy('first_name'),
+                'activities' => fn ($q) => $q->latest('starts_at')->limit(5),
+            ])->findOrFail($this->viewingId) : null,
         ]);
     }
 }

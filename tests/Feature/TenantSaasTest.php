@@ -69,6 +69,21 @@ class TenantSaasTest extends TestCase
         $this->assertSame($expiry, $tenant->fresh()->trial_ends_at->toISOString());
     }
 
+    public function test_suspended_space_never_displays_the_trial_banner_or_expiry_tracker(): void
+    {
+        [$tenant, $admin] = $this->space();
+        $tenant->forceFill(['suspended_at' => now()])->save();
+
+        $this->actingAs($admin)->get('/abonnement')
+            ->assertOk()
+            ->assertSee('Votre espace est suspendu')
+            ->assertDontSee('Essai gratuit · fin le')
+            ->assertDontSee('name="tenant-access-expires"', false);
+
+        $this->assertFalse($tenant->fresh()->isTrialing());
+        $this->assertSame('Suspendu', $tenant->fresh()->accessLabel());
+    }
+
     public function test_signup_honeypot_rejects_bots_without_creating_a_space(): void
     {
         $before = Tenant::count();

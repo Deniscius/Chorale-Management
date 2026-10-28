@@ -85,7 +85,7 @@
             ['label' => 'Activité'],
             ['label' => 'Type'],
             ['label' => 'Lieu'],
-            ['label' => 'Organisateur'],
+            ['label' => 'Commission'],
             ['label' => 'Participants'],
             ['label' => 'Budget'],
             ['label' => 'Statut'],
@@ -113,7 +113,7 @@
                         {{ $activity->venue ?? '—' }}
                     </td>
                     <td class="px-4 py-3 text-sm text-slate-600">
-                        {{ $activity->organizer?->full_name ?? '—' }}
+                        {{ $activity->commission?->name ?? 'À attribuer' }}
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
                         <button type="button" wire:click="manageParticipants({{ $activity->id }})"

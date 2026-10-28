@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ChoraleLogoController;
@@ -167,6 +168,10 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/comptabilite/presences', AttendanceFinancialReport::class)
         ->middleware('can:view-attendance-finance')
         ->name('attendance.financial-report');
+
+    Route::get('/presences/{eventType}/{event}/rapport', AttendanceReportController::class)
+        ->where(['eventType' => 'repetition|activite', 'event' => '[0-9]+'])
+        ->name('attendance.report');
 
     // Administration
     Route::get('/utilisateurs', UsersIndex::class)

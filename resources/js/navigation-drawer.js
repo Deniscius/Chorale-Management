@@ -13,6 +13,31 @@ export function navigationDrawer(browser = window) {
                 this.close(false);
             };
             media.addEventListener('change', onChange);
+            this.$nextTick(() => this.restoreNavigationScroll());
+        },
+        rememberNavigationScroll(event = null) {
+            const navigation = event?.currentTarget ?? this.$refs.navigationScroll;
+            if (!navigation) return;
+            try {
+                browser.sessionStorage?.setItem(
+                    'chorale.sidebar.scroll',
+                    String(navigation.scrollTop),
+                );
+            } catch {
+                // La navigation reste fonctionnelle si le stockage est désactivé.
+            }
+        },
+        restoreNavigationScroll() {
+            const navigation = this.$refs.navigationScroll;
+            if (!navigation) return;
+            try {
+                const position = Number(
+                    browser.sessionStorage?.getItem('chorale.sidebar.scroll'),
+                );
+                if (Number.isFinite(position)) navigation.scrollTop = position;
+            } catch {
+                // Le navigateur peut bloquer sessionStorage en mode privé strict.
+            }
         },
         open() {
             opener = browser.document.activeElement;
@@ -61,6 +86,7 @@ export function navigationDrawer(browser = window) {
             }
         },
         destroy() {
+            this.rememberNavigationScroll();
             media?.removeEventListener('change', onChange);
             browser.document.documentElement.classList.remove(
                 'mobile-menu-open',

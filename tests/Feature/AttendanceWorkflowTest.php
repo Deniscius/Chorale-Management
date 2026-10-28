@@ -8,10 +8,15 @@ use App\Models\Activity;
 use App\Models\ActivityParticipant;
 use App\Models\AttendanceIncident;
 use App\Models\AttendanceRule;
+use App\Models\LetterheadTemplate;
 use App\Models\Member;
 use App\Models\Rehearsal;
+use App\Models\RehearsalAttendance;
 use App\Models\User;
+use App\Services\PrivateFiles;
+use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -110,6 +115,58 @@ class AttendanceWorkflowTest extends TestCase
 
         $this->actingAs($treasurer)->get(route('attendance.financial-report'))->assertOk();
         $this->actingAs($treasurer)->get(route('attendance.sheet'))->assertForbidden();
+    }
+
+    public function test_a_finalized_sheet_without_incident_is_visible_to_accounting(): void
+    {
+        $secretary = User::factory()->role(UserRole::Secretaire)->create();
+        $treasurer = User::factory()->role(UserRole::Tresorier)->create();
+        Member::factory()->active()->create();
+        $rehearsal = Rehearsal::factory()->create(['date' => today(), 'venue' => 'Salle paroissiale']);
+
+        Livewire::actingAs($secretary)->test(Sheet::class)
+            ->set('eventId', $rehearsal->id)
+            ->call('markAllPresent')
+            ->call('finalize')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseCount('attendance_incidents', 0);
+        $this->actingAs($treasurer)->get(route('attendance.financial-report'))
+            ->assertOk()
+            ->assertSee('Salle paroissiale')
+            ->assertSee(route('attendance.report', ['repetition', $rehearsal->id]), false);
+    }
+
+    public function test_the_printable_attendance_report_uses_the_active_letterhead(): void
+    {
+        Storage::fake('local');
+        $secretary = User::factory()->role(UserRole::Secretaire)->create();
+        $member = Member::factory()->active()->create(['first_name' => 'Alice', 'last_name' => 'Mensah']);
+        $rehearsal = Rehearsal::factory()->create([
+            'date' => today(), 'venue' => 'Grande salle',
+            'attendance_finalized_at' => now(), 'attendance_finalized_by' => $secretary->id,
+        ]);
+        RehearsalAttendance::query()->create([
+            'rehearsal_id' => $rehearsal->id, 'member_id' => $member->id,
+            'status' => 'present', 'checked_at' => now(), 'recorded_by' => $secretary->id,
+        ]);
+        $path = app(TenantContext::class)->path('letterheads/official/header.png');
+        app(PrivateFiles::class)->storeContents(
+            $path,
+            base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='),
+            'image/png',
+        );
+        LetterheadTemplate::query()->create([
+            'original_name' => 'papier-officiel.docx', 'header_path' => $path,
+            'status' => LetterheadTemplate::STATUS_ACTIVE, 'activated_at' => now(), 'uploaded_by' => $secretary->id,
+        ]);
+
+        $this->actingAs($secretary)->get(route('attendance.report', ['repetition', $rehearsal->id]))
+            ->assertOk()
+            ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertSee('data:image/png;base64,', false)
+            ->assertSee('Alice')
+            ->assertSee('Rapport de présence');
     }
 
     public function test_finalized_activity_uses_only_registered_participants(): void

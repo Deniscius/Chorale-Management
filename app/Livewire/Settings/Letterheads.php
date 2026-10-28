@@ -66,6 +66,7 @@ final class Letterheads extends Component
 
         return view('livewire.settings.letterheads', [
             'templates' => $templates,
+            'activeTemplate' => $templates->firstWhere('status', LetterheadTemplate::STATUS_ACTIVE),
             'isProcessing' => $templates->contains(fn ($item) => in_array($item->status, [LetterheadTemplate::STATUS_PENDING, LetterheadTemplate::STATUS_PROCESSING], true)),
             'labels' => LetterheadTemplate::statusLabels(),
         ]);

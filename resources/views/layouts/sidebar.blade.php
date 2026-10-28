@@ -92,7 +92,7 @@
         </button>
     </div>
 
-    <nav class="scrollbar-slim flex-1 space-y-6 overflow-y-auto px-3 py-5" aria-label="Sections">
+    <nav x-ref="navigationScroll" @scroll.passive="rememberNavigationScroll($event)" class="scrollbar-slim flex-1 space-y-6 overflow-y-auto px-3 py-5" aria-label="Sections">
         @foreach ($sections as $section)
             @php
                 $visible = collect($section['items'])->filter(function ($item) {
@@ -128,7 +128,7 @@
                                 }
                             @endphp
                             <li>
-                                <a href="{{ route($item['route'], $item['parameters'] ?? []) }}" wire:navigate.hover @click="close(false)"
+                                <a href="{{ route($item['route'], $item['parameters'] ?? []) }}" wire:navigate @click="rememberNavigationScroll(); if (desktop) $el.blur(); close(false)"
                                     aria-current="{{ $active ? 'page' : 'false' }}"
                                     @class([
                                         'nav-item',

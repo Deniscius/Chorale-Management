@@ -14,6 +14,7 @@ function fixture() {
             },
         },
     };
+    const stored = new Map();
     const button = {
         isConnected: true,
         focus() {
@@ -31,6 +32,10 @@ function fixture() {
     document.activeElement = button;
     const state = navigationDrawer({
         document,
+        sessionStorage: {
+            getItem: (key) => stored.get(key) ?? null,
+            setItem: (key, value) => stored.set(key, value),
+        },
         matchMedia: () => ({
             matches: false,
             addEventListener: (name, callback) => (change = callback),
@@ -43,6 +48,7 @@ function fixture() {
             querySelector: () => first,
             querySelectorAll: () => [first, last],
         },
+        navigationScroll: { scrollTop: 0 },
     };
     state.init();
     return {
@@ -54,6 +60,7 @@ function fixture() {
         classes,
         resize: (matches) => change({ matches }),
         removed: () => removed,
+        stored,
     };
 }
 
@@ -65,6 +72,14 @@ test('mobile navigation focuses the close control and restores the opener on clo
     f.state.close();
     assert.equal(f.document.activeElement, f.button);
     assert.equal(f.classes.size, 0);
+});
+test('sidebar keeps its scroll position between Livewire pages', () => {
+    const f = fixture();
+    f.state.$refs.navigationScroll.scrollTop = 318;
+    f.state.rememberNavigationScroll();
+    f.state.$refs.navigationScroll.scrollTop = 0;
+    f.state.restoreNavigationScroll();
+    assert.equal(f.state.$refs.navigationScroll.scrollTop, 318);
 });
 test('tab and shift tab wrap inside the mobile menu', () => {
     const f = fixture();

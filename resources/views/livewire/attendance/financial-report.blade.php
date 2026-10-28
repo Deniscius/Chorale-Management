@@ -1,13 +1,15 @@
 <div>
     <x-page-header title="Rapport financier des présences" icon="banknotes"
         subtitle="Absences et retards issus uniquement des fiches finalisées. Aucun élément de ce rapport ne crée automatiquement une dette ou une transaction.">
-        <x-slot name="actions">
-            <button type="button" onclick="window.print()" class="btn btn-secondary">
-                <x-icon name="archive" class="h-4 w-4" />
-                Imprimer le rapport
-            </button>
-        </x-slot>
     </x-page-header>
+
+    <div @class(['mb-5 rounded-xl border p-4 text-sm', 'border-emerald-200 bg-emerald-50 text-emerald-900' => $activeLetterhead, 'border-amber-200 bg-amber-50 text-amber-950' => ! $activeLetterhead])>
+        @if($activeLetterhead)
+            <strong>Papier à en-tête actif :</strong> {{ $activeLetterhead->original_name }}. Il sera intégré aux rapports ci-dessous.
+        @else
+            <strong>Aucun papier à en-tête actif.</strong> Les rapports utiliseront provisoirement le nom et les coordonnées de la chorale. Un administrateur doit vérifier puis activer le document importé dans les informations de la chorale.
+        @endif
+    </div>
 
     @can('configure-attendance-finance')
         <details class="mb-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -37,7 +39,33 @@
         <div><label class="form-label" for="incident-to">Au</label><input id="incident-to" type="date" wire:model.live="to" class="form-input"></div>
     </div></x-filter-bar>
 
+    <section class="mt-5 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-5 py-4">
+            <h2 class="font-semibold text-slate-900">Fiches de présence validées</h2>
+            <p class="mt-1 text-sm text-slate-600">Toutes les fiches transmises par le secrétariat apparaissent ici, y compris lorsqu’il n’y a ni absence ni retard.</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Date</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Événement</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Présences</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Validation</th><th class="px-4 py-3 text-right text-xs font-semibold uppercase">Rapport</th></tr></thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse($this->finalizedSheets as $sheet)
+                        <tr wire:key="validated-sheet-{{ $sheet['type'] }}-{{ $sheet['id'] }}">
+                            <td class="whitespace-nowrap px-4 py-3 text-sm">{{ $sheet['date']->format('d/m/Y') }}</td>
+                            <td class="px-4 py-3 text-sm font-medium text-slate-900">{{ $sheet['label'] }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm"><span class="text-emerald-700">{{ $sheet['present'] }} présent(s)</span> · <span class="text-amber-700">{{ $sheet['late'] }} retard(s)</span> · <span class="text-red-700">{{ $sheet['absent'] }} absent(s)</span> · {{ $sheet['excused'] }} excusé(s)</td>
+                            <td class="px-4 py-3 text-sm text-slate-600">{{ $sheet['finalized_at']->format('d/m/Y à H:i') }}<br><span class="text-xs">{{ $sheet['finalizer'] ?: 'Compte supprimé' }}</span></td>
+                            <td class="px-4 py-3 text-right"><a href="{{ route('attendance.report', [$sheet['type'], $sheet['id']]) }}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm"><x-icon name="archive" class="h-4 w-4" />Voir et imprimer</a></td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="5" class="px-4 py-10 text-center text-sm text-slate-600">Aucune fiche finalisée pour cette période.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </section>
+
     <div id="resultats" class="mt-5 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-5 py-4"><h2 class="font-semibold text-slate-900">Incidents à examiner par la comptabilité</h2><p class="mt-1 text-sm text-slate-600">Absences non excusées et retards dépassant le seuil configuré.</p></div>
         <table class="min-w-full divide-y divide-slate-200">
             <thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Date</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Choriste</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Événement</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Incident</th><th class="px-4 py-3 text-right text-xs font-semibold uppercase">Montant</th><th class="px-4 py-3 text-right text-xs font-semibold uppercase">Action</th></tr></thead>
             <tbody class="divide-y divide-slate-100">

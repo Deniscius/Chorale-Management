@@ -96,6 +96,7 @@
 
             <div class="flex flex-wrap justify-end gap-3 border-t border-slate-200 px-5 py-4">
                 @if($this->isFinalized())
+                    <a href="{{ route('attendance.report', [$eventType === 'rehearsal' ? 'repetition' : 'activite', $eventId]) }}" target="_blank" rel="noopener" class="btn btn-primary"><x-icon name="archive" class="h-4 w-4" />Voir le rapport officiel</a>
                     @can('finalize-attendance')<button type="button" wire:click="reopen" wire:confirm="Rouvrir cette fiche ? Les incidents du rapport courant seront annulés." class="btn btn-secondary">Corriger la fiche</button>@endcan
                 @elseif(count($rows) > 0)
                     @can('manage-attendance')<button type="button" wire:click="saveDraft" class="btn btn-secondary">Enregistrer le brouillon</button>@endcan

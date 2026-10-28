@@ -19,6 +19,15 @@
         </form>
         <x-input-error :messages="$errors->get('activation')" class="mt-3" />
 
+        @if($activeTemplate)
+            <div class="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+                <div><strong>En-tête actuellement utilisé :</strong> {{ $activeTemplate->original_name }}<p class="mt-1 text-xs text-emerald-800">Il est intégré aux rapports de présence et aux prochains documents officiels.</p></div>
+                <a href="{{ route('settings.letterheads.sample') }}" target="_blank" rel="noopener" class="btn btn-secondary">Voir le rendu actif</a>
+            </div>
+        @elseif($templates->isNotEmpty())
+            <div class="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><strong>L’en-tête importé n’est pas encore actif.</strong> Attendez l’aperçu, vérifiez-le, puis cliquez sur « Activer après vérification ». Tant que cette étape n’est pas faite, il ne peut pas apparaître dans les rapports.</div>
+        @endif
+
         <div class="mt-6 space-y-5">
             @forelse($templates as $template)
                 <article wire:key="letterhead-{{ $template->id }}" class="rounded-xl border border-slate-200 p-4">
@@ -33,7 +42,9 @@
                         <a class="btn btn-secondary" href="{{ route('settings.letterheads.file', [$template, 'original']) }}"><x-icon name="download" class="h-4 w-4" />Original</a>
                     </div>
 
-                    @if($template->error_message)<p class="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-800">{{ $template->error_message }}</p>@endif
+                    @if($template->error_message)
+                        <div class="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-red-50 p-3 text-sm text-red-800"><span>{{ $template->error_message }}</span><button type="button" wire:click="reprocess({{ $template->id }})" class="btn btn-secondary btn-sm">Réessayer la préparation</button></div>
+                    @endif
                     @if($template->preview_path)
                         <div class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
                             <a href="{{ route('settings.letterheads.file', [$template, 'preview']) }}" target="_blank" class="block overflow-hidden rounded-lg border bg-slate-50" title="Ouvrir l’aperçu">
@@ -44,7 +55,7 @@
                                 <div class="flex items-center gap-2"><x-text-input id="height-{{ $template->id }}" type="number" min="20" max="100" wire:model="heights.{{ $template->id }}" class="w-24" /><span class="text-sm text-slate-500">mm</span></div>
                                 <button type="button" wire:click="reprocess({{ $template->id }})" class="btn btn-secondary">Recalculer l’aperçu</button>
                                 @if($template->status !== 'active' && $template->isUsable())
-                                    <button type="button" wire:click="activate({{ $template->id }})" class="btn btn-primary">Activer après vérification</button>
+                                    <button type="button" wire:click="activate({{ $template->id }})" wire:confirm="Utiliser cet en-tête pour les rapports et documents officiels ?" class="btn btn-primary">Activer après vérification</button>
                                 @endif
                                 @if($template->status === 'active')
                                     <a href="{{ route('settings.letterheads.sample') }}" target="_blank" class="btn btn-secondary">Voir le document d’essai</a>

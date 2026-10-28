@@ -2,8 +2,11 @@
 
 namespace App\Livewire\Attendance;
 
+use App\Models\Activity;
 use App\Models\AttendanceIncident;
 use App\Models\AttendanceRule;
+use App\Models\Rehearsal;
+use App\Services\Letterhead;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
@@ -106,6 +109,51 @@ final class FinancialReport extends Component
         return $this->query()->with('member')->orderByDesc('occurred_on')->orderByDesc('id')->paginate(20);
     }
 
+    /** Toutes les fiches finalisées restent visibles, même sans incident financier. */
+    #[Computed]
+    public function finalizedSheets()
+    {
+        $rehearsals = Rehearsal::query()
+            ->whereNotNull('attendance_finalized_at')
+            ->when($this->from !== '', fn (Builder $query) => $query->whereDate('date', '>=', $this->from))
+            ->when($this->to !== '', fn (Builder $query) => $query->whereDate('date', '<=', $this->to))
+            ->with('attendanceFinalizer:id,name')
+            ->withCount([
+                'attendances as attendance_total',
+                'attendances as present_count' => fn (Builder $query) => $query->where('status', 'present'),
+                'attendances as late_count' => fn (Builder $query) => $query->where('status', 'late'),
+                'attendances as absent_count' => fn (Builder $query) => $query->where('status', 'absent'),
+                'attendances as excused_count' => fn (Builder $query) => $query->where('status', 'excuse'),
+            ])->latest('date')->limit(100)->get()->map(fn (Rehearsal $event): array => [
+                'type' => 'repetition', 'id' => $event->id, 'date' => $event->date,
+                'label' => $event->venue ? 'Répétition — '.$event->venue : 'Répétition',
+                'finalized_at' => $event->attendance_finalized_at, 'finalizer' => $event->attendanceFinalizer?->name,
+                'total' => $event->attendance_total, 'present' => $event->present_count,
+                'late' => $event->late_count, 'absent' => $event->absent_count, 'excused' => $event->excused_count,
+            ]);
+
+        $activities = Activity::query()
+            ->whereNotNull('attendance_finalized_at')
+            ->when($this->from !== '', fn (Builder $query) => $query->whereDate('starts_at', '>=', $this->from))
+            ->when($this->to !== '', fn (Builder $query) => $query->whereDate('starts_at', '<=', $this->to))
+            ->with('attendanceFinalizer:id,name')
+            ->withCount([
+                'participantRecords as attendance_total',
+                'participantRecords as present_count' => fn (Builder $query) => $query->where('status', 'present'),
+                'participantRecords as late_count' => fn (Builder $query) => $query->where('status', 'late'),
+                'participantRecords as absent_count' => fn (Builder $query) => $query->where('status', 'absent'),
+                'participantRecords as excused_count' => fn (Builder $query) => $query->where('status', 'excuse'),
+            ])->latest('starts_at')->limit(100)->get()->map(fn (Activity $event): array => [
+                'type' => 'activite', 'id' => $event->id, 'date' => $event->starts_at,
+                'label' => $event->title, 'finalized_at' => $event->attendance_finalized_at,
+                'finalizer' => $event->attendanceFinalizer?->name, 'total' => $event->attendance_total,
+                'present' => $event->present_count, 'late' => $event->late_count,
+                'absent' => $event->absent_count, 'excused' => $event->excused_count,
+            ]);
+
+        return $rehearsals->concat($activities)->sortByDesc('date')->values();
+    }
+
     #[Computed]
     public function totals(): array
     {
@@ -129,6 +177,8 @@ final class FinancialReport extends Component
 
     public function render(): View
     {
-        return view('livewire.attendance.financial-report');
+        return view('livewire.attendance.financial-report', [
+            'activeLetterhead' => app(Letterhead::class)->active(),
+        ]);
     }
 }

@@ -26,7 +26,7 @@ case "${1:-web}" in
         printf 'Listen %s\n' "${PORT:-10000}" > /etc/apache2/ports.conf
         exec apache2-foreground
         ;;
-    worker) exec php artisan queue:work database --sleep=3 --timeout=60 --max-time=3600 ;;
+    worker) exec php artisan queue:work database --sleep=3 --timeout=180 --max-time=3600 ;;
     schedule) exec php artisan schedule:run --no-interaction ;;
     *) exec "$@" ;;
 esac

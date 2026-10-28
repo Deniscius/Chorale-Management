@@ -104,4 +104,6 @@
             </div>
         </x-card>
     </form>
+
+    <livewire:settings.letterheads />
 </div>

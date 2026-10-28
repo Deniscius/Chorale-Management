@@ -1,7 +1,10 @@
+# syntax=docker/dockerfile:1
 FROM node:22-bookworm-slim AS assets
 WORKDIR /build
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN --mount=type=secret,id=proxy_ca \
+    if [ -f /run/secrets/proxy_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/proxy_ca; fi; \
+    npm ci --strict-ssl=true
 COPY resources ./resources
 COPY public ./public
 COPY app ./app
@@ -10,14 +13,16 @@ COPY tailwind.config.js postcss.config.js ./
 RUN npm run build
 
 FROM php:8.4-apache-bookworm AS runtime
-RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev libicu-dev libonig-dev libzip-dev unzip git \
+RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev libicu-dev libonig-dev libzip-dev unzip git libreoffice-writer-nogui poppler-utils fonts-dejavu-core \
     && docker-php-ext-install -j$(nproc) pdo_pgsql intl mbstring zip pcntl opcache \
     && a2enmod rewrite headers remoteip \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 WORKDIR /var/www/html
 COPY . .
-RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+RUN --mount=type=secret,id=proxy_ca \
+    mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && if [ -f /run/secrets/proxy_ca ]; then export COMPOSER_CAFILE=/run/secrets/proxy_ca; fi \
     && composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader \
     && chown -R www-data:www-data storage bootstrap/cache
 COPY --from=assets /build/public/build ./public/build

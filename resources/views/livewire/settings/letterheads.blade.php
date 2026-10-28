@@ -1,0 +1,63 @@
+<section class="mt-8" @if($isProcessing) wire:poll.3s @endif>
+    <x-card title="Papier à en-tête officiel" subtitle="Importez un document Word vierge. L’en-tête est isolé pour cette chorale et appliqué aux documents générés.">
+        <form wire:submit="upload" class="grid gap-4 md:grid-cols-[1fr_12rem_auto] md:items-end">
+            <div>
+                <x-input-label for="letterhead-document" value="Document Word (.docx)" />
+                <input id="letterhead-document" type="file" wire:model="document" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="mt-1 block w-full rounded-lg border border-slate-300 bg-white p-2 text-sm" />
+                <x-input-error :messages="$errors->get('document')" class="mt-1" />
+                <p class="mt-1 text-xs text-slate-500">Document vierge, sans macro ni objet incorporé — 10 Mo maximum.</p>
+            </div>
+            <div>
+                <x-input-label for="header-height" value="Hauteur à conserver" />
+                <div class="mt-1 flex items-center gap-2"><x-text-input id="header-height" type="number" min="20" max="100" wire:model="header_height_mm" class="w-full" /><span class="text-sm text-slate-500">mm</span></div>
+                <x-input-error :messages="$errors->get('header_height_mm')" class="mt-1" />
+            </div>
+            <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" wire:target="document,upload">
+                <x-icon name="upload" class="h-4 w-4" />
+                <span wire:loading.remove wire:target="upload">Importer</span><span wire:loading wire:target="upload">Envoi…</span>
+            </button>
+        </form>
+        <x-input-error :messages="$errors->get('activation')" class="mt-3" />
+
+        <div class="mt-6 space-y-5">
+            @forelse($templates as $template)
+                <article wire:key="letterhead-{{ $template->id }}" class="rounded-xl border border-slate-200 p-4">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h3 class="font-semibold text-slate-900">{{ $template->original_name }}</h3>
+                                <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $template->status === 'active' ? 'bg-emerald-100 text-emerald-800' : ($template->status === 'error' ? 'bg-red-100 text-red-800' : 'bg-slate-100 text-slate-700') }}">{{ $labels[$template->status] ?? $template->status }}</span>
+                            </div>
+                            <p class="mt-1 text-xs text-slate-500">Importé {{ $template->created_at->diffForHumans() }}{{ $template->uploader ? ' par '.$template->uploader->name : '' }}</p>
+                        </div>
+                        <a class="btn btn-secondary" href="{{ route('settings.letterheads.file', [$template, 'original']) }}"><x-icon name="download" class="h-4 w-4" />Original</a>
+                    </div>
+
+                    @if($template->error_message)<p class="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-800">{{ $template->error_message }}</p>@endif
+                    @if($template->preview_path)
+                        <div class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+                            <a href="{{ route('settings.letterheads.file', [$template, 'preview']) }}" target="_blank" class="block overflow-hidden rounded-lg border bg-slate-50" title="Ouvrir l’aperçu">
+                                <img src="{{ route('settings.letterheads.file', [$template, 'preview']) }}" alt="Aperçu de la première page" class="mx-auto max-h-96 object-contain" />
+                            </a>
+                            <div class="space-y-3">
+                                <label class="text-sm font-medium text-slate-700" for="height-{{ $template->id }}">Zone d’en-tête</label>
+                                <div class="flex items-center gap-2"><x-text-input id="height-{{ $template->id }}" type="number" min="20" max="100" wire:model="heights.{{ $template->id }}" class="w-24" /><span class="text-sm text-slate-500">mm</span></div>
+                                <button type="button" wire:click="reprocess({{ $template->id }})" class="btn btn-secondary">Recalculer l’aperçu</button>
+                                @if($template->status !== 'active' && $template->isUsable())
+                                    <button type="button" wire:click="activate({{ $template->id }})" class="btn btn-primary">Activer après vérification</button>
+                                @endif
+                                @if($template->status === 'active')
+                                    <a href="{{ route('settings.letterheads.sample') }}" target="_blank" class="btn btn-secondary">Voir le document d’essai</a>
+                                @endif
+                            </div>
+                        </div>
+                    @elseif(in_array($template->status, ['pending', 'processing'], true))
+                        <p class="mt-4 text-sm text-slate-600">Préparation sécurisée de l’aperçu en cours…</p>
+                    @endif
+                </article>
+            @empty
+                <p class="rounded-lg bg-slate-50 p-4 text-sm text-slate-600">Aucun papier à en-tête n’a encore été importé.</p>
+            @endforelse
+        </div>
+    </x-card>
+</section>

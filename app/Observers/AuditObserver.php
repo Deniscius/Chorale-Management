@@ -10,6 +10,7 @@ use App\Models\Contribution;
 use App\Models\Document;
 use App\Models\Donation;
 use App\Models\FinancialType;
+use App\Models\LetterheadTemplate;
 use App\Models\MemberInvitation;
 use App\Models\Reminder;
 use App\Models\Transaction;
@@ -33,6 +34,7 @@ final class AuditObserver
             Budget::class => ['year', 'category', 'allocated_amount', 'committed_amount', 'opening_realized_amount'],
             Transaction::class => ['reference', 'type', 'amount', 'transaction_date', 'status', 'budget_id', 'member_id', 'validated_by'],
             Reminder::class => ['status', 'attempts'],
+            LetterheadTemplate::class => ['original_name', 'status', 'header_height_mm', 'activated_at'],
             default => [],
         };
     }

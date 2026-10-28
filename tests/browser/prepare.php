@@ -11,6 +11,7 @@ use App\Services\PrivateFiles;
 use App\Services\TenantRegistration;
 use App\Tenancy\TenantContext;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
 
 // Create a new SQLite fixture only; never reuse or reset an existing database.
@@ -61,8 +62,8 @@ $admin = app(TenantRegistration::class)->create([
 ]);
 Tenant::findOrFail($admin->tenant_id)->forceFill(['paid_perpetual' => true])->save();
 app(TenantContext::class)->run($admin->tenant_id, function () use ($password): void {
-    $logoPath = 'tenants/'.app(TenantContext::class)->requireId().'/chorale/logo.png';
-    app(PrivateFiles::class)->persist($logoPath, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZrC8AAAAASUVORK5CYII='), 'image/png');
+    $logo = UploadedFile::fake()->createWithContent('logo.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZrC8AAAAASUVORK5CYII='));
+    $logoPath = app(PrivateFiles::class)->store($logo, app(TenantContext::class)->path('chorale'));
     Setting::set(ChoraleIdentity::KEY_LOGO_PATH, $logoPath);
     User::factory()->role(UserRole::Choriste)->create([
         'username' => 'review-choriste', 'email' => 'review-choriste@example.test', 'password' => $password,

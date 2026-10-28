@@ -22,6 +22,8 @@ class RehearsalAttendance extends Model
         'status',
         'excuse_reason',
         'checked_at',
+        'minutes_late',
+        'recorded_by',
     ];
 
     protected function casts(): array
@@ -29,6 +31,7 @@ class RehearsalAttendance extends Model
         return [
             'status' => ParticipationStatus::class,
             'checked_at' => 'datetime',
+            'minutes_late' => 'integer',
         ];
     }
 
@@ -40,5 +43,10 @@ class RehearsalAttendance extends Model
     public function member(): BelongsTo
     {
         return $this->belongsTo(Member::class);
+    }
+
+    public function recorder(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'recorded_by');
     }
 }

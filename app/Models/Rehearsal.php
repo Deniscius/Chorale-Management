@@ -32,6 +32,8 @@ class Rehearsal extends Model
         'ai_report',
         'ai_report_generated_at',
         'created_by',
+        'attendance_finalized_at',
+        'attendance_finalized_by',
     ];
 
     protected function casts(): array
@@ -41,6 +43,7 @@ class Rehearsal extends Model
             'type' => RehearsalType::class,
             'status' => EventStatus::class,
             'ai_report_generated_at' => 'datetime',
+            'attendance_finalized_at' => 'datetime',
         ];
     }
 
@@ -111,6 +114,11 @@ class Rehearsal extends Model
     public function attendances(): HasMany
     {
         return $this->hasMany(RehearsalAttendance::class);
+    }
+
+    public function attendanceFinalizer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'attendance_finalized_by');
     }
 
     public function reminders(): HasMany

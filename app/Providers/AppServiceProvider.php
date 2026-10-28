@@ -5,6 +5,10 @@ namespace App\Providers;
 use App\Enums\UserRole;
 use App\Http\Middleware\AuthenticateChoraleSession;
 use App\Http\Middleware\EnsureModuleAccess;
+use App\Models\Activity;
+use App\Models\ActivityParticipant;
+use App\Models\AttendanceIncident;
+use App\Models\AttendanceRule;
 use App\Models\Budget;
 use App\Models\ChoirCommission;
 use App\Models\CommissionTeam;
@@ -15,6 +19,8 @@ use App\Models\FinancialType;
 use App\Models\LetterheadTemplate;
 use App\Models\Member;
 use App\Models\MemberInvitation;
+use App\Models\Rehearsal;
+use App\Models\RehearsalAttendance;
 use App\Models\Reminder;
 use App\Models\Transaction;
 use App\Models\User;
@@ -103,7 +109,7 @@ class AppServiceProvider extends ServiceProvider
         // composant Livewire) pour que les interactions x-data de la coque restent actives.
         app('livewire')->forceAssetInjection();
         Livewire::addPersistentMiddleware([EnsureModuleAccess::class, AuthenticateChoraleSession::class]);
-        foreach ([FinancialType::class, MemberInvitation::class, CommissionTeam::class, User::class, Document::class, Donation::class, Contribution::class, Budget::class, Transaction::class, Reminder::class, LetterheadTemplate::class] as $model) {
+        foreach ([FinancialType::class, MemberInvitation::class, CommissionTeam::class, User::class, Document::class, Donation::class, Contribution::class, Budget::class, Transaction::class, Reminder::class, LetterheadTemplate::class, AttendanceRule::class, AttendanceIncident::class, Rehearsal::class, RehearsalAttendance::class, Activity::class, ActivityParticipant::class] as $model) {
             $model::observe(AuditObserver::class);
         }
 
@@ -142,5 +148,24 @@ class AppServiceProvider extends ServiceProvider
 
         // Paramètres de l'application (identité de la chorale) : administrateur uniquement.
         Gate::define('manage-settings', fn (User $user) => $user->role === UserRole::Admin);
+
+        Gate::define('view-attendance', fn (User $user) => in_array($user->role, [
+            UserRole::Directeur, UserRole::Secretaire, UserRole::CommissionLiturgique,
+            UserRole::CommissionSuivieFormation,
+        ], true));
+        Gate::define('manage-attendance', fn (User $user) => in_array($user->role, [
+            UserRole::Directeur, UserRole::Secretaire, UserRole::CommissionLiturgique,
+            UserRole::CommissionSuivieFormation,
+        ], true));
+        Gate::define('finalize-attendance', fn (User $user) => in_array($user->role, [
+            UserRole::Directeur, UserRole::Secretaire,
+        ], true));
+        Gate::define('view-attendance-finance', fn (User $user) => in_array($user->role, [
+            UserRole::Directeur, UserRole::Tresorier,
+        ], true));
+        Gate::define('manage-attendance-finance', fn (User $user) => in_array($user->role, [
+            UserRole::Directeur, UserRole::Tresorier,
+        ], true));
+        Gate::define('configure-attendance-finance', fn (User $user) => $user->role === UserRole::Directeur);
     }
 }

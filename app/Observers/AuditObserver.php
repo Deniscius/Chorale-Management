@@ -2,6 +2,10 @@
 
 namespace App\Observers;
 
+use App\Models\Activity;
+use App\Models\ActivityParticipant;
+use App\Models\AttendanceIncident;
+use App\Models\AttendanceRule;
 use App\Models\AuditEvent;
 use App\Models\Budget;
 use App\Models\ChoirCommission;
@@ -12,6 +16,8 @@ use App\Models\Donation;
 use App\Models\FinancialType;
 use App\Models\LetterheadTemplate;
 use App\Models\MemberInvitation;
+use App\Models\Rehearsal;
+use App\Models\RehearsalAttendance;
 use App\Models\Reminder;
 use App\Models\Transaction;
 use App\Models\User;
@@ -35,6 +41,10 @@ final class AuditObserver
             Transaction::class => ['reference', 'type', 'amount', 'transaction_date', 'status', 'budget_id', 'member_id', 'validated_by'],
             Reminder::class => ['status', 'attempts'],
             LetterheadTemplate::class => ['original_name', 'status', 'header_height_mm', 'activated_at'],
+            AttendanceRule::class => ['financial_tracking_enabled', 'rehearsal_absence_amount', 'activity_absence_amount', 'late_amount', 'late_threshold_minutes', 'effective_from'],
+            AttendanceIncident::class => ['member_id', 'source_type', 'incident_type', 'minutes_late', 'amount', 'status', 'reviewed_by', 'reviewed_at', 'review_note'],
+            Rehearsal::class, Activity::class => ['attendance_finalized_at', 'attendance_finalized_by'],
+            RehearsalAttendance::class, ActivityParticipant::class => ['member_id', 'status', 'minutes_late', 'excuse_reason', 'checked_at', 'recorded_by'],
             default => [],
         };
     }

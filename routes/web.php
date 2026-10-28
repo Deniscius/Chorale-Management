@@ -16,6 +16,8 @@ use App\Http\Controllers\TenantAddressController;
 use App\Http\Controllers\TenantRegistrationController;
 use App\Http\Middleware\TenantAddress;
 use App\Livewire\Activities\Index as ActivitiesIndex;
+use App\Livewire\Attendance\FinancialReport as AttendanceFinancialReport;
+use App\Livewire\Attendance\Sheet as AttendanceSheet;
 use App\Livewire\Audit\Index;
 use App\Livewire\Budgets\Index as BudgetsIndex;
 use App\Livewire\Contributions\Index as ContributionsIndex;
@@ -141,6 +143,10 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
         ->middleware('module:'.UserRole::MODULE_ACTIVITES)
         ->name('activities.index');
 
+    Route::get('/secretariat/presences', AttendanceSheet::class)
+        ->middleware('can:view-attendance')
+        ->name('attendance.sheet');
+
     // Comptabilité
     Route::get('/transactions', TransactionsIndex::class)
         ->middleware('module:'.UserRole::MODULE_COMPTABILITE)
@@ -157,6 +163,10 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/dons', DonationsIndex::class)
         ->middleware('module:'.UserRole::MODULE_COMPTABILITE)
         ->name('donations.index');
+
+    Route::get('/comptabilite/presences', AttendanceFinancialReport::class)
+        ->middleware('can:view-attendance-finance')
+        ->name('attendance.financial-report');
 
     // Administration
     Route::get('/utilisateurs', UsersIndex::class)

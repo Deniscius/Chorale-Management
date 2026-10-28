@@ -20,6 +20,10 @@ class ActivityParticipant extends Model
         'status',
         'hours',
         'notes',
+        'minutes_late',
+        'excuse_reason',
+        'checked_at',
+        'recorded_by',
     ];
 
     protected function casts(): array
@@ -27,6 +31,8 @@ class ActivityParticipant extends Model
         return [
             'status' => ParticipationStatus::class,
             'hours' => 'decimal:2',
+            'minutes_late' => 'integer',
+            'checked_at' => 'datetime',
         ];
     }
 
@@ -38,5 +44,10 @@ class ActivityParticipant extends Model
     public function member(): BelongsTo
     {
         return $this->belongsTo(Member::class);
+    }
+
+    public function recorder(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'recorded_by');
     }
 }

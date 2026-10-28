@@ -35,6 +35,8 @@ class Activity extends Model
         'report',
         'is_public',
         'created_by',
+        'attendance_finalized_at',
+        'attendance_finalized_by',
     ];
 
     protected function casts(): array
@@ -47,6 +49,7 @@ class Activity extends Model
             'budget_allocated' => 'decimal:2',
             'budget_spent' => 'decimal:2',
             'is_public' => 'boolean',
+            'attendance_finalized_at' => 'datetime',
         ];
     }
 
@@ -73,8 +76,18 @@ class Activity extends Model
     public function participants(): BelongsToMany
     {
         return $this->belongsToMany(Member::class, 'activity_participants')
-            ->withPivot(['role', 'status', 'hours', 'notes'])
+            ->withPivot(['role', 'status', 'hours', 'notes', 'minutes_late', 'excuse_reason', 'checked_at', 'recorded_by'])
             ->withTimestamps();
+    }
+
+    public function participantRecords(): HasMany
+    {
+        return $this->hasMany(ActivityParticipant::class);
+    }
+
+    public function attendanceFinalizer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'attendance_finalized_by');
     }
 
     public function transactions(): HasMany

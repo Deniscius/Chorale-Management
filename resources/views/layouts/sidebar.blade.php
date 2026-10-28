@@ -43,6 +43,7 @@
                 ['route' => 'documents.index', 'parameters'=>['commission'=>'commission_secretariat'], 'label'=>'Archives des courriers', 'icon'=>'archive'],
                 ['route' => 'correspondences.index', 'label' => 'Courriers', 'icon' => 'mail', 'module' => UserRole::MODULE_COURRIERS],
                 ['route' => 'activities.index', 'label' => 'Activités', 'icon' => 'chart', 'module' => UserRole::MODULE_ACTIVITES],
+                ['route' => 'attendance.sheet', 'label' => 'Fiches de présence', 'icon' => 'check', 'ability' => 'view-attendance'],
                 ['route' => 'documents.index', 'label' => 'Archives documentaires', 'icon' => 'archive'],
             ],
         ],
@@ -53,6 +54,7 @@
                 ['route' => 'budgets.index', 'label' => 'Budgets', 'icon' => 'chart', 'module' => UserRole::MODULE_COMPTABILITE],
                 ['route' => 'contributions.index', 'label' => app(\App\Services\FinancialCatalog::class)->section('contribution'), 'icon' => 'users', 'module' => UserRole::MODULE_COMPTABILITE],
                 ['route' => 'donations.index', 'label' => app(\App\Services\FinancialCatalog::class)->section('donation'), 'icon' => 'sparkles', 'module' => UserRole::MODULE_COMPTABILITE],
+                ['route' => 'attendance.financial-report', 'label' => 'Rapport des présences', 'icon' => 'clock', 'ability' => 'view-attendance-finance'],
             ],
         ],
         [
@@ -100,6 +102,10 @@
 
                     if (isset($item['module'])) {
                         return auth()->user()?->canAccessModule($item['module']);
+                    }
+
+                    if (isset($item['ability'])) {
+                        return auth()->user()?->can($item['ability']);
                     }
 
                     return true;

@@ -5,9 +5,12 @@ use App\Http\Middleware\EnsureModuleAccess;
 use App\Http\Middleware\EstablishTenant;
 use App\Http\Middleware\PlatformAccess;
 use App\Http\Middleware\RecordPlatformUsage;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\TrustDeploymentProxies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -17,7 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->replace(\Illuminate\Http\Middleware\TrustProxies::class, \App\Http\Middleware\TrustDeploymentProxies::class);
+        $middleware->replace(TrustProxies::class, TrustDeploymentProxies::class);
+        $middleware->append(SecurityHeaders::class);
         $middleware->web(append: [EstablishTenant::class, RecordPlatformUsage::class]);
         $middleware->prependToPriorityList(SubstituteBindings::class, EstablishTenant::class);
         $middleware->prependToPriorityList(SubstituteBindings::class, PlatformAccess::class);

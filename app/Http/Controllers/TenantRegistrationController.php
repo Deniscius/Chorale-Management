@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Rules\PersonName;
+use App\Rules\ReadableText;
 use App\Services\TenantRegistration;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
@@ -25,10 +27,15 @@ final class TenantRegistrationController extends Controller
         if ($request->filled('website')) {
             throw ValidationException::withMessages(['organization' => 'L’inscription n’a pas pu être validée. Réessayez.']);
         }
-        $request->merge(['email' => mb_strtolower(trim((string) $request->input('email'))), 'username' => mb_strtolower(trim((string) $request->input('username')))]);
+        $request->merge([
+            'organization' => trim(preg_replace('/\\s+/u', ' ', (string) $request->input('organization'))),
+            'name' => trim(preg_replace('/\\s+/u', ' ', (string) $request->input('name'))),
+            'email' => mb_strtolower(trim((string) $request->input('email'))),
+            'username' => mb_strtolower(trim((string) $request->input('username'))),
+        ]);
         $data = $request->validate([
-            'organization' => ['required', 'string', 'max:120'],
-            'name' => ['required', 'string', 'max:120'],
+            'organization' => ['required', 'string', 'max:120', new ReadableText],
+            'name' => ['required', 'string', 'max:120', new PersonName],
             'username' => ['required', 'string', 'max:50', 'regex:/^[a-z0-9][a-z0-9._-]*$/', 'unique:users,username'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::min(10)->letters()->numbers()],

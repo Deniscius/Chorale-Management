@@ -101,10 +101,8 @@ try {
     await dialog
         .getByRole('button', { name: /Écouter : Donnez un nom/ })
         .click();
-    assert.ok(
-        !(await page.evaluate(() => window.__spoken.at(-1))).includes(name),
-        'Help must not read entered values.',
-    );
+    const spokenHelp = await page.evaluate(() => window.__spoken.at(-1) ?? '');
+    assert.ok(!spokenHelp.includes(name), 'Help must not read entered values.');
     await dialog
         .getByRole('button', { name: 'Arrêter la lecture', exact: true })
         .first()
@@ -156,6 +154,21 @@ try {
     await preview.waitForLoadState();
     assert.equal(await preview.locator('.code').innerText(), code);
     assert.equal(await preview.locator('.ordinal').innerText(), 'n° 1');
+    const watermark = preview.locator('.watermark');
+    assert.equal(
+        await watermark.count(),
+        1,
+        'Choir logo watermark is visible in preview.',
+    );
+    assert.match(
+        await watermark.getAttribute('src'),
+        /^data:image\/png;base64,/,
+    );
+    assert.ok(
+        Number.parseFloat(
+            await watermark.evaluate((el) => getComputedStyle(el).opacity),
+        ) >= 0.18,
+    );
     assert.ok(
         await preview
             .locator('.ordinal')

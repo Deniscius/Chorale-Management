@@ -17,18 +17,19 @@ final class Tenant extends Model
 
     protected function casts(): array
     {
-        return ['trial_started_at' => 'immutable_datetime', 'trial_ends_at' => 'immutable_datetime', 'paid_until' => 'immutable_datetime', 'suspended_at' => 'immutable_datetime', 'paid_perpetual' => 'boolean'];
+        return ['trial_started_at' => 'immutable_datetime', 'trial_ends_at' => 'immutable_datetime', 'paid_until' => 'immutable_datetime', 'suspended_at' => 'immutable_datetime', 'paid_perpetual' => 'boolean', 'is_free' => 'boolean'];
     }
 
     public function hasAccess(): bool
     {
-        return $this->suspended_at === null && ($this->trial_ends_at?->isFuture() || $this->paid_perpetual || $this->paid_until?->isFuture());
+        return $this->suspended_at === null && ($this->is_free || $this->trial_ends_at?->isFuture() || $this->paid_perpetual || $this->paid_until?->isFuture());
     }
 
     public function isTrialing(): bool
     {
         return $this->suspended_at === null
             && ! $this->paid_perpetual
+            && ! $this->is_free
             && ! $this->paid_until?->isFuture()
             && (bool) $this->trial_ends_at?->isFuture();
     }
@@ -37,6 +38,7 @@ final class Tenant extends Model
     {
         return match (true) {
             $this->suspended_at !== null => 'Suspendu',
+            $this->is_free => 'Accès gratuit',
             $this->paid_perpetual => 'Accès permanent',
             $this->paid_until?->isFuture() => 'Accès payant',
             $this->trial_ends_at?->isFuture() => 'En essai',
@@ -46,7 +48,7 @@ final class Tenant extends Model
 
     public function accessEndsAt(): ?CarbonImmutable
     {
-        if ($this->suspended_at !== null || $this->paid_perpetual) {
+        if ($this->suspended_at !== null || $this->paid_perpetual || $this->is_free) {
             return null;
         }
         if (! $this->paid_until) {

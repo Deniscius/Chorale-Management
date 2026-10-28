@@ -2,9 +2,12 @@
 
 use App\Enums\UserRole;
 use App\Models\Rehearsal;
+use App\Models\Setting;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Work;
+use App\Services\ChoraleIdentity;
+use App\Services\PrivateFiles;
 use App\Services\TenantRegistration;
 use App\Tenancy\TenantContext;
 use Illuminate\Contracts\Console\Kernel;
@@ -58,6 +61,9 @@ $admin = app(TenantRegistration::class)->create([
 ]);
 Tenant::findOrFail($admin->tenant_id)->forceFill(['paid_perpetual' => true])->save();
 app(TenantContext::class)->run($admin->tenant_id, function () use ($password): void {
+    $logoPath = 'tenants/'.app(TenantContext::class)->requireId().'/chorale/logo.png';
+    app(PrivateFiles::class)->persist($logoPath, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZrC8AAAAASUVORK5CYII='), 'image/png');
+    Setting::set(ChoraleIdentity::KEY_LOGO_PATH, $logoPath);
     User::factory()->role(UserRole::Choriste)->create([
         'username' => 'review-choriste', 'email' => 'review-choriste@example.test', 'password' => $password,
     ]);

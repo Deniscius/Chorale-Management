@@ -9,6 +9,8 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Choir;
 use App\Models\Member;
 use App\Observers\PersonalInformationObserver;
+use App\Rules\PersonName;
+use App\Rules\ReadableText;
 use App\Services\MemberOnboarding;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Arr;
@@ -30,10 +32,10 @@ class Form extends Component
     #[Locked]
     public ?string $activationLink = null;
 
-    #[Validate('required|string|max:100')]
+    #[Validate]
     public string $first_name = '';
 
-    #[Validate('required|string|max:100')]
+    #[Validate]
     public string $last_name = '';
 
     #[Validate]
@@ -66,10 +68,10 @@ class Form extends Component
     #[Validate('nullable|date|after_or_equal:1900-01-01')]
     public ?string $joined_on = null;
 
-    #[Validate('nullable|string|max:255')]
+    #[Validate]
     public ?string $profession = null;
 
-    #[Validate('nullable|string|max:255')]
+    #[Validate]
     public ?string $address = null;
 
     #[Validate('nullable|string|max:1000')]
@@ -78,7 +80,11 @@ class Form extends Component
     protected function rules(): array
     {
         return [
+            'first_name' => ['required', 'string', 'max:100', new PersonName],
+            'last_name' => ['required', 'string', 'max:100', new PersonName],
             'email' => ['nullable', 'string', 'email', 'max:255', Rule::unique('members', 'email')->ignore($this->member)],
+            'profession' => ['nullable', 'string', 'max:255', new ReadableText],
+            'address' => ['nullable', 'string', 'max:255', new ReadableText],
             'voice' => ['nullable', Rule::enum(Voice::class)],
             'status' => ['required', Rule::enum(MemberStatus::class)],
         ];
@@ -123,6 +129,12 @@ class Form extends Component
             return;
         }
 
+        $this->first_name = trim(preg_replace('/\\s+/u', ' ', $this->first_name));
+        $this->last_name = trim(preg_replace('/\\s+/u', ' ', $this->last_name));
+        $this->email = filled($this->email) ? mb_strtolower(trim($this->email)) : null;
+        $this->phone = filled($this->phone) ? trim($this->phone) : null;
+        $this->profession = filled($this->profession) ? trim(preg_replace('/\\s+/u', ' ', $this->profession)) : null;
+        $this->address = filled($this->address) ? trim(preg_replace('/\\s+/u', ' ', $this->address)) : null;
         $this->validate();
 
         $data = [

@@ -9,6 +9,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Activity;
 use App\Models\Choir;
 use App\Models\ChoirCommission;
+use App\Rules\ReadableText;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -23,7 +24,7 @@ class Form extends Component
 
     public ?Activity $activity = null;
 
-    #[Validate('required|string|max:255')]
+    #[Validate]
     public string $title = '';
 
     #[Validate]
@@ -38,7 +39,7 @@ class Form extends Component
     #[Validate('nullable|date|after_or_equal:starts_at')]
     public ?string $ends_at = null;
 
-    #[Validate('nullable|string|max:255')]
+    #[Validate]
     public ?string $venue = null;
 
     #[Validate('required|exists:choir_commissions,id')]
@@ -65,6 +66,8 @@ class Form extends Component
     protected function rules(): array
     {
         return [
+            'title' => ['required', 'string', 'max:255', new ReadableText],
+            'venue' => ['nullable', 'string', 'max:255', new ReadableText],
             'type' => ['required', Rule::enum(ActivityType::class)],
             'status' => ['required', Rule::enum(ActivityStatus::class)],
         ];
@@ -108,6 +111,8 @@ class Form extends Component
     {
         $this->authorizeManage();
 
+        $this->title = trim(preg_replace('/\\s+/u', ' ', $this->title));
+        $this->venue = filled($this->venue) ? trim(preg_replace('/\\s+/u', ' ', $this->venue)) : null;
         $this->validate();
 
         $data = [

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\InstrumentUnit;
 use App\Services\ChoraleIdentity;
+use App\Services\PrivateFiles;
 use Illuminate\Http\Request;
 use Illuminate\Support\HtmlString;
 use Illuminate\Validation\ValidationException;
@@ -31,11 +32,12 @@ final class InstrumentLabelsController extends Controller
         $slots = collect(array_fill(0, (int) $data['start'] - 1, null))->concat($labels);
 
         $identity = app(ChoraleIdentity::class);
+        $logoPath = $identity->logoPath();
 
         return response()->view('instruments.labels', [
             'pages' => $slots->chunk(24),
             'chorale' => $identity->name(),
-            'logo' => $identity->logoUrl(),
+            'logo' => $logoPath ? app(PrivateFiles::class)->imageDataUri($logoPath) : null,
         ])
             ->header('Cache-Control', 'private, no-store')->header('X-Content-Type-Options', 'nosniff');
     }

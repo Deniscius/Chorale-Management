@@ -119,6 +119,31 @@ final class PrivateFiles
         return Storage::disk('local')->delete($path);
     }
 
+    /** Embed a small private image in a self-contained print preview. */
+    public function imageDataUri(string $path, int $maxBytes = 2_097_152): ?string
+    {
+        $this->assertPath($path);
+        $row = $this->persistent() ? $this->query()->where('path', $path)->first() : null;
+        if ($row) {
+            $contents = Crypt::decryptString($row->payload);
+            abort_unless(hash_equals($row->sha256, hash('sha256', $contents)), 500, 'Le fichier n’a pas pu être vérifié.');
+        } else {
+            if (! Storage::disk('local')->exists($path)) {
+                return null;
+            }
+            $contents = Storage::disk('local')->get($path);
+        }
+        if (strlen($contents) > $maxBytes) {
+            return null;
+        }
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($contents);
+        if (! in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            return null;
+        }
+
+        return 'data:'.$mime.';base64,'.base64_encode($contents);
+    }
+
     public function response(string $path, string $name, bool $inline, ?string $mime = null, array $headers = [])
     {
         $this->assertPath($path);

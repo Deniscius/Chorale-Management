@@ -490,6 +490,10 @@
     background: #e8f3eb;
     color: #326446
 }
+.p-badge-free {
+    background: #dcfce7;
+    color: #166534
+}
 .p-badge-expired {
     background: #f5eaea;
     color: #98514e

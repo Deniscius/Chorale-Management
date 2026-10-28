@@ -63,7 +63,8 @@ class InstrumentLabelsTest extends TestCase
         config(['private-files.driver' => 'local']);
         $this->actingAs(User::factory()->role(UserRole::Admin)->create());
         $path = 'chorale/logo.png';
-        Storage::disk('local')->put($path, 'logo-fictif');
+        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZrC8AAAAASUVORK5CYII=');
+        Storage::disk('local')->put($path, $png);
         Setting::set(ChoraleIdentity::KEY_LOGO_PATH, $path);
         $instrument = Instrument::factory()->create(['quantity' => 1]);
         app(InstrumentIdentity::class)->generate($instrument->id);
@@ -71,6 +72,8 @@ class InstrumentLabelsTest extends TestCase
         $this->post(route('instruments.labels'), ['units' => [$instrument->units()->value('id')], 'start' => 1])
             ->assertOk()
             ->assertSee('class="watermark"', false)
+            ->assertSee('src="data:image/png;base64,', false)
+            ->assertSee('opacity:.18', false)
             ->assertDontSee('Un objet · un code permanent');
     }
 

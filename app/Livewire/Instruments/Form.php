@@ -8,6 +8,7 @@ use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Instrument;
 use App\Models\Member;
+use App\Rules\ReadableText;
 use App\Services\InstrumentIdentity;
 use App\Services\PrivateFiles;
 use App\Tenancy\TenantContext;
@@ -31,13 +32,13 @@ class Form extends Component
 
     public ?Instrument $instrument = null;
 
-    #[Validate('required|string|max:255')]
+    #[Validate]
     public string $name = '';
 
     #[Validate]
     public string $category = 'orgue';
 
-    #[Validate('nullable|string|max:100')]
+    #[Validate]
     public ?string $serial_number = null;
 
     #[Validate('required|integer|min:1|max:999')]
@@ -55,7 +56,7 @@ class Form extends Component
     #[Validate('nullable|numeric|min:0')]
     public ?string $current_value = null;
 
-    #[Validate('nullable|string|max:255')]
+    #[Validate]
     public ?string $location = null;
 
     #[Validate('nullable|exists:members,id')]
@@ -75,6 +76,9 @@ class Form extends Component
     protected function rules(): array
     {
         return [
+            'name' => ['required', 'string', 'max:255', new ReadableText],
+            'serial_number' => ['nullable', 'string', 'max:100', 'regex:/^[\\p{L}\\p{N}._\\/ -]+$/u'],
+            'location' => ['nullable', 'string', 'max:255', new ReadableText],
             'category' => ['required', Rule::enum(InstrumentCategory::class)],
             'condition' => ['required', Rule::enum(InstrumentCondition::class)],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
@@ -110,6 +114,9 @@ class Form extends Component
     {
         $this->authorizeManage();
 
+        $this->name = trim(preg_replace('/\\s+/u', ' ', $this->name));
+        $this->serial_number = filled($this->serial_number) ? trim(preg_replace('/\\s+/u', ' ', $this->serial_number)) : null;
+        $this->location = filled($this->location) ? trim(preg_replace('/\\s+/u', ' ', $this->location)) : null;
         $this->validate();
 
         $data = [

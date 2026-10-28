@@ -1,14 +1,14 @@
 <section class="mt-8" @if($isProcessing) wire:poll.3s @endif>
-    <x-card title="Papier à en-tête officiel" subtitle="Importez un document Word vierge. L’en-tête est isolé pour cette chorale et appliqué aux documents générés.">
+    <x-card title="Papier à en-tête officiel" subtitle="Importez un document Word ou PDF. L’en-tête est isolé pour cette chorale et appliqué aux documents générés.">
         <div class="grid gap-4 md:grid-cols-[1fr_12rem_auto] md:items-end">
             <div>
-                <x-input-label for="letterhead-document" value="Document Word (.docx)" />
-                <input id="letterhead-document" type="file" wire:model="document" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="mt-1 block w-full rounded-lg border border-slate-300 bg-white p-2 text-sm" />
+                <x-input-label for="letterhead-document" value="Document Word ou PDF (.docx, .pdf)" />
+                <input id="letterhead-document" type="file" wire:model="document" accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf" class="mt-1 block w-full rounded-lg border border-slate-300 bg-white p-2 text-sm" />
                 <x-input-error :messages="$errors->get('document')" class="mt-1" />
                 <x-input-error :messages="$errors->get('file')" class="mt-1" />
                 <p wire:loading wire:target="document" class="mt-2 text-sm font-medium text-blue-700">Téléversement du document en cours…</p>
                 @if($document)<p wire:loading.remove wire:target="document" class="mt-2 text-sm font-medium text-emerald-700">Document sélectionné : {{ $document->getClientOriginalName() }}</p>@endif
-                <p class="mt-1 text-xs text-slate-500">Document vierge, sans macro ni objet incorporé — 10 Mo maximum.</p>
+                <p class="mt-1 text-xs text-slate-500">DOCX sans macro, ou PDF statique sans script ni pièce jointe — 10 Mo maximum.</p>
             </div>
             <div>
                 <x-input-label for="header-height" value="Hauteur à conserver" />

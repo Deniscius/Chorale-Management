@@ -27,7 +27,7 @@ final class Letterheads extends Component
     {
         $this->authorizeManage();
         $data = $this->validate([
-            'document' => ['required', 'file', 'mimes:docx', 'max:10240'],
+            'document' => ['required', 'file', 'mimes:docx,pdf', 'max:10240'],
             'header_height_mm' => ['required', 'integer', 'min:20', 'max:100'],
         ], [], ['document' => 'document Word', 'header_height_mm' => 'hauteur de l’en-tête']);
         $manager->upload($data['document'], (int) $data['header_height_mm'], auth()->user());

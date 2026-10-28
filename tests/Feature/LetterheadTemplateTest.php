@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\DocxSecurityInspector;
 use App\Services\LetterheadManager;
 use App\Services\LetterheadProcessor;
+use App\Services\PdfSecurityInspector;
 use App\Services\PrivateFiles;
 use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -67,6 +68,31 @@ class LetterheadTemplateTest extends TestCase
         app(DocxSecurityInspector::class)->inspect($file);
 
         $this->addToAssertionCount(1);
+    }
+
+    public function test_an_administrator_can_submit_a_static_pdf_letterhead(): void
+    {
+        Storage::fake('local');
+        Bus::fake();
+        $admin = User::factory()->role(UserRole::Admin)->create();
+
+        Livewire::actingAs($admin)->test(Letterheads::class)
+            ->set('document', $this->pdf())
+            ->call('upload')
+            ->assertHasNoErrors();
+
+        $template = LetterheadTemplate::sole();
+        $this->assertSame('papier-entete.pdf', $template->original_name);
+        Bus::assertDispatchedAfterResponse(ProcessLetterheadTemplate::class);
+    }
+
+    public function test_an_interactive_pdf_is_rejected(): void
+    {
+        $file = $this->pdf('/OpenAction << /S /JavaScript >>');
+
+        $this->expectException(ValidationException::class);
+
+        app(PdfSecurityInspector::class)->inspect($file);
     }
 
     public function test_activation_is_atomic_and_keeps_the_previous_version(): void
@@ -153,5 +179,13 @@ class LetterheadTemplateTest extends TestCase
         unlink($path);
 
         return UploadedFile::fake()->createWithContent('papier-entete.docx', $contents);
+    }
+
+    private function pdf(string $extra = ''): UploadedFile
+    {
+        return UploadedFile::fake()->createWithContent(
+            'papier-entete.pdf',
+            "%PDF-1.4\n1 0 obj << /Type /Catalog {$extra} >> endobj\n%%EOF",
+        );
     }
 }

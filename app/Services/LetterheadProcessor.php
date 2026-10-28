@@ -24,15 +24,18 @@ final class LetterheadProcessor
 
         try {
             File::ensureDirectoryExists($directory, 0700, true);
-            $source = $directory.'/source.docx';
+            $extension = strtolower(pathinfo($template->original_name, PATHINFO_EXTENSION));
+            $source = $directory.'/source.'.($extension === 'pdf' ? 'pdf' : 'docx');
             File::put($source, $this->files->contents($template->original_path));
-            $profile = $directory.'/profile';
-            File::ensureDirectoryExists($profile, 0700, true);
-            $this->run([
-                'soffice', '--headless', '--nologo', '--nodefault', '--nofirststartwizard',
-                '-env:UserInstallation=file://'.$profile, '--convert-to', 'pdf', '--outdir', $directory, $source,
-            ], 90);
             $pdf = $directory.'/source.pdf';
+            if ($extension !== 'pdf') {
+                $profile = $directory.'/profile';
+                File::ensureDirectoryExists($profile, 0700, true);
+                $this->run([
+                    'soffice', '--headless', '--nologo', '--nodefault', '--nofirststartwizard',
+                    '-env:UserInstallation=file://'.$profile, '--convert-to', 'pdf', '--outdir', $directory, $source,
+                ], 90);
+            }
             if (! File::isFile($pdf)) {
                 throw new RuntimeException('Conversion PDF absente.');
             }
@@ -74,7 +77,7 @@ final class LetterheadProcessor
             ]);
             $template->update([
                 'status' => LetterheadTemplate::STATUS_ERROR,
-                'error_message' => 'Le document n’a pas pu être préparé. Vérifiez qu’il s’ouvre correctement dans Word, puis réessayez.',
+                'error_message' => 'Le document n’a pas pu être préparé. Vérifiez qu’il s’ouvre correctement dans Word ou dans un lecteur PDF, puis réessayez.',
             ]);
         } finally {
             if (str_starts_with($directory, storage_path('framework/tmp/letterheads/'))) {

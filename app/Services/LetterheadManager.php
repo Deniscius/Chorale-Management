@@ -14,13 +14,18 @@ final class LetterheadManager
 {
     public function __construct(
         private readonly DocxSecurityInspector $inspector,
+        private readonly PdfSecurityInspector $pdfInspector,
         private readonly PrivateFiles $files,
         private readonly TenantContext $tenant,
     ) {}
 
     public function upload(UploadedFile $document, int $height, User $user): LetterheadTemplate
     {
-        $this->inspector->inspect($document);
+        if (strtolower($document->getClientOriginalExtension()) === 'pdf') {
+            $this->pdfInspector->inspect($document);
+        } else {
+            $this->inspector->inspect($document);
+        }
 
         $template = DB::transaction(function () use ($document, $height, $user): LetterheadTemplate {
             $template = LetterheadTemplate::create([

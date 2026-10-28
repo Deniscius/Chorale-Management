@@ -1,6 +1,22 @@
 <div>
     <form wire:submit="save" class="space-y-5">
         <x-validation-summary />
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <x-input-label for="instruments-form-image" value="Photo de l’instrument" />
+            <input id="instruments-form-image" type="file" wire:model="image" accept="image/jpeg,image/png,image/webp"
+                class="form-input mt-1 block w-full" aria-describedby="instruments-form-image-help instruments-form-image-error">
+            <p id="instruments-form-image-help" class="mt-1 text-xs text-slate-600">JPEG, PNG ou WebP, 5 Mo maximum. La photo reste privée dans l’espace de la chorale.</p>
+            <x-input-error id="instruments-form-image-error" :messages="$errors->get('image')" class="mt-1" />
+            <div wire:loading wire:target="image" class="mt-2 text-sm text-slate-600">Chargement de l’image…</div>
+            @if($image)
+                <img src="{{ $image->temporaryUrl() }}" alt="Nouvelle photo de l’instrument" class="mt-3 h-32 w-48 rounded-lg object-cover">
+            @elseif($instrument?->image_path && !$remove_image)
+                <div class="mt-3 flex flex-wrap items-end gap-3">
+                    <img src="{{ route('instruments.image', $instrument) }}" alt="Photo actuelle de {{ $instrument->name }}" class="h-32 w-48 rounded-lg object-cover">
+                    <label class="inline-flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" wire:model.live="remove_image" class="form-checkbox rounded"> Retirer cette photo</label>
+                </div>
+            @endif
+        </div>
         <x-material-step number="1" title="Identifier le matériel" icon="cube"
             help="Donnez un nom au matériel, choisissez sa catégorie et indiquez le nombre d’objets identiques. Par exemple, trois microphones donnent trois codes différents.">
             <div class="grid gap-4 sm:grid-cols-3">

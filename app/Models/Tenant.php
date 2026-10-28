@@ -25,6 +25,14 @@ final class Tenant extends Model
         return $this->suspended_at === null && ($this->trial_ends_at?->isFuture() || $this->paid_perpetual || $this->paid_until?->isFuture());
     }
 
+    public function isTrialing(): bool
+    {
+        return $this->suspended_at === null
+            && ! $this->paid_perpetual
+            && ! $this->paid_until?->isFuture()
+            && (bool) $this->trial_ends_at?->isFuture();
+    }
+
     public function accessLabel(): string
     {
         return match (true) {
@@ -38,7 +46,7 @@ final class Tenant extends Model
 
     public function accessEndsAt(): ?CarbonImmutable
     {
-        if ($this->paid_perpetual) {
+        if ($this->suspended_at !== null || $this->paid_perpetual) {
             return null;
         }
         if (! $this->paid_until) {

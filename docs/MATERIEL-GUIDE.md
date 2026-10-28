@@ -9,7 +9,7 @@ Le nom et le numéro sont lisibles sur l’écran et sur l’étiquette imprimé
 ## Enregistrer du matériel
 
 1. Dans **Voir le matériel**, une personne autorisée choisit **Ajouter du matériel**.
-2. Dans **Identifier le matériel**, elle renseigne le nom, la catégorie, le nombre d’objets identiques et leur état.
+2. Dans **Identifier le matériel**, elle renseigne le nom, la catégorie, le nombre d’objets identiques et leur état. Elle peut joindre une photo JPEG, PNG ou WebP de 5 Mo maximum ; l’image reste dans le stockage privé de la chorale.
 3. Dans **Savoir où le retrouver**, elle peut préciser le rangement, la personne responsable et les notes.
 4. Les informations d’achat et de valeur restent dans un panneau facultatif. Les valeurs déjà enregistrées sont conservées lors d’une simple modification du nom ; le panneau s’ouvre si un champ financier est invalide.
 5. Après vérification, **Enregistrer** applique les règles existantes et attribue les codes manquants. Aucun champ ni contrôle métier n’est supprimé.
@@ -24,7 +24,7 @@ Chaque section propose une explication audio française sur demande et un bouton
 4. Choisir **Voir les étiquettes avant impression**. L’aperçu s’ouvre dans un nouvel onglet ; rien n’est envoyé automatiquement à l’imprimante.
 5. Imprimer en A4, à taille réelle, sans ajustement à la page ni en-têtes/pieds de page. Faire d’abord un essai sur papier ordinaire avant d’utiliser la feuille adhésive de 24 étiquettes de 63,5 × 33,9 mm.
 
-La limite de 240 étiquettes, les décalages de cases et les protections d’accès existantes restent appliqués. Préparer une planche ne régénère pas les codes et ne change pas les quantités.
+La limite de 240 étiquettes, les décalages de cases et les protections d’accès existantes restent appliqués. Préparer une planche ne régénère pas les codes et ne change pas les quantités. Si la chorale a défini son logo, celui de l’espace courant apparaît en filigrane sur chaque étiquette ; le logo d’une autre chorale ne peut pas être utilisé.
 
 ## Prêter puis enregistrer le retour
 
@@ -39,6 +39,6 @@ Un objet prêté reste à l’inventaire. **Retirer de l’inventaire** diminue 
 - Tests Laravel : création des objets/codes, impression sans mutation, conservation des valeurs d’achat et des codes à la modification, capacité de stock, clôture du prêt, permissions et isolation couvertes par les tests existants et `GuidedMaterialTest`.
 - `npm run test:material` rejoue dans Chromium une création de matériel, la lecture/arrêt de l’aide sans lecture des valeurs saisies, une sélection, un aperçu au même code, un prêt et son retour. Il contrôle les pages stabilisées avec axe et le repli à 320 pixels avec grand texte. La synthèse vocale est simulée ; aucun compte de production ne doit être utilisé.
 - Pour préparer la base et les comptes synthétiques, suivre `docs/ACCESSIBILITE.md`. Le même fichier `ACCESSIBILITY_CREDENTIALS_FILE`, la même URL locale et la même configuration de navigateur peuvent être réutilisés. Le scénario refuse une URL distante et écrit uniquement des données synthétiques sur cette instance locale. Il faut avoir démarré le serveur local avant le test. Les captures et rapports se trouvent dans `test-results/material` ; ils sont ignorés par Git.
-- La CI lance ce parcours après `test:accessibility` sur la base SQLite synthétique. Ces changements ne nécessitent ni migration de schéma ni modification d’APP_KEY ou de DB_URL.
+- La CI lance ce parcours après `test:accessibility` sur la base SQLite synthétique. La migration additive `2026_10_28_000001_add_images_and_commissions_to_operations.php` ajoute uniquement le chemin privé de la photo et le rattachement des activités aux commissions. Elle ne modifie ni `APP_KEY` ni `DB_URL`.
 
 Les contrôles automatiques ne remplacent pas un essai réel d’impression et des essais avec des membres non lecteurs, des voix réelles, TalkBack/VoiceOver et des membres de différents âges. Les présences et les formulaires comptables ne sont pas remaniés par cette modification. Aucun déploiement Render ou transfert Neon n’est effectué.

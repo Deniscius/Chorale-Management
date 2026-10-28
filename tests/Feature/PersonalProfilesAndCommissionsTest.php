@@ -72,6 +72,24 @@ class PersonalProfilesAndCommissionsTest extends TestCase
         $this->assertSame('alto', $member->fresh()->voice->value);
     }
 
+    public function test_direction_can_update_membership_date_without_changing_personal_identity(): void
+    {
+        $director = User::factory()->role(UserRole::Directeur)->create();
+        $member = Member::factory()->create(['joined_on' => '2020-01-10', 'birth_date' => '1990-01-01']);
+        Livewire::actingAs($director)->test(MemberForm::class, ['member' => $member])
+            ->assertSet('activationLink', null)
+            ->set('joined_on', '2024-09-15')
+            ->assertSet('activationLink', null)
+            ->assertSet('joined_on', '2024-09-15')
+            ->call('save')
+            ->assertStatus(200)
+            ->assertHasNoErrors()
+            ->assertDispatched('toast');
+
+        $this->assertSame('2024-09-15', $member->fresh()->joined_on->format('Y-m-d'));
+        $this->assertSame('1990-01-01', $member->fresh()->birth_date->format('Y-m-d'));
+    }
+
     public function test_only_director_can_create_edit_or_archive_commissions_even_admin_is_denied(): void
     {
         $director = User::factory()->role(UserRole::Directeur)->create();

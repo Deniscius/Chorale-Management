@@ -3,7 +3,7 @@
     $kind = match (true) {
         $tenant->suspended_at !== null => 'suspended',
         $tenant->paid_perpetual || $tenant->paid_until?->isFuture() => 'paid',
-        $tenant->trial_ends_at?->isFuture() => 'trial',
+        $tenant->isTrialing() => 'trial',
         default => 'expired',
     };
 @endphp

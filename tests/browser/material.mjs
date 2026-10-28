@@ -90,6 +90,14 @@ try {
     await dialog
         .getByLabel('Nombre d’objets identiques', { exact: true })
         .fill('2');
+    await dialog.getByLabel('Photo de l’instrument', { exact: true }).setInputFiles({
+        name: 'microphone.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZrC8AAAAASUVORK5CYII=',
+            'base64',
+        ),
+    });
     await dialog
         .getByRole('button', { name: /Écouter : Donnez un nom/ })
         .click();
@@ -106,6 +114,9 @@ try {
         .getByRole('button', { name: 'Enregistrer', exact: true })
         .click();
     await dialog.waitFor({ state: 'detached' });
+    const inventoryRow = page.getByRole('row').filter({ hasText: name });
+    await inventoryRow.waitFor();
+    assert.equal(await inventoryRow.locator('img').count(), 1, 'Instrument photo is visible in inventory.');
     await page
         .getByRole('link', { name: 'Préparer les étiquettes', exact: true })
         .click();
@@ -232,7 +243,7 @@ try {
     });
     assert.equal(errors.length, 0, JSON.stringify(errors));
     console.log(
-        'Material creation, private audio guidance, stable label code, loan and return passed.',
+        'Material creation, private image, audio guidance, stable label code, loan and return passed.',
     );
 } finally {
     await browser.close();

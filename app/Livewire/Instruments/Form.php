@@ -9,17 +9,23 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Instrument;
 use App\Models\Member;
 use App\Services\InstrumentIdentity;
+use App\Services\PrivateFiles;
+use App\Tenancy\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Livewire\WithFileUploads;
+use Throwable;
 
 class Form extends Component
 {
     use InteractsWithModule;
+    use WithFileUploads;
 
     public const MODULE_KEY = UserRole::MODULE_INSTRUMENTS;
 
@@ -61,11 +67,17 @@ class Form extends Component
     #[Validate('nullable|string|max:2000')]
     public ?string $notes = null;
 
+    public $image = null;
+
+    #[Validate('boolean')]
+    public bool $remove_image = false;
+
     protected function rules(): array
     {
         return [
             'category' => ['required', Rule::enum(InstrumentCategory::class)],
             'condition' => ['required', Rule::enum(InstrumentCondition::class)],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ];
     }
 
@@ -114,19 +126,42 @@ class Form extends Component
             'notes' => $this->notes,
         ];
 
-        $this->instrument = DB::transaction(function () use ($data) {
-            $entry = $this->instrument ? Instrument::query()->lockForUpdate()->findOrFail($this->instrument->id) : new Instrument;
-            $out = $entry->exists ? $entry->movements()->whereIn('type', ['sortie', 'pret'])->whereNull('actual_return_on')->sum('quantity') : 0;
-            if ($data['quantity'] < $out) {
-                throw ValidationException::withMessages(['quantity' => 'La quantité ne peut pas être inférieure aux unités encore prêtées.']);
+        $previousImage = $this->instrument?->image_path;
+        $newImage = null;
+        if ($this->image) {
+            try {
+                $newImage = app(PrivateFiles::class)->store($this->image, app(TenantContext::class)->path('instruments'));
+            } catch (ValidationException $exception) {
+                throw ValidationException::withMessages(['image' => $exception->errors()['file'] ?? 'L’image n’a pas pu être enregistrée.']);
             }
-            $entry->fill($data);
-            $entry->is_borrowed = $out > 0;
-            $entry->save();
-            app(InstrumentIdentity::class)->synchronize($entry->id);
+        }
 
-            return $entry;
-        }, 3);
+        try {
+            $this->instrument = DB::transaction(function () use ($data, $newImage) {
+                $entry = $this->instrument ? Instrument::query()->lockForUpdate()->findOrFail($this->instrument->id) : new Instrument;
+                $out = $entry->exists ? $entry->movements()->whereIn('type', ['sortie', 'pret'])->whereNull('actual_return_on')->sum('quantity') : 0;
+                if ($data['quantity'] < $out) {
+                    throw ValidationException::withMessages(['quantity' => 'La quantité ne peut pas être inférieure aux unités encore prêtées.']);
+                }
+                $entry->fill($data);
+                if ($newImage !== null || $this->remove_image) {
+                    $entry->image_path = $newImage;
+                }
+                $entry->is_borrowed = $out > 0;
+                $entry->save();
+                app(InstrumentIdentity::class)->synchronize($entry->id);
+
+                return $entry;
+            }, 3);
+        } catch (Throwable $exception) {
+            if ($newImage) {
+                $this->removeImage($newImage);
+            }
+            throw $exception;
+        }
+        if (($newImage !== null || $this->remove_image) && $previousImage && $previousImage !== $newImage) {
+            $this->removeImage($previousImage);
+        }
         $message = 'Instrument enregistré.';
 
         $this->dispatch('toast', type: 'success', message: $message);
@@ -158,5 +193,16 @@ class Form extends Component
     public function render(): View
     {
         return view('livewire.instruments.form');
+    }
+
+    private function removeImage(string $path): void
+    {
+        try {
+            if (! app(PrivateFiles::class)->delete($path)) {
+                Log::warning('Nettoyage d’une ancienne photo d’instrument à reprendre.');
+            }
+        } catch (Throwable) {
+            Log::warning('Nettoyage d’une ancienne photo d’instrument à reprendre.');
+        }
     }
 }

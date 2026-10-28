@@ -10,11 +10,15 @@ use App\Models\Instrument;
 use App\Models\InstrumentMovement;
 use App\Models\InstrumentUnit;
 use App\Models\Member;
+use App\Models\Setting;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\ChoraleIdentity;
 use App\Services\InstrumentIdentity;
 use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
@@ -45,12 +49,58 @@ class InstrumentLabelsTest extends TestCase
         $ids = $instrument->units()->pluck('id')->all();
         $codes = $instrument->units()->pluck('inventory_code')->all();
         $response = $this->post(route('instruments.labels'), ['units' => $ids, 'start' => 24]);
-        $response->assertOk()->assertHeader('Cache-Control', 'no-store, private')->assertSee('@page{size:A4', false)->assertSee('<svg', false)->assertDontSee('<!DOCTYPE svg', false);
+        $response->assertOk()->assertHeader('Cache-Control', 'no-store, private')->assertSee('@page{size:A4', false)->assertSee('<svg', false)->assertDontSee('<!DOCTYPE svg', false)->assertDontSee('Un objet · un code permanent');
         $this->assertSame(2, substr_count($response->getContent(), '<main class="sheet"'));
         foreach ($codes as $code) {
             $response->assertSee($code);
         }
         $this->assertSame(2, InstrumentUnit::count());
+    }
+
+    public function test_print_uses_the_current_tenants_logo_as_a_watermark(): void
+    {
+        Storage::fake('local');
+        config(['private-files.driver' => 'local']);
+        $this->actingAs(User::factory()->role(UserRole::Admin)->create());
+        $path = 'chorale/logo.png';
+        Storage::disk('local')->put($path, 'logo-fictif');
+        Setting::set(ChoraleIdentity::KEY_LOGO_PATH, $path);
+        $instrument = Instrument::factory()->create(['quantity' => 1]);
+        app(InstrumentIdentity::class)->generate($instrument->id);
+
+        $this->post(route('instruments.labels'), ['units' => [$instrument->units()->value('id')], 'start' => 1])
+            ->assertOk()
+            ->assertSee('class="watermark"', false)
+            ->assertDontSee('Un objet · un code permanent');
+    }
+
+    public function test_instrument_image_is_private_and_can_be_replaced(): void
+    {
+        Storage::fake('local');
+        config(['private-files.driver' => 'local']);
+        $admin = User::factory()->role(UserRole::Admin)->create();
+        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZrC8AAAAASUVORK5CYII=');
+        $first = UploadedFile::fake()->createWithContent('piano.png', $png);
+
+        Livewire::actingAs($admin)->test(Form::class)
+            ->set('name', 'Piano numérique')
+            ->set('quantity', '1')
+            ->set('image', $first)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $instrument = Instrument::firstOrFail();
+        $oldPath = $instrument->image_path;
+        Storage::disk('local')->assertExists($oldPath);
+        $this->actingAs($admin)->get(route('instruments.image', $instrument))->assertOk()->assertHeader('Cache-Control', 'no-store, private');
+
+        Livewire::actingAs($admin)->test(Form::class, ['instrument' => $instrument])
+            ->set('image', UploadedFile::fake()->createWithContent('nouveau.png', $png))
+            ->call('save')
+            ->assertHasNoErrors();
+
+        Storage::disk('local')->assertMissing($oldPath);
+        Storage::disk('local')->assertExists($instrument->fresh()->image_path);
     }
 
     public function test_retirement_and_reactivation_preserve_codes_and_stock_and_never_reuse_codes(): void

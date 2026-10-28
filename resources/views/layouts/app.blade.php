@@ -45,7 +45,7 @@
             <main id="contenu" tabindex="-1"
                 class="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 focus:outline-none sm:px-6 lg:px-8 lg:py-8">
                 <x-accessibility-help />
-                @if(config('tenancy.enabled') && !request()->attributes->get('tenant')?->paid_perpetual && request()->attributes->get('tenant')?->trial_ends_at?->isFuture() && !request()->attributes->get('tenant')?->paid_until?->isFuture())
+                @if(config('tenancy.enabled') && request()->attributes->get('tenant')?->isTrialing())
                     <div class="mb-5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
                         <span>Essai gratuit · fin le {{ request()->attributes->get('tenant')->trial_ends_at->timezone(config('app.timezone'))->format('d/m/Y à H:i') }}</span>
                         <a href="{{ route('billing.show') }}" class="font-semibold underline">Mon accès</a>

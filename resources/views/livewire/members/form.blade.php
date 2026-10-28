@@ -5,7 +5,7 @@
     @else
     <form wire:submit="save" class="space-y-5">
         <x-validation-summary />
-        @if((bool) $member)<p class="rounded-xl bg-sky-50 p-4 text-sm text-sky-900">Seul le choriste peut modifier ses informations personnelles dans Mon profil. Vous pouvez gérer sa voix, son pupitre et sa situation dans la chorale.</p>@endif
+        @if((bool) $member)<p class="rounded-xl bg-sky-50 p-4 text-sm text-sky-900">Seul le choriste peut modifier ses informations personnelles dans Mon profil. La direction peut gérer sa voix, son pupitre, son statut, sa chorale et sa date d’adhésion.</p>@endif
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
                 <x-input-label for="members-form-first_name" value="Prénom" />
@@ -97,13 +97,18 @@
         <div class="grid gap-4 sm:grid-cols-3">
             <div>
                 <x-input-label for="members-form-choir_id" value="Chorale" />
-                <select id="members-form-choir_id" aria-describedby="members-form-choir_id-error" aria-invalid="{{ $errors->has('choir_id') ? 'true' : 'false' }}" wire:model="choir_id"
-                    class="form-select mt-1">
-                    <option value="">—</option>
-                    @foreach ($this->choirs as $choir)
-                        <option value="{{ $choir->id }}">{{ $choir->name }}</option>
-                    @endforeach
-                </select>
+                @if($this->choirs->count() === 1)
+                    <div id="members-form-choir_id" class="form-input mt-1 bg-slate-50 text-slate-700" aria-describedby="members-form-choir_id-help">{{ $this->choirs->first()->name }}</div>
+                    <p id="members-form-choir_id-help" class="mt-1 text-xs text-slate-500">La chorale de cet espace est sélectionnée automatiquement.</p>
+                @else
+                    <select id="members-form-choir_id" aria-describedby="members-form-choir_id-error" aria-invalid="{{ $errors->has('choir_id') ? 'true' : 'false' }}" wire:model="choir_id"
+                        class="form-select mt-1">
+                        <option value="">—</option>
+                        @foreach ($this->choirs as $choir)
+                            <option value="{{ $choir->id }}">{{ $choir->name }}</option>
+                        @endforeach
+                    </select>
+                @endif
                 <x-input-error id="members-form-choir_id-error" :messages="$errors->get('choir_id')" class="mt-1" />
             </div>
 

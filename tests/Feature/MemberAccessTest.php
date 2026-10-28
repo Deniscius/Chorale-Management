@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserRole;
 use App\Livewire\Members\Access;
 use App\Livewire\Members\Form;
+use App\Models\Choir;
 use App\Models\Member;
 use App\Models\MemberInvitation;
 use App\Models\User;
@@ -40,6 +41,7 @@ class MemberAccessTest extends TestCase
             ->assertDontSeeHtml('name="password"')->assertDontSeeHtml('name="username"')
             ->set('role', 'secretaire')->call('save')->assertHasNoErrors();
         $this->assertNotEmpty($component->get('activationLink'));
+        $component->assertSee('Copier le lien')->assertSee('Copiez maintenant ce lien');
         $this->assertNull($member->fresh()->user);
         $this->assertDatabaseHas('member_invitations', ['member_id' => $member->id, 'role' => 'secretaire']);
     }
@@ -53,6 +55,21 @@ class MemberAccessTest extends TestCase
         $this->assertSame(1, User::count());
         $component->call('save');
         $this->assertSame(1, Member::count());
+    }
+
+    public function test_new_member_uses_the_current_spaces_only_choir_automatically(): void
+    {
+        $admin = User::factory()->role(UserRole::Admin)->create();
+        $choir = Choir::factory()->create(['name' => 'Chœur Magnificat']);
+
+        Livewire::actingAs($admin)->test(Form::class)
+            ->assertSet('choir_id', $choir->id)
+            ->set('first_name', 'Ama')
+            ->set('last_name', 'Kossi')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame($choir->id, Member::where('last_name', 'Kossi')->firstOrFail()->choir_id);
     }
 
     public function test_non_admin_cannot_issue_access_or_modify_roles(): void

@@ -8,7 +8,7 @@ use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Activity;
 use App\Models\Choir;
-use App\Models\Member;
+use App\Models\ChoirCommission;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -41,8 +41,8 @@ class Form extends Component
     #[Validate('nullable|string|max:255')]
     public ?string $venue = null;
 
-    #[Validate('nullable|exists:members,id')]
-    public ?string $organizer_id = null;
+    #[Validate('required|exists:choir_commissions,id')]
+    public ?string $choir_commission_id = null;
 
     #[Validate('nullable|exists:choirs,id')]
     public ?string $choir_id = null;
@@ -85,7 +85,7 @@ class Form extends Component
                 'starts_at' => $activity->starts_at?->format('Y-m-d H:i'),
                 'ends_at' => $activity->ends_at?->format('Y-m-d H:i'),
                 'venue' => $activity->venue,
-                'organizer_id' => $activity->organizer_id,
+                'choir_commission_id' => $activity->choir_commission_id,
                 'choir_id' => $activity->choir_id,
                 'budget_allocated' => $activity->budget_allocated,
                 'budget_spent' => $activity->budget_spent,
@@ -96,6 +96,11 @@ class Form extends Component
         } else {
             $this->starts_at = now()->addWeek()->format('Y-m-d H:i');
             $this->choir_id = Choir::query()->value('id');
+            $this->choir_commission_id = ChoirCommission::query()
+                ->whereNull('archived_at')
+                ->orderByRaw("CASE WHEN module_key = 'activites' THEN 0 ELSE 1 END")
+                ->orderBy('name')
+                ->value('id');
         }
     }
 
@@ -112,7 +117,8 @@ class Form extends Component
             'starts_at' => $this->starts_at,
             'ends_at' => $this->ends_at ?: null,
             'venue' => $this->venue,
-            'organizer_id' => $this->organizer_id !== null && $this->organizer_id !== '' ? (int) $this->organizer_id : null,
+            'organizer_id' => null,
+            'choir_commission_id' => (int) $this->choir_commission_id,
             'choir_id' => $this->choir_id !== null && $this->choir_id !== '' ? (int) $this->choir_id : null,
             'budget_allocated' => $this->budget_allocated !== null && $this->budget_allocated !== '' ? (float) $this->budget_allocated : 0,
             'budget_spent' => $this->budget_spent !== null && $this->budget_spent !== '' ? (float) $this->budget_spent : 0,
@@ -134,12 +140,15 @@ class Form extends Component
     }
 
     #[Computed]
-    public function organizers()
+    public function commissions()
     {
-        return Member::query()
-            ->where('status', 'actif')
-            ->orderBy('last_name')
-            ->orderBy('first_name')
+        return ChoirCommission::query()
+            ->where(fn ($query) => $query->whereNull('archived_at')->when(
+                $this->activity?->choir_commission_id,
+                fn ($query, $id) => $query->orWhere('id', $id),
+            ))
+            ->orderByRaw("CASE WHEN module_key = 'activites' THEN 0 ELSE 1 END")
+            ->orderBy('name')
             ->get();
     }
 

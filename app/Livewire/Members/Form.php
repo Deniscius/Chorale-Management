@@ -111,6 +111,7 @@ class Form extends Component
             ]);
         } else {
             $this->joined_on = now()->format('Y-m-d');
+            $this->choir_id = Choir::query()->value('id');
         }
     }
 
@@ -145,11 +146,12 @@ class Form extends Component
         if ($this->member) {
             $current = Member::findOrFail($this->member->id);
             $personalFields = PersonalInformationObserver::MEMBER_FIELDS;
-            foreach (Arr::only($data, $personalFields) as $field => $value) {
+            foreach (Arr::except(Arr::only($data, $personalFields), ['notify_email', 'notify_sms']) as $field => $value) {
                 $original = $field === 'birth_date' ? $current->birth_date?->format('Y-m-d') : $current->getAttribute($field);
                 abort_unless($original === $value || (blank($original) && blank($value)), 403, 'Les informations personnelles se modifient dans Mon profil.');
             }
-            $this->member->update(Arr::except($data, $personalFields));
+            $current->update(Arr::except($data, $personalFields));
+            $this->member = $current;
             $message = 'Choriste mis à jour.';
         } else {
             DB::transaction(function () use ($data) {

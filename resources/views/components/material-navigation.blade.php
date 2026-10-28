@@ -1,7 +1,7 @@
 <nav aria-label="Parcours du matériel" class="mb-5 grid gap-3 sm:grid-cols-3">
     @foreach ([
         ['route' => 'instruments.index', 'icon' => 'cube', 'label' => 'Voir le matériel', 'help' => 'Voir le matériel. Consultez les fiches et les quantités. Une fiche peut contenir plusieurs objets identiques.'],
-        ['route' => 'instruments.units', 'icon' => 'archive', 'label' => 'Préparer les étiquettes', 'help' => 'Préparer les étiquettes. Chaque objet a son propre numéro et son propre code permanent. Sélectionnez les objets, puis préparez la feuille à imprimer.'],
+        ['route' => 'instruments.units', 'icon' => 'archive', 'label' => 'Préparer les étiquettes', 'help' => 'Sélectionnez les objets, puis préparez la feuille d’étiquettes à imprimer.'],
         ['route' => 'instruments.movements', 'icon' => 'folder', 'label' => 'Suivre les prêts et retours', 'help' => 'Suivre les prêts et retours. Consultez les mouvements du matériel. Seules les personnes autorisées peuvent enregistrer un prêt ou un retour.'],
     ] as $item)
         <div class="rounded-2xl border border-slate-200 bg-white p-3">

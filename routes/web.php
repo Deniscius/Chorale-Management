@@ -7,6 +7,7 @@ use App\Http\Controllers\ChoraleLogoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentDownloadController;
 use App\Http\Controllers\DocumentPreviewController;
+use App\Http\Controllers\InstrumentImageController;
 use App\Http\Controllers\InstrumentLabelsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TenantAddressController;
@@ -110,6 +111,7 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
 
     Route::get('/instruments/articles', Units::class)->middleware('module:'.UserRole::MODULE_INSTRUMENTS)->name('instruments.units');
     Route::post('/instruments/etiquettes', InstrumentLabelsController::class)->middleware(['module:'.UserRole::MODULE_INSTRUMENTS, 'throttle:30,1'])->name('instruments.labels');
+    Route::get('/instruments/{instrument}/image', InstrumentImageController::class)->middleware('module:'.UserRole::MODULE_INSTRUMENTS)->name('instruments.image');
 
     // Commission des instruments
     Route::get('/instruments', InstrumentsIndex::class)

@@ -6,6 +6,7 @@ use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ChoirCommission extends Model
 {
@@ -36,6 +37,11 @@ class ChoirCommission extends Model
     public function instrumentAssociates(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'instrument_commission_associates');
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(Activity::class);
     }
 
     public function scopeInStatus(Builder $query, string $status): void

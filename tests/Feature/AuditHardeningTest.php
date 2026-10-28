@@ -224,6 +224,24 @@ class AuditHardeningTest extends TestCase
         Livewire::actingAs($admin)->test(Index::class)->set('action', 'created')->assertSee('Création');
     }
 
+    public function test_audit_screen_tolerates_legacy_and_nested_change_values(): void
+    {
+        $admin = User::factory()->role(UserRole::Admin)->create();
+        AuditEvent::create([
+            'actor_id' => $admin->id,
+            'subject_type' => User::class,
+            'subject_id' => $admin->id,
+            'action' => 'updated',
+            'changes' => ['legacy_field' => ['ancienne', 'valeur']],
+            'created_at' => now(),
+        ]);
+
+        $this->actingAs($admin)->get(route('audit.index'))
+            ->assertOk()
+            ->assertSee('legacy_field')
+            ->assertSee('[&quot;ancienne&quot;,&quot;valeur&quot;]', false);
+    }
+
     public function test_saving_notes_without_payment_preserves_last_payment_date(): void
     {
         $ledger = app(ReceiptLedger::class);

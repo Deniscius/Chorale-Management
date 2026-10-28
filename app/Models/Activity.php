@@ -28,6 +28,7 @@ class Activity extends Model
         'ends_at',
         'venue',
         'organizer_id',
+        'choir_commission_id',
         'budget_allocated',
         'budget_spent',
         'status',
@@ -57,6 +58,11 @@ class Activity extends Model
     public function organizer(): BelongsTo
     {
         return $this->belongsTo(Member::class, 'organizer_id');
+    }
+
+    public function commission(): BelongsTo
+    {
+        return $this->belongsTo(ChoirCommission::class, 'choir_commission_id');
     }
 
     public function author(): BelongsTo

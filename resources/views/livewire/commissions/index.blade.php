@@ -24,6 +24,7 @@
                 <p class="mt-2 line-clamp-3 break-words text-sm text-slate-600">{{ $commission->mission }}</p>
                 <p class="mt-4 text-sm text-slate-500">{{ $commission->starts_on->format('d/m/Y') }} → {{ $commission->ends_on?->format('d/m/Y') ?? 'Sans échéance' }}</p>
                 <p class="mt-1 text-sm font-medium">{{ $commission->members_count }} choriste(s)</p>
+                @if($commission->activities_count)<p class="mt-1 text-sm text-slate-600">{{ $commission->activities_count }} activité(s) organisée(s)</p>@endif
                 <p class="mt-2 text-sm text-slate-600">Responsable : <span class="font-medium">{{ $commission->leader?->name ?? 'À désigner' }}</span></p>
                 @if($commission->module_key)<p class="mt-1 text-xs text-slate-500">{{ \App\Models\ChoirCommission::moduleLabels()[$commission->module_key] ?? '' }}</p>@endif
                 <div class="mt-auto flex flex-wrap gap-2 border-t border-slate-100 pt-4 mt-4">
@@ -72,7 +73,9 @@
                 @if($detail->module_key && $detail->status === 'active' && auth()->user()->canAccessModule($detail->module_key))
                     <section class="rounded-xl bg-sky-50 p-4"><h3 class="font-semibold text-sky-950">Fonctionnalités de la commission</h3><p class="mt-1 text-sm text-sky-900">{{ auth()->user()->canManageModule($detail->module_key) ? 'Vous pouvez consulter et gérer ce module.' : 'Vous disposez d’un accès en consultation.' }}</p><div class="mt-3 flex flex-wrap gap-2">@foreach($detail->featureLinks() as $route => $label)<a href="{{ route($route) }}" class="btn btn-secondary">{{ $label }}</a>@endforeach</div></section>
                 @elseif($detail->module_key)<p class="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">L’accès aux fonctionnalités dépend de votre affectation et des dates de mission.</p>@endif
-                <p class="whitespace-pre-line break-words text-slate-700">{{ $detail->mission }}</p><p class="text-sm text-slate-500">Du {{ $detail->starts_on->format('d/m/Y') }} {{ $detail->ends_on ? 'au '.$detail->ends_on->format('d/m/Y') : '· Sans échéance' }} · {{ \App\Models\ChoirCommission::statuses()[$detail->status] }}</p><h3 class="font-semibold">Choristes affectés ({{ $detail->members->count() }})</h3><ul class="grid gap-2 sm:grid-cols-2">@forelse($detail->members as $member)<li class="rounded-lg bg-slate-50 p-3 text-sm">{{ $member->full_name }}</li>@empty<li class="text-sm text-slate-500">L’équipe sera constituée par la directrice.</li>@endforelse</ul></div>
+                <p class="whitespace-pre-line break-words text-slate-700">{{ $detail->mission }}</p><p class="text-sm text-slate-500">Du {{ $detail->starts_on->format('d/m/Y') }} {{ $detail->ends_on ? 'au '.$detail->ends_on->format('d/m/Y') : '· Sans échéance' }} · {{ \App\Models\ChoirCommission::statuses()[$detail->status] }}</p>
+                @if($detail->activities->isNotEmpty())<section><h3 class="font-semibold">Activités organisées</h3><ul class="mt-2 space-y-2">@foreach($detail->activities as $activity)<li class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 p-3 text-sm"><span class="font-medium">{{ $activity->title }}</span><time class="text-slate-500">{{ $activity->starts_at->format('d/m/Y') }}</time></li>@endforeach</ul></section>@endif
+                <h3 class="font-semibold">Choristes affectés ({{ $detail->members->count() }})</h3><ul class="grid gap-2 sm:grid-cols-2">@forelse($detail->members as $member)<li class="rounded-lg bg-slate-50 p-3 text-sm">{{ $member->full_name }}</li>@empty<li class="text-sm text-slate-500">L’équipe sera constituée par la directrice.</li>@endforelse</ul></div>
         </x-modal-panel>
     @endif
 </div>

@@ -80,7 +80,9 @@ try {
         .click();
     await member
         .getByRole('status')
-        .filter({ hasText: 'Vos informations ont été enregistrées.' })
+        .filter({
+            hasText: 'Vos informations personnelles ont été enregistrées.',
+        })
         .waitFor();
     assert.equal(
         await member

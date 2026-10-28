@@ -13,9 +13,12 @@ use App\Http\Controllers\InstrumentLabelsController;
 use App\Http\Controllers\LetterheadFileController;
 use App\Http\Controllers\LetterheadSampleController;
 use App\Http\Controllers\LetterheadUploadController;
+use App\Http\Controllers\MemberPhotoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TenantAddressController;
 use App\Http\Controllers\TenantRegistrationController;
+use App\Http\Controllers\VoiceResourceAudioController;
+use App\Http\Controllers\VoiceSpaceController;
 use App\Http\Middleware\TenantAddress;
 use App\Livewire\Activities\Index as ActivitiesIndex;
 use App\Livewire\Attendance\FinancialReport as AttendanceFinancialReport;
@@ -83,6 +86,17 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/oeuvres', WorksIndex::class)
         ->middleware('module:'.UserRole::MODULE_LITURGIQUE)
         ->name('works.index');
+
+    Route::get('/mon-pupitre', [VoiceSpaceController::class, 'index'])
+        ->middleware('module:'.UserRole::MODULE_LITURGIQUE)->name('voice-space.index');
+    Route::post('/mon-pupitre', [VoiceSpaceController::class, 'store'])
+        ->middleware(['module:'.UserRole::MODULE_LITURGIQUE, 'throttle:20,1'])->name('voice-space.store');
+    Route::patch('/mon-pupitre/{resource}', [VoiceSpaceController::class, 'update'])
+        ->middleware(['module:'.UserRole::MODULE_LITURGIQUE, 'throttle:30,1'])->name('voice-space.update');
+    Route::delete('/mon-pupitre/{resource}', [VoiceSpaceController::class, 'destroy'])
+        ->middleware(['module:'.UserRole::MODULE_LITURGIQUE, 'throttle:30,1'])->name('voice-space.destroy');
+    Route::get('/mon-pupitre/{resource}/audio', VoiceResourceAudioController::class)
+        ->middleware('module:'.UserRole::MODULE_LITURGIQUE)->name('voice-space.audio');
 
     Route::get('/repetitions', RehearsalsIndex::class)
         ->middleware('module:'.UserRole::MODULE_LITURGIQUE)
@@ -198,6 +212,9 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/photo', [MemberPhotoController::class, 'store'])->middleware('throttle:10,1')->name('profile.photo.store');
+    Route::get('/profile/photo', [MemberPhotoController::class, 'show'])->name('profile.photo.show');
+    Route::delete('/profile/photo', [MemberPhotoController::class, 'destroy'])->middleware('throttle:10,1')->name('profile.photo.destroy');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 

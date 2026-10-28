@@ -7,6 +7,7 @@
             'items' => [
                 ['route' => 'dashboard', 'label' => 'Tableau de bord', 'icon' => 'home'],
                 ['route' => 'profile.edit', 'label' => 'Mes informations', 'icon' => 'user'],
+                ['route' => 'voice-space.index', 'label' => 'Mon pupitre', 'icon' => 'music', 'module' => UserRole::MODULE_LITURGIQUE],
             ],
         ],
         [

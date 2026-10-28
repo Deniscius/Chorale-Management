@@ -21,6 +21,7 @@ use App\Models\RehearsalAttendance;
 use App\Models\Reminder;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\VoiceResource;
 use App\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Model;
 
@@ -41,6 +42,7 @@ final class AuditObserver
             Transaction::class => ['reference', 'type', 'amount', 'transaction_date', 'status', 'budget_id', 'member_id', 'validated_by'],
             Reminder::class => ['status', 'attempts'],
             LetterheadTemplate::class => ['original_name', 'status', 'header_height_mm', 'activated_at'],
+            VoiceResource::class => ['voice', 'title', 'audio_original_name', 'audio_size'],
             AttendanceRule::class => ['financial_tracking_enabled', 'rehearsal_absence_amount', 'activity_absence_amount', 'late_amount', 'late_threshold_minutes', 'effective_from'],
             AttendanceIncident::class => ['member_id', 'source_type', 'incident_type', 'minutes_late', 'amount', 'status', 'reviewed_by', 'reviewed_at', 'review_note'],
             Rehearsal::class, Activity::class => ['attendance_finalized_at', 'attendance_finalized_by'],

@@ -24,6 +24,7 @@ use App\Models\RehearsalAttendance;
 use App\Models\Reminder;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\VoiceResource;
 use App\Observers\AuditObserver;
 use App\Observers\PersonalInformationObserver;
 use App\Services\Ai\AiClient;
@@ -109,7 +110,7 @@ class AppServiceProvider extends ServiceProvider
         // composant Livewire) pour que les interactions x-data de la coque restent actives.
         app('livewire')->forceAssetInjection();
         Livewire::addPersistentMiddleware([EnsureModuleAccess::class, AuthenticateChoraleSession::class]);
-        foreach ([FinancialType::class, MemberInvitation::class, CommissionTeam::class, User::class, Document::class, Donation::class, Contribution::class, Budget::class, Transaction::class, Reminder::class, LetterheadTemplate::class, AttendanceRule::class, AttendanceIncident::class, Rehearsal::class, RehearsalAttendance::class, Activity::class, ActivityParticipant::class] as $model) {
+        foreach ([FinancialType::class, MemberInvitation::class, CommissionTeam::class, User::class, Document::class, Donation::class, Contribution::class, Budget::class, Transaction::class, Reminder::class, LetterheadTemplate::class, VoiceResource::class, AttendanceRule::class, AttendanceIncident::class, Rehearsal::class, RehearsalAttendance::class, Activity::class, ActivityParticipant::class] as $model) {
             $model::observe(AuditObserver::class);
         }
 

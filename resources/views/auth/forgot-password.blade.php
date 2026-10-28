@@ -6,9 +6,6 @@
         Indiquez l'adresse e-mail de votre compte : nous vous enverrons un lien permettant de choisir un nouveau mot de passe.
     </p>
 
-    <!-- Session Status -->
-    <x-auth-session-status class="mt-4 mb-4" :status="session('status')" />
-
     <form method="POST" action="{{ route('password.email') }}" class="mt-6 space-y-5">
         @csrf
 

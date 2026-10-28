@@ -1,8 +1,5 @@
 <section id="papier-entete" class="mt-8 scroll-mt-20" @if($isProcessing) wire:poll.3s @endif>
     <x-card title="Papier à en-tête officiel" subtitle="Importez un document Word ou PDF. L’en-tête est isolé pour cette chorale et appliqué aux documents générés.">
-        @if(session('letterhead_success'))
-            <div role="status" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-900">{{ session('letterhead_success') }}</div>
-        @endif
         <form method="POST" action="{{ route('settings.letterheads.upload') }}" enctype="multipart/form-data" class="grid gap-4 md:grid-cols-[1fr_12rem_auto] md:items-end" x-data="{ fileName: '' }">
             @csrf
             <div>

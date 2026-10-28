@@ -11,6 +11,11 @@ export function actionPresentation(action) {
 }
 
 export function initializePlatform(root = document) {
+    root.querySelectorAll('[data-notification-close]').forEach(button => {
+        if (button.dataset.bound) return;
+        button.dataset.bound = 'true';
+        button.addEventListener('click', () => button.closest('[data-notification-popup]')?.remove());
+    });
     root.querySelectorAll('[data-password-toggle]').forEach(button => {
         const input = root.getElementById(button.dataset.passwordToggle);
         if (!input || button.dataset.bound) return;

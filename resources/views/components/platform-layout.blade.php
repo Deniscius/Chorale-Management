@@ -28,7 +28,6 @@
         <div class="p-workspace">
             <header class="p-topbar"><p class="p-breadcrumb">Administration <span>/</span> <strong>{{ $title }}</strong></p><div class="p-topbar-right"><span class="p-session"><x-icon name="lock" />Session protégée</span><form method="POST" action="{{ route('platform.logout') }}">@csrf<button class="p-btn" type="submit"><x-icon name="logout" />Déconnexion</button></form></div></header>
             <main id="contenu" class="p-main">
-                @if(session('status'))<p role="status" class="p-alert"><x-icon name="check-circle" />{{ session('status') }}</p>@endif
                 @if($errors->any())<div role="alert" class="p-alert p-alert-error"><x-icon name="warning" /><div><strong>Vérifiez les informations saisies.</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div></div>@endif
                 {{ $slot }}
             </main>
@@ -36,5 +35,6 @@
         </div>
     </div>
     @endif
+    @include('layouts.platform-notifications')
 </body>
 </html>

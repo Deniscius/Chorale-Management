@@ -33,16 +33,6 @@
 
         <div class="flex items-center gap-4">
             <x-primary-button class="bg-slate-900 hover:bg-slate-700 focus:bg-slate-700">Enregistrer</x-primary-button>
-
-            @if (session('status') === 'password-updated')
-                <p
-                    x-data="{ show: true }"
-                    x-show="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-emerald-600"
-                >Enregistré.</p>
-            @endif
         </div>
     </form>
 </section>

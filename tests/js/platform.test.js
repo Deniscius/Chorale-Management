@@ -19,13 +19,24 @@ function fixture() {
     const hint = node({ textContent: '' });
     const submit = node({ disabled: false });
     const form = node({ querySelector: () => submit });
+    const popup = node({ removed: false, remove() { this.removed = true; } });
+    const close = node({ closest: () => popup });
     const root = {
         getElementById: () => password,
         querySelector: selector => ({ '[data-access-action]': select, '[data-access-days]': field, '[data-access-hint]': hint })[selector],
-        querySelectorAll: selector => ({ '[data-password-toggle]': [toggle], '[data-platform-submit]': [form] })[selector] ?? [],
+        querySelectorAll: selector => ({ '[data-notification-close]': [close], '[data-password-toggle]': [toggle], '[data-platform-submit]': [form] })[selector] ?? [],
     };
-    return { root, password, toggle, select, days, field, hint, submit, form };
+    return { root, password, toggle, select, days, field, hint, submit, form, popup, close };
 }
+
+test('platform notification popups can be dismissed without binding twice', () => {
+    const f = fixture();
+    initializePlatform(f.root);
+    initializePlatform(f.root);
+    assert.equal(f.close.handlers.click.length, 1);
+    f.close.fire('click');
+    assert.equal(f.popup.removed, true);
+});
 
 test('password visibility updates accessible state without changing the secret or binding twice', () => {
     const f = fixture();

@@ -7,7 +7,6 @@
         </aside>
         <main id="contenu" class="p-auth-content"><div class="p-auth-card">
             <div class="p-auth-lock"><x-icon name="lock" /></div><p class="p-kicker">Accès propriétaire</p><h1>Connectez-vous<br>à votre espace.</h1><p class="p-description">Retrouvez le pilotage de votre plateforme avec vos identifiants et votre code de sécurité.</p>
-            @if(session('status'))<div role="status" class="p-alert" style="margin-bottom:20px">{{ session('status') }}</div>@endif
             @if($errors->any())<div role="alert" class="p-alert p-alert-error" style="margin-bottom:20px"><x-icon name="warning" /><div>@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div></div>@endif
             <form action="{{ route('platform.login.store') }}" method="POST" class="p-form" data-platform-submit>
                 @csrf

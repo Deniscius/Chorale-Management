@@ -23,6 +23,12 @@ document.addEventListener('livewire:init', () => {
             if (status === 402) {
                 preventDefault();
                 window.location.assign(document.querySelector('meta[name="billing-url"]')?.content || '/abonnement');
+            } else if (status === 419) {
+                preventDefault();
+                window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'warning', message: 'Votre session a expiré. Rechargez la page avant de recommencer.' } }));
+            } else if (status === 0 || status >= 500) {
+                preventDefault();
+                window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', message: 'L’action n’a pas pu aboutir. Vérifiez votre connexion puis réessayez.' } }));
             }
         });
     });

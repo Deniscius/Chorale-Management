@@ -43,7 +43,6 @@
         </fieldset>
         <div class="flex flex-wrap items-center gap-4">
             <x-primary-button class="max-w-full whitespace-normal">Enregistrer mes informations</x-primary-button>
-            @if(session('status') === 'profile-updated')<p role="status" class="text-sm font-medium text-emerald-700">Vos informations ont été enregistrées.</p>@endif
         </div>
     </form>
     @endif

@@ -116,6 +116,7 @@
             </div>
         </main>
     </div>
+    @include('layouts.toasts')
 </body>
 
 </html>

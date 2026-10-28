@@ -7,12 +7,6 @@
         activer une licence payante. Demandez un lien, puis ouvrez-le depuis votre boîte mail.
     </p>
 
-    @if (session('status') == 'verification-link-sent')
-        <div class="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-            Un nouveau lien de vérification a été envoyé à l'adresse e-mail que vous avez indiquée lors de votre inscription.
-        </div>
-    @endif
-
     <div class="mt-6 flex items-center justify-between">
         <form method="POST" action="{{ route('verification.send') }}">
             @csrf

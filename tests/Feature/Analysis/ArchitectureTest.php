@@ -46,6 +46,8 @@ class ArchitectureTest extends TestCase
         'tenant.login',
         'member-activation.show',
         'member-activation.store',
+        // Authentification machine OIDC GitHub, vérifiée par son test dédié.
+        'internal.reminders.run',
     ];
 
     public function test_personal_addresses_have_tenant_checks_and_initial_setup_is_rate_limited(): void

@@ -10,11 +10,20 @@
             <label for="website">Laisser ce champ vide</label>
             <input id="website" name="website" type="text" value="" tabindex="-1" autocomplete="off">
         </div>
+        @if($churchProjectEnabled)
+        <div>
+            <x-input-label for="invitation" value="Invitation Church Project" />
+            <x-text-input id="invitation" name="invitation" :value="old('invitation', request('invitation'))" class="mt-1 block w-full font-mono" required minlength="40" maxlength="200" autocomplete="off" autofocus />
+            <p class="mt-1 text-xs text-slate-500">Ce code à usage unique est fourni par votre paroisse depuis Church Project.</p>
+            <x-input-error :messages="$errors->get('invitation')" class="mt-1" />
+        </div>
+        @else
         <div>
             <x-input-label for="organization" value="Nom de votre chorale" />
             <x-text-input id="organization" name="organization" :value="old('organization')" class="mt-1 block w-full" required maxlength="120" autocomplete="organization" autofocus />
             <x-input-error :messages="$errors->get('organization')" class="mt-1" />
         </div>
+        @endif
         <div>
             <x-input-label for="name" value="Votre nom" />
             <x-text-input id="name" name="name" :value="old('name')" class="mt-1 block w-full" required maxlength="120" autocomplete="name" />

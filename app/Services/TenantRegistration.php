@@ -16,7 +16,13 @@ final class TenantRegistration
     public function create(array $data): User
     {
         return DB::transaction(function () use ($data) {
-            $tenant = new Tenant(['name' => $data['organization'], 'slug' => Str::slug($data['organization']).'-'.Str::lower(Str::random(10))]);
+            $tenant = new Tenant([
+                'name' => $data['organization'],
+                'slug' => Str::slug($data['organization']).'-'.Str::lower(Str::random(10)),
+                'church_project_chorale_id' => $data['church_project_chorale_id'] ?? null,
+                'church_project_paroisse_id' => $data['church_project_paroisse_id'] ?? null,
+                'church_project_doyenne_id' => $data['church_project_doyenne_id'] ?? null,
+            ]);
             $tenant->forceFill(['trial_started_at' => now(), 'trial_ends_at' => now()->addHours(72)])->save();
 
             return app(TenantContext::class)->run($tenant->id, function () use ($data) {

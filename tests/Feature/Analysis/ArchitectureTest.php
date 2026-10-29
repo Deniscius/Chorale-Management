@@ -92,9 +92,7 @@ class ArchitectureTest extends TestCase
                 continue;
             }
 
-            $authenticated = collect($route->middleware())->contains(fn (string $middleware) => in_array($middleware, ['auth', 'platform.auth'], true) || str_starts_with($middleware, 'integration.api:')
-            );
-            if (! $authenticated) {
+            if (! in_array('auth', $route->middleware(), true) && ! in_array('platform.auth', $route->middleware(), true)) {
                 $protegees[] = sprintf('%s (%s)', $nom, $route->uri());
             }
         }

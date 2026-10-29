@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 final class Tenant extends Model
 {
-    protected $fillable = ['name', 'slug'];
+    protected $fillable = ['name', 'slug', 'church_project_chorale_id', 'church_project_paroisse_id', 'church_project_doyenne_id'];
 
     protected static function booted(): void
     {

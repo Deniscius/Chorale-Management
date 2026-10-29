@@ -114,6 +114,7 @@ envVarGroups:
       - {key: MAIL_PORT, value: '587'}
       - {key: MAIL_FROM_NAME, value: Chorale Management}
       - {key: TENANCY_ENABLED, value: 'true'}
+      - {key: CHURCH_PROJECT_INTEGRATION_ENABLED, value: 'false'}
       - {key: TENANT_REGISTRATION_ENABLED, value: 'true'}
       - {key: REMINDERS_ENABLED, value: 'true'}
       - {key: REMINDERS_QUEUED, value: 'true'}

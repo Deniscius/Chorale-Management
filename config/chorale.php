@@ -17,6 +17,8 @@ return [
         'queued' => (bool) env('REMINDERS_QUEUED', true),
         'lease_minutes' => (int) env('REMINDERS_LEASE_MINUTES', 60),
         'days_before' => (int) env('REMINDERS_DAYS_BEFORE', 2),
+        'platform_days' => array_map('intval', explode(',', env('REMINDERS_PLATFORM_DAYS', '7,2,0'))),
+        'notebook_days' => (int) env('PERSONAL_NOTEBOOK_DAYS', 45),
         'send_at' => env('REMINDERS_SEND_AT', '08:00'),
         'oidc_audience' => env('REMINDERS_OIDC_AUDIENCE', 'chorale-management-reminders'),
         'oidc_repository' => env('REMINDERS_OIDC_REPOSITORY', 'Deniscius/Chorale-Management'),

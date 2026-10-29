@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Rehearsal;
 use App\Models\Tenant;
+use App\Services\PlatformReminderDispatcher;
 use App\Services\ReminderDispatcher;
 use App\Tenancy\TenantContext;
 use Illuminate\Console\Command;
@@ -23,12 +24,12 @@ class SendRehearsalReminders extends Command
         {--tenant= : Espace client à traiter (tous les espaces actifs par défaut)}
         {--rehearsal= : Ne traiter que la répétition indiquée (identifiant)}';
 
-    protected $description = 'Envoie les rappels de répétition par e-mail et par SMS';
+    protected $description = 'Envoie les rappels de la chorale et les échéances personnelles';
 
-    public function handle(ReminderDispatcher $dispatcher): int
+    public function handle(ReminderDispatcher $dispatcher, PlatformReminderDispatcher $platform): int
     {
         if (! TenantContext::isolated()) {
-            return $this->handleOne($dispatcher);
+            return $this->handleOne($dispatcher, $platform);
         }
         if ($this->option('rehearsal') && ! $this->option('tenant')) {
             $this->error('Précisez --tenant pour une répétition ciblée.');
@@ -39,14 +40,14 @@ class SendRehearsalReminders extends Command
         $exit = self::SUCCESS;
         foreach ($tenants as $tenant) {
             if ($tenant->hasAccess()) {
-                $exit = max($exit, app(TenantContext::class)->run($tenant->id, fn () => $this->handleOne($dispatcher)));
+                $exit = max($exit, app(TenantContext::class)->run($tenant->id, fn () => $this->handleOne($dispatcher, $platform)));
             }
         }
 
         return $exit;
     }
 
-    private function handleOne(ReminderDispatcher $dispatcher): int
+    private function handleOne(ReminderDispatcher $dispatcher, PlatformReminderDispatcher $platform): int
     {
         if (! config('chorale.reminders.enabled')) {
             $this->components->warn('Les rappels sont désactivés (REMINDERS_ENABLED=false).');
@@ -63,6 +64,7 @@ class SendRehearsalReminders extends Command
                 $result['rehearsals'] = 1;
             } else {
                 $result = $dispatcher->dispatchAll($dryRun);
+                $platformResult = $platform->dispatchAll($dryRun);
             }
         } catch (Throwable $exception) {
             $this->components->error($exception->getMessage());
@@ -79,6 +81,15 @@ class SendRehearsalReminders extends Command
             $result['failed'],
             $dryRun ? ' (simulation)' : '',
         ));
+
+        if (isset($platformResult)) {
+            $this->components->info(sprintf(
+                '%d rappel(s) transversal(aux) détecté(s) — %d envoyé(s), %d déjà traité(s), %d échec(s)%s.',
+                $platformResult['candidates'], $platformResult['sent'], $platformResult['skipped'], $platformResult['failed'],
+                $dryRun ? ' (simulation)' : '',
+            ));
+            $result['failed'] += $platformResult['failed'];
+        }
 
         return $result['failed'] > 0 ? self::FAILURE : self::SUCCESS;
     }

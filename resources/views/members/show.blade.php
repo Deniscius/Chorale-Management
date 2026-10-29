@@ -6,6 +6,25 @@
         </x-slot>
     </x-page-header>
 
+    <section class="mb-5 flex flex-col items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row">
+        <div class="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-white bg-slate-100 text-2xl font-bold text-slate-500 shadow">
+            @if($member->photo_path)
+                <img src="{{ route('members.photo', $member) }}" alt="Photo d’identité de {{ $member->full_name }}" class="h-full w-full object-cover" />
+            @else
+                {{ $member->initials }}
+            @endif
+        </div>
+        <div class="min-w-0 text-center sm:text-left">
+            <h2 class="text-xl font-bold text-slate-900">{{ $member->full_name }}</h2>
+            <p class="mt-1 text-sm text-slate-600">{{ $member->voice?->label() ?? 'Pupitre non renseigné' }}@if($member->part) · {{ $member->part }}@endif</p>
+            @if(auth()->user()->member_id === $member->id)
+                <a href="{{ route('profile.edit') }}" wire:navigate class="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-amber-700 hover:text-amber-900">
+                    <x-icon name="pencil" class="h-4 w-4" /> Modifier ma photo
+                </a>
+            @endif
+        </div>
+    </section>
+
     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Statut" :value="$member->status->label()" icon="user" color="slate" />
         <x-stat-card label="Pupitre" :value="$member->voice?->label() ?? 'Non renseigné'" icon="music" color="blue" />

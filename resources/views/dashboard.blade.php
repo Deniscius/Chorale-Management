@@ -8,6 +8,33 @@
 
     <x-welcome-actions />
 
+    @if($personalNotebook['member'])
+        <section class="mb-6 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-white shadow-sm">
+            <div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-amber-700">Mon carnet personnel</p>
+                    <h2 class="mt-1 text-lg font-bold text-slate-900">
+                        {{ $personalNotebook['timeline']->count() }} rendez-vous à venir
+                    </h2>
+                    <p class="mt-1 text-sm text-slate-600">
+                        @if($personalNotebook['timeline']->first())
+                            Prochain : {{ $personalNotebook['timeline']->first()['title'] }},
+                            {{ $personalNotebook['timeline']->first()['at']->diffForHumans() }}.
+                        @else
+                            Aucun rendez-vous prévu dans les prochains jours.
+                        @endif
+                        @if($personalNotebook['outstanding'] > 0)
+                            · {{ number_format($personalNotebook['outstanding'], 0, ',', ' ') }} FCFA à régulariser.
+                        @endif
+                    </p>
+                </div>
+                <a href="{{ route('personal-notebook.show') }}" wire:navigate class="btn btn-primary shrink-0">
+                    <x-icon name="calendar" class="h-4 w-4" /> Ouvrir mon carnet
+                </a>
+            </div>
+        </section>
+    @endif
+
     <details class="rounded-2xl border border-slate-200 bg-white p-4">
         <summary class="help-control cursor-pointer rounded-lg px-2 py-3 text-lg font-semibold text-slate-900">Voir les détails de la chorale</summary>
         <div class="mt-4">

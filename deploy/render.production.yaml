@@ -130,6 +130,8 @@ envVarGroups:
       - {key: CHURCH_PROJECT_INTEGRATION_ENABLED, value: 'false'}
       - {key: TENANT_REGISTRATION_ENABLED, value: 'true'}
       - {key: REMINDERS_ENABLED, value: 'true'}
+      - {key: REMINDERS_PLATFORM_DAYS, value: '7,2,0'}
+      - {key: PERSONAL_NOTEBOOK_DAYS, value: '45'}
       - {key: REMINDERS_QUEUED, value: 'true'}
       - {key: REMINDERS_SMS_ENABLED, value: 'false'}
       - {key: AI_ENABLED, value: 'false'}

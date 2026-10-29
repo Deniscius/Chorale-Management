@@ -24,7 +24,7 @@ final class MemberDossierTest extends TestCase
 
     public function test_chorister_sees_only_their_own_complete_dossier(): void
     {
-        $member = Member::factory()->active()->create(['first_name' => 'Alice', 'last_name' => 'Mensah']);
+        $member = Member::factory()->active()->create(['first_name' => 'Alice', 'last_name' => 'Mensah', 'photo_path' => 'tenants/1/members/1/identity/photo.png']);
         $other = Member::factory()->active()->create();
         $user = User::factory()->role(UserRole::Choriste)->create(['member_id' => $member->id]);
         $rehearsal = Rehearsal::factory()->create(['date' => today(), 'venue' => 'Salle A']);
@@ -37,8 +37,10 @@ final class MemberDossierTest extends TestCase
         ]);
 
         $this->actingAs($user)->get(route('members.show', $member))
-            ->assertOk()->assertSee('Alice Mensah')->assertSee('12 min de retard')->assertSee('5 000 FCFA');
+            ->assertOk()->assertSee('Alice Mensah')->assertSee('12 min de retard')->assertSee('5 000 FCFA')
+            ->assertSee(route('members.photo', $member), false)->assertSee('Modifier ma photo');
         $this->actingAs($user)->get(route('members.show', $other))->assertForbidden();
+        $this->actingAs($user)->get(route('members.photo', $other))->assertForbidden();
     }
 
     public function test_secretary_sees_attendance_but_not_financial_amounts(): void

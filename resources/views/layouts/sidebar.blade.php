@@ -6,6 +6,7 @@
             'label' => 'Pilotage',
             'items' => [
                 ['route' => 'dashboard', 'label' => 'Tableau de bord', 'icon' => 'home'],
+                ['route' => 'personal-notebook.show', 'label' => 'Mon carnet', 'icon' => 'calendar'],
                 ['route' => 'profile.edit', 'label' => 'Mes informations', 'icon' => 'user'],
                 ['route' => 'voice-space.index', 'label' => 'Mon pupitre', 'icon' => 'music', 'module' => UserRole::MODULE_LITURGIQUE],
             ],

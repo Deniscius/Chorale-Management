@@ -14,6 +14,7 @@ use App\Models\Performance;
 use App\Models\Rehearsal;
 use App\Models\Transaction;
 use App\Models\Work;
+use App\Services\PersonalNotebook;
 use App\Tenancy\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Cache;
@@ -34,11 +35,17 @@ class DashboardController extends Controller
         $modules = auth()->user()->accessibleModules();
         sort($modules);
 
-        return view('dashboard', Cache::flexible(
+        $overview = Cache::flexible(
             app(TenantContext::class)->key('dashboard.overview.v3.'.hash('sha256', implode('|', $modules))),
             [30, 120],
             fn (): array => app(TenantContext::class)->run($tenantId, fn () => $this->overview($modules)),
-        ));
+        );
+
+        // Ces données sont propres au compte connecté et ne doivent jamais
+        // rejoindre le cache partagé du tableau de bord de la chorale.
+        $overview['personalNotebook'] = app(PersonalNotebook::class)->for(auth()->user()->member, 4);
+
+        return view('dashboard', $overview);
     }
 
     /**

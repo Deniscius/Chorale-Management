@@ -17,6 +17,7 @@ use App\Http\Controllers\MemberDossierController;
 use App\Http\Controllers\MemberPhotoController;
 use App\Http\Controllers\MemberReportController;
 use App\Http\Controllers\NotificationCenterController;
+use App\Http\Controllers\PersonalNotebookController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\RunReminderSchedulerController;
@@ -88,6 +89,7 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::post('/abonnement/activer', [BillingController::class, 'activate'])->middleware('throttle:5,1,billing-activation:')->name('billing.activate');
     Route::post('/abonnement/actualiser', [BillingController::class, 'refresh'])->middleware('throttle:5,1,billing-refresh:')->name('billing.refresh');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/mon-carnet', PersonalNotebookController::class)->name('personal-notebook.show');
 
     Route::get('/commissions', App\Livewire\Commissions\Index::class)->middleware('module:'.UserRole::MODULE_MEMBERS)->name('commissions.index');
 
@@ -96,6 +98,7 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
         ->middleware('module:'.UserRole::MODULE_MEMBERS)
         ->name('members.index');
     Route::get('/membres/rapport/general', MemberReportController::class)->name('members.report');
+    Route::get('/membres/{member}/photo', [MemberPhotoController::class, 'member'])->name('members.photo');
     Route::get('/membres/{member}/dossier', MemberDossierController::class)->name('members.show');
 
     // Commission liturgique

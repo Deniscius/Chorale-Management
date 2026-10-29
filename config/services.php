@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'church_project' => [
+        'enabled' => (bool) env('CHURCH_PROJECT_INTEGRATION_ENABLED', false),
+        'url' => env('CHURCH_PROJECT_URL'),
+        'timeout' => (int) env('CHURCH_PROJECT_TIMEOUT', 8),
+    ],
+
 ];

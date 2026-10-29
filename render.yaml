@@ -38,6 +38,7 @@ services:
       - {key: MAIL_MAILER, value: log}
       - {key: MAIL_DELIVERY_ENABLED, value: 'false'}
       - {key: TENANCY_ENABLED, value: 'true'}
+      - {key: CHURCH_PROJECT_INTEGRATION_ENABLED, value: 'false'}
       - {key: TENANT_REGISTRATION_ENABLED, value: 'true'}
       - {key: REMINDERS_ENABLED, value: 'false'}
       - {key: REMINDERS_SMS_ENABLED, value: 'false'}

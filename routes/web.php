@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\UserRole;
-use App\Http\Controllers\ApiIntegrationController;
 use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BillingController;
@@ -205,12 +204,6 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/parametres/chorale', SettingsChorale::class)
         ->middleware('can:manage-settings')
         ->name('settings.chorale');
-    Route::get('/parametres/integrations-api', [ApiIntegrationController::class, 'index'])
-        ->middleware('can:manage-settings')->name('settings.api-integrations');
-    Route::post('/parametres/integrations-api', [ApiIntegrationController::class, 'store'])
-        ->middleware(['can:manage-settings', 'throttle:5,1'])->name('settings.api-integrations.store');
-    Route::delete('/parametres/integrations-api/{apiClient}', [ApiIntegrationController::class, 'destroy'])
-        ->middleware(['can:manage-settings', 'throttle:10,1'])->name('settings.api-integrations.destroy');
     Route::get('/parametres/chorale/papier-entete/exemple', LetterheadSampleController::class)
         ->middleware('can:manage-settings')->name('settings.letterheads.sample');
     Route::post('/parametres/chorale/papier-entete', LetterheadUploadController::class)

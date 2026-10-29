@@ -105,10 +105,6 @@ class AppServiceProvider extends ServiceProvider
             RateLimiter::for('reminder-'.$channel,
                 fn () => Limit::perMinute(60)->by(app(TenantContext::class)->key('reminder-'.$channel)));
         }
-        RateLimiter::for('api-integrations', fn ($request) => Limit::perMinute(120)->by(
-            'api-client:'.($request->attributes->get('apiClient')?->id ?? $request->ip())
-        ));
-
         // Livewire fournit Alpine : on l'injecte sur toutes les pages (même sans
         // composant Livewire) pour que les interactions x-data de la coque restent actives.
         app('livewire')->forceAssetInjection();

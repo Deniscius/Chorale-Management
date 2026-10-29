@@ -76,10 +76,33 @@ class RenderNeonConfigurationTest extends TestCase
             $variables = isset($blueprint['envVarGroups'])
                 ? array_column($blueprint['envVarGroups'][0]['envVars'], null, 'key') : $web;
             $this->assertSame('pgsql', $variables['DB_CONNECTION']['value']);
+            $this->assertSame('true', $variables['SESSION_ENCRYPT']['value']);
             $this->assertSame('verify-full', $variables['DB_SSLMODE']['value']);
             $this->assertSame('/etc/ssl/certs/ca-certificates.crt', $variables['DB_SSLROOTCERT']['value']);
             $this->assertArrayNotHasKey('generateValue', $web['APP_KEY']);
             $this->assertArrayNotHasKey('APP_KEY', array_column($blueprint['envVarGroups'][0]['envVars'] ?? [], null, 'key'));
+        }
+    }
+
+    public function test_background_processes_drop_root_privileges(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $dockerfile = file_get_contents($root.'/Dockerfile');
+        $entrypoint = file_get_contents($root.'/docker/entrypoint.sh');
+
+        $this->assertStringContainsString(' gosu ', $dockerfile);
+        $this->assertStringContainsString('worker) exec gosu www-data php artisan queue:work', $entrypoint);
+        $this->assertStringContainsString('schedule) exec gosu www-data php artisan schedule:run', $entrypoint);
+    }
+
+    public function test_ci_third_party_actions_are_pinned_to_immutable_commits(): void
+    {
+        $root = dirname(__DIR__, 2);
+        foreach (glob($root.'/.github/workflows/*.yml') as $workflow) {
+            preg_match_all('/uses:\s*[^\s@]+@([^\s#]+)/', file_get_contents($workflow), $matches);
+            foreach ($matches[1] as $reference) {
+                $this->assertMatchesRegularExpression('/^[a-f0-9]{40}$/D', $reference, basename($workflow));
+            }
         }
     }
 

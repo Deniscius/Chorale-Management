@@ -12,6 +12,10 @@ final class SecurityHeaders
     {
         $response = $next($request);
         $defaults = [
+            // These directives are compatible with Livewire/Alpine while blocking
+            // three common injection primitives. Script/style policies remain
+            // deliberately separate until they can be enforced without unsafe-inline.
+            'Content-Security-Policy' => "base-uri 'self'; object-src 'none'; frame-ancestors 'self'",
             'X-Content-Type-Options' => 'nosniff',
             'X-Frame-Options' => 'SAMEORIGIN',
             'Referrer-Policy' => 'strict-origin-when-cross-origin',

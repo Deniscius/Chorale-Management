@@ -15,6 +15,7 @@ class SecurityHeadersTest extends TestCase
     {
         foreach ([$this->get('/login'), $this->actingAs(User::factory()->create())->get('/dashboard')] as $response) {
             $response->assertHeader('X-Content-Type-Options', 'nosniff')
+                ->assertHeader('Content-Security-Policy', "base-uri 'self'; object-src 'none'; frame-ancestors 'self'")
                 ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
                 ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
                 ->assertHeader('Permissions-Policy', 'camera=(), geolocation=(), microphone=()');

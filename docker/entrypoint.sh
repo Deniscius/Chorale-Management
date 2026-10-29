@@ -26,7 +26,9 @@ case "${1:-web}" in
         printf 'Listen %s\n' "${PORT:-10000}" > /etc/apache2/ports.conf
         exec apache2-foreground
         ;;
-    worker) exec php artisan queue:work database --sleep=3 --timeout=180 --max-time=3600 ;;
-    schedule) exec php artisan schedule:run --no-interaction ;;
+    # Queue payloads and scheduled tasks must never run with the container's
+    # root account. The web process already serves PHP requests as www-data.
+    worker) exec gosu www-data php artisan queue:work database --sleep=3 --timeout=180 --max-time=3600 ;;
+    schedule) exec gosu www-data php artisan schedule:run --no-interaction ;;
     *) exec "$@" ;;
 esac

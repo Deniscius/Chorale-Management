@@ -74,4 +74,30 @@ final class ChurchProjectProvisioningTest extends TestCase
         $this->assertSame($before, Tenant::count());
         $this->assertGuest();
     }
+
+    public function test_production_refuses_an_insecure_church_project_endpoint_before_sending_the_invitation(): void
+    {
+        config([
+            'app.env' => 'production',
+            'tenancy.enabled' => true,
+            'tenancy.registration' => true,
+            'services.church_project.enabled' => true,
+            'services.church_project.url' => 'http://church-project.example',
+        ]);
+        Http::fake();
+
+        $this->post(route('spaces.store'), [
+            'invitation' => 'choir_'.str_repeat('a', 50),
+            'name' => 'Responsable Test',
+            'username' => 'responsable.test',
+            'email' => 'responsable@example.test',
+            'password' => 'ChoraleSecret2026',
+            'password_confirmation' => 'ChoraleSecret2026',
+            'terms' => '1',
+            'website' => '',
+        ])->assertSessionHasErrors('invitation');
+
+        Http::assertNothingSent();
+        $this->assertSame(1, Tenant::count());
+    }
 }

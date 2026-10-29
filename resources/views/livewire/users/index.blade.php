@@ -98,6 +98,10 @@
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-right">
                         <a href="{{ route('users.commissions', $user) }}" wire:navigate class="help-control mb-2 inline-flex items-center rounded-lg px-2 text-sm font-semibold text-indigo-700 underline">Commissions et accès</a>
+                        <button type="button" wire:click="openPasswordReset({{ $user->id }})"
+                            class="help-control mb-2 inline-flex items-center rounded-lg px-2 text-sm font-semibold text-amber-700 underline">
+                            Réinitialiser le mot de passe
+                        </button>
                         <x-row-actions edit="edit" :id="$user->id" remove="delete"
                             :confirm="'Supprimer le compte de '.$user->name.' ?'" />
                     </td>
@@ -114,6 +118,38 @@
         <x-modal-panel :title="$editingId ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'"
             subtitle="Définissez l'identité, le rôle et l'accès du compte.">
             <livewire:users.form :user="$this->editingUser" />
+        </x-modal-panel>
+    @endif
+
+    @if ($showPasswordReset && $this->resetUser)
+        <x-modal-panel close-event="close-password-reset" size="lg"
+            title="Aider à réinitialiser le mot de passe"
+            :subtitle="'Compte de '.$this->resetUser->name">
+            @if ($generatedResetLink === '')
+                <div class="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950">
+                    Le lien remplacera tout lien précédent, expirera dans {{ config('auth.passwords.users.expire') }} minutes et ne pourra être utilisé qu’une seule fois. Vérifiez l’identité de la personne avant de le transmettre en privé.
+                </div>
+                <form wire:submit="generatePasswordResetLink" class="mt-5 space-y-4">
+                    <div>
+                        <label for="reset-current-password" class="form-label">Votre mot de passe administrateur</label>
+                        <input id="reset-current-password" type="password" wire:model="currentPassword" required autocomplete="current-password" class="form-input">
+                        <x-input-error :messages="$errors->get('currentPassword')" />
+                    </div>
+                    <button class="btn btn-primary">Générer le lien sécurisé</button>
+                </form>
+            @else
+                <div x-data="{ copied: false }" class="rounded-xl border-2 border-amber-300 bg-amber-50 p-4">
+                    <h3 class="font-semibold text-amber-950">Copiez ce lien maintenant</h3>
+                    <p class="mt-1 text-sm text-amber-900">Il disparaîtra à la fermeture de cette fenêtre. Envoyez-le uniquement à la personne concernée, dans une conversation privée.</p>
+                    <div class="mt-3 flex flex-col gap-2 sm:flex-row">
+                        <input x-ref="resetLink" readonly value="{{ $generatedResetLink }}" class="form-input min-w-0 flex-1 font-mono text-xs" aria-label="Lien sécurisé de réinitialisation">
+                        <button type="button" class="btn btn-primary shrink-0" @click="navigator.clipboard.writeText($refs.resetLink.value); copied=true; window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', message: 'Lien copié.' } }))">
+                            <x-icon name="copy" class="h-4 w-4" /><span x-text="copied ? 'Copié' : 'Copier le lien'"></span>
+                        </button>
+                    </div>
+                </div>
+                <p class="mt-4 text-sm text-slate-600">Après utilisation, le lien devient invalide. Pour annuler ce lien avant son utilisation, générez-en un nouveau pour ce même compte.</p>
+            @endif
         </x-modal-panel>
     @endif
 </div>

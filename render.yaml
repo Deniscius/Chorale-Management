@@ -36,6 +36,7 @@ services:
       - {key: QUEUE_CONNECTION, value: sync}
       - {key: LOG_CHANNEL, value: stderr}
       - {key: MAIL_MAILER, value: log}
+      - {key: MAIL_DELIVERY_ENABLED, value: 'false'}
       - {key: TENANCY_ENABLED, value: 'true'}
       - {key: TENANT_REGISTRATION_ENABLED, value: 'true'}
       - {key: REMINDERS_ENABLED, value: 'false'}

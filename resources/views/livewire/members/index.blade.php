@@ -2,6 +2,11 @@
     <x-page-header title="Choristes" icon="users"
         :subtitle="'Effectif, voix et implications de la chorale — '.$this->stats['total'].' fiche(s) enregistrée(s).'">
         <x-slot name="actions">
+            @can('manage-module', \App\Enums\UserRole::MODULE_MEMBERS)
+                <a href="{{ route('members.report') }}" target="_blank" rel="noopener" class="btn btn-secondary">
+                    <x-icon name="archive" class="h-4 w-4" /> Rapport général
+                </a>
+            @endcan
             @if ($this->canManage())
                 <button type="button" wire:click="create"
                     class="btn btn-primary">

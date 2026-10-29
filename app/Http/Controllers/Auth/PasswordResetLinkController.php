@@ -16,7 +16,7 @@ class PasswordResetLinkController extends Controller
      */
     public function create(): View
     {
-        return view('auth.forgot-password');
+        return view('auth.forgot-password', ['deliveryEnabled' => config('mail.delivery_enabled')]);
     }
 
     /**
@@ -26,6 +26,10 @@ class PasswordResetLinkController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        if (! config('mail.delivery_enabled')) {
+            return back()->with('status', 'manual-reset-required');
+        }
+
         $request->validate([
             'email' => ['required', 'email'],
         ]);

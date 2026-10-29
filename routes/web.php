@@ -16,6 +16,7 @@ use App\Http\Controllers\LetterheadSampleController;
 use App\Http\Controllers\LetterheadUploadController;
 use App\Http\Controllers\MemberDossierController;
 use App\Http\Controllers\MemberPhotoController;
+use App\Http\Controllers\MemberReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TenantAddressController;
 use App\Http\Controllers\TenantRegistrationController;
@@ -84,6 +85,7 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/membres', MembersIndex::class)
         ->middleware('module:'.UserRole::MODULE_MEMBERS)
         ->name('members.index');
+    Route::get('/membres/rapport/general', MemberReportController::class)->name('members.report');
     Route::get('/membres/{member}/dossier', MemberDossierController::class)->name('members.show');
 
     // Commission liturgique

@@ -3,12 +3,15 @@
 namespace App\Livewire\Users;
 
 use App\Enums\UserRole;
+use App\Models\AuditEvent;
 use App\Models\Member;
 use App\Models\User;
 use App\Services\AccountWriter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Password;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -29,6 +32,14 @@ class Index extends Component
     public bool $showForm = false;
 
     public ?int $editingId = null;
+
+    public bool $showPasswordReset = false;
+
+    public ?int $resetUserId = null;
+
+    public string $currentPassword = '';
+
+    public string $generatedResetLink = '';
 
     public function mount(): void
     {
@@ -70,6 +81,55 @@ class Index extends Component
         $this->editingId = null;
     }
 
+    public function openPasswordReset(int $userId): void
+    {
+        abort_unless(auth()->user()?->can('manage-users'), 403);
+        User::query()->findOrFail($userId);
+        $this->resetValidation();
+        $this->resetUserId = $userId;
+        $this->currentPassword = '';
+        $this->generatedResetLink = '';
+        $this->showPasswordReset = true;
+    }
+
+    public function generatePasswordResetLink(): void
+    {
+        abort_unless(auth()->user()?->can('manage-users'), 403);
+        $this->validate([
+            'currentPassword' => ['required', 'string', 'current_password'],
+        ], [
+            'currentPassword.current_password' => 'Votre mot de passe administrateur est incorrect.',
+        ]);
+
+        $user = User::query()->findOrFail($this->resetUserId);
+        $token = Password::broker()->createToken($user);
+        $this->generatedResetLink = route('password.reset', [
+            'token' => $token,
+            'email' => $user->email,
+        ]);
+        $this->currentPassword = '';
+
+        AuditEvent::query()->create([
+            'actor_id' => auth()->id(),
+            'subject_type' => $user->getMorphClass(),
+            'subject_id' => $user->id,
+            'action' => 'reset_link_issued',
+            'changes' => ['before' => [], 'after' => ['expires_in_minutes' => (int) config('auth.passwords.users.expire')]],
+            'created_at' => now(),
+        ]);
+        $this->dispatch('toast', type: 'success', message: 'Lien à usage unique généré. Copiez-le maintenant.');
+    }
+
+    #[On('close-password-reset')]
+    public function closePasswordReset(): void
+    {
+        $this->showPasswordReset = false;
+        $this->resetUserId = null;
+        $this->currentPassword = '';
+        $this->generatedResetLink = '';
+        $this->resetValidation();
+    }
+
     public function delete(int $userId): void
     {
         abort_unless(auth()->user()?->can('manage-users'), 403);
@@ -108,6 +168,12 @@ class Index extends Component
     public function editingUser(): ?User
     {
         return $this->editingId ? User::findOrFail($this->editingId) : null;
+    }
+
+    #[Computed]
+    public function resetUser(): ?User
+    {
+        return $this->resetUserId ? User::query()->findOrFail($this->resetUserId) : null;
     }
 
     #[Computed]

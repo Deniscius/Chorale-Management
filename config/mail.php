@@ -16,6 +16,10 @@ return [
 
     'default' => env('MAIL_MAILER', 'log'),
 
+    // Tant qu'aucun transport réel n'est configuré, ne jamais créer de lien
+    // public qui finirait dans les journaux avec le mailer « log ».
+    'delivery_enabled' => (bool) env('MAIL_DELIVERY_ENABLED', false),
+
     /*
     |--------------------------------------------------------------------------
     | Mailer Configurations

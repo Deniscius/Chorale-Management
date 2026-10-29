@@ -110,6 +110,7 @@ envVarGroups:
       - {key: LOG_CHANNEL, value: stderr}
       - {key: LOG_LEVEL, value: warning}
       - {key: MAIL_MAILER, value: smtp}
+      - {key: MAIL_DELIVERY_ENABLED, value: 'false'}
       - {key: MAIL_PORT, value: '587'}
       - {key: MAIL_FROM_NAME, value: Chorale Management}
       - {key: TENANCY_ENABLED, value: 'true'}

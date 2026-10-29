@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\Commission;
 use App\Enums\DocumentVisibility;
+use App\Jobs\ProcessDocumentPreview;
 use App\Models\Choir;
 use App\Models\Document;
 use App\Tenancy\TenantContext;
@@ -53,12 +54,24 @@ final class DocumentArchive
                     }
                 }
                 $old = $entry->path;
+                $oldPreview = $entry->preview_path;
                 if (! $entry->exists) {
                     $entry->fill(['choir_id' => Choir::query()->value('id'), 'uploaded_by' => auth()->id(), 'member_id' => null]);
+                }
+                if ($stored) {
+                    $entry->fill(['preview_path' => null, 'preview_status' => 'none', 'preview_error' => null]);
                 }
                 $entry->fill($data)->save();
                 if ($stored && $old) {
                     $this->removeAfterCommit($old);
+                }
+                if ($stored && $oldPreview) {
+                    $this->removeAfterCommit($oldPreview);
+                }
+                if ($stored && $entry->requiresGeneratedPreview()) {
+                    $entry->update(['preview_status' => 'pending']);
+                    $tenantId = app(TenantContext::class)->requireId();
+                    DB::afterCommit(fn () => ProcessDocumentPreview::dispatchAfterResponse($tenantId, $entry->id));
                 }
 
                 return $entry;
@@ -77,8 +90,12 @@ final class DocumentArchive
             $entry = Document::query()->lockForUpdate()->findOrFail($document->id);
             abort_unless($entry->canManage(auth()->user()), 403);
             $path = $entry->path;
+            $preview = $entry->preview_path;
             $entry->delete();
             $this->removeAfterCommit($path);
+            if ($preview) {
+                $this->removeAfterCommit($preview);
+            }
         });
     }
 

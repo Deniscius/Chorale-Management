@@ -101,7 +101,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Auth::provider('tenant-eloquent', fn ($app, $config) => new TenantUserProvider($app['hash'], $config['model']));
-        foreach (['mail', 'sms'] as $channel) {
+        foreach (['mail', 'sms', 'application'] as $channel) {
             RateLimiter::for('reminder-'.$channel,
                 fn () => Limit::perMinute(60)->by(app(TenantContext::class)->key('reminder-'.$channel)));
         }

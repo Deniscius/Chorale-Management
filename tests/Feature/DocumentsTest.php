@@ -175,6 +175,28 @@ class DocumentsTest extends TestCase
         $this->actingAs($outsider)->get(route('documents.preview', $office))->assertForbidden();
     }
 
+    public function test_un_document_bureautique_prepare_est_affiche_comme_pdf_prive(): void
+    {
+        Storage::fake('local');
+        $manager = User::factory()->role(UserRole::Admin)->create();
+        $office = Document::factory()->create([
+            'commission' => Commission::Direction,
+            'visibility' => 'private',
+            'path' => 'documents/rapport.docx',
+            'original_name' => 'rapport.docx',
+            'preview_path' => 'document-previews/rapport.pdf',
+            'preview_status' => 'ready',
+        ]);
+        Storage::disk('local')->put($office->path, 'source Word');
+        Storage::disk('local')->put($office->preview_path, '%PDF aperçu privé');
+
+        $response = $this->actingAs($manager)->get(route('documents.preview', $office));
+
+        $response->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('inline;', $response->headers->get('Content-Disposition'));
+        $this->assertSame('%PDF aperçu privé', $response->getFile()->getContent());
+    }
+
     public function test_la_fenetre_apercu_reverifie_les_droits_apres_une_restriction(): void
     {
         $reader = User::factory()->role(UserRole::Choriste)->create();

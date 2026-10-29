@@ -16,7 +16,9 @@ use App\Http\Controllers\LetterheadUploadController;
 use App\Http\Controllers\MemberDossierController;
 use App\Http\Controllers\MemberPhotoController;
 use App\Http\Controllers\MemberReportController;
+use App\Http\Controllers\NotificationCenterController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\TenantAddressController;
 use App\Http\Controllers\TenantRegistrationController;
 use App\Http\Controllers\VoiceResourceAudioController;
@@ -72,6 +74,11 @@ Route::get('/chorale/logo', ChoraleLogoController::class)
     ->name('chorale.logo');
 
 Route::middleware(['auth', 'chorale.session'])->group(function () {
+    Route::get('/notifications', [NotificationCenterController::class, 'index'])->middleware('throttle:120,1')->name('notifications.index');
+    Route::post('/notifications/tout-lire', [NotificationCenterController::class, 'readAll'])->middleware('throttle:60,1')->name('notifications.read-all');
+    Route::post('/notifications/{notification}/lire', [NotificationCenterController::class, 'read'])->whereUuid('notification')->middleware('throttle:120,1')->name('notifications.read');
+    Route::post('/notifications/appareil', [PushSubscriptionController::class, 'store'])->middleware('throttle:20,1')->name('notifications.push.store');
+    Route::delete('/notifications/appareil', [PushSubscriptionController::class, 'destroy'])->middleware('throttle:20,1')->name('notifications.push.destroy');
     Route::get('/parametres/contributions', FinancialTypes::class)->middleware('can:manage-settings')->name('settings.financial-types');
     Route::get('/abonnement', [BillingController::class, 'show'])->name('billing.show');
     Route::post('/abonnement/activer', [BillingController::class, 'activate'])->middleware('throttle:5,1,billing-activation:')->name('billing.activate');

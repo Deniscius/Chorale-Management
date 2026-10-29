@@ -89,7 +89,7 @@
         @endif
     </x-filter-bar>
 
-    <div id="resultats" class="mt-4 scroll-mt-20">
+    <div id="resultats" class="mt-4 scroll-mt-20" wire:poll.visible.12s>
         <x-data-table :headers="[
             ['label' => 'Document'],
             ['label' => 'Catégorie / visibilité'],
@@ -138,9 +138,21 @@
                                 @if($document->isPreviewable())
                                     <button type="button" wire:click="preview({{ $document->id }})"
                                         title="Aperçu sans téléchargement" aria-label="Aperçu de {{ $document->title }}"
-                                        class="rounded-lg p-2 text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-700">
+                                        class="btn btn-primary btn-sm">
                                         <x-icon name="eye" class="h-4 w-4" />
+                                        Consulter
                                     </button>
+                                @elseif($document->requiresGeneratedPreview())
+                                    @if(in_array($document->preview_status, ['pending', 'processing'], true))
+                                        <span class="inline-flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800" role="status">
+                                            <span class="h-2 w-2 animate-pulse rounded-full bg-amber-500"></span> Aperçu en préparation
+                                        </span>
+                                    @else
+                                        <button type="button" wire:click="preparePreview({{ $document->id }})" wire:loading.attr="disabled"
+                                            class="btn btn-secondary btn-sm" aria-label="Préparer l’aperçu de {{ $document->title }}">
+                                            <x-icon name="eye" class="h-4 w-4" /> Préparer l’aperçu
+                                        </button>
+                                    @endif
                                 @endif
                                 <a href="{{ route('documents.download', $document) }}"
                                     title="Télécharger le document" aria-label="Télécharger {{ $document->title }}"

@@ -20,8 +20,8 @@ final class DocumentPreviewController extends Controller
         abort_unless($mime !== null, 415, 'Ce format ne permet pas un aperçu sécurisé.');
 
         return app(PrivateFiles::class)->response(
-            $document->path,
-            $document->original_name,
+            $document->previewFilePath(),
+            $document->preview_status === 'ready' ? pathinfo($document->original_name, PATHINFO_FILENAME).'.pdf' : $document->original_name,
             true,
             $mime,
             [

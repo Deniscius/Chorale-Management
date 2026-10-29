@@ -4,12 +4,14 @@ namespace App\Livewire\Documents;
 
 use App\Enums\Commission;
 use App\Enums\UserRole;
+use App\Jobs\ProcessDocumentPreview;
 use App\Models\CommissionTeam;
 use App\Models\Correspondence;
 use App\Models\Document;
 use App\Models\User;
 use App\Services\DocumentArchive;
 use App\Services\PrivateFiles;
+use App\Tenancy\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -64,6 +66,16 @@ class Index extends Component
         abort_unless($document->canView(auth()->user()), 403);
         abort_unless($document->isPreviewable(), 415);
         $this->previewDocumentId = $document->id;
+    }
+
+    public function preparePreview(int $id): void
+    {
+        $document = Document::findOrFail($id);
+        abort_unless($document->canView(auth()->user()), 403);
+        abort_unless($document->requiresGeneratedPreview(), 422);
+        $document->update(['preview_status' => 'pending', 'preview_error' => null]);
+        ProcessDocumentPreview::dispatchAfterResponse(app(TenantContext::class)->requireId(), $document->id);
+        $this->dispatch('toast', type: 'info', message: 'Préparation de l’aperçu lancée. Actualisez dans quelques instants.');
     }
 
     #[On('close-preview')]

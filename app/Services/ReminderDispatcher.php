@@ -11,6 +11,7 @@ use App\Mail\RehearsalReminder;
 use App\Models\Member;
 use App\Models\Rehearsal;
 use App\Models\Reminder;
+use App\Notifications\RehearsalReminderNotification;
 use App\Services\Sms\DeliveryRejected;
 use App\Services\Sms\SmsSender;
 use Illuminate\Database\Eloquent\Collection;
@@ -52,13 +53,19 @@ final class ReminderDispatcher
         }
         $rehearsal->loadMissing('works');
         $result = ['sent' => 0, 'queued' => 0, 'skipped' => 0, 'failed' => 0];
-        $members = Member::where('status', MemberStatus::Actif->value)->where(fn ($q) => $q->where('notify_email', true)->orWhere('notify_sms', true))->orderBy('id')->lazyById(200);
+        $members = Member::with('user')->where('status', MemberStatus::Actif->value)
+            ->where(fn ($q) => $q->where('notify_email', true)->orWhere('notify_sms', true)->orWhereHas('user'))
+            ->orderBy('id')->lazyById(200);
         foreach ($members as $member) {
             $channels = [];
             if ($member->canReceiveEmail()) {
                 $channels[] = ReminderChannel::Mail;
-            }if ($member->canReceiveSms()) {
+            }
+            if ($member->canReceiveSms()) {
                 $channels[] = ReminderChannel::Sms;
+            }
+            if ($member->user) {
+                $channels[] = ReminderChannel::Application;
             }
             foreach ($channels as $channel) {
                 if ($dryRun) {
@@ -66,7 +73,11 @@ final class ReminderDispatcher
 
                     continue;
                 }
-                $recipient = $channel === ReminderChannel::Mail ? $member->email : $member->phone;
+                $recipient = match ($channel) {
+                    ReminderChannel::Mail => $member->email,
+                    ReminderChannel::Sms => $member->phone,
+                    ReminderChannel::Application => (string) $member->user->id,
+                };
                 $outcome = $this->reserve($rehearsal, $member, $channel, (string) $recipient);
                 $result[$outcome]++;
             }
@@ -116,9 +127,17 @@ final class ReminderDispatcher
             if (! $entry || $entry->lease_token !== $token || ! in_array($entry->status, $retry ? [ReminderStatus::EnAttente, ReminderStatus::Echec] : [ReminderStatus::EnAttente], true) || $entry->sending_at) {
                 return null;
             }
-            $entry->load(['member', 'rehearsal.works']);
-            $allowed = config('chorale.reminders.enabled') && $entry->rehearsal?->status !== EventStatus::Annulee && $entry->member?->status === MemberStatus::Actif && ($entry->channel === ReminderChannel::Mail ? $entry->member?->canReceiveEmail() : $entry->member?->canReceiveSms());
-            $recipient = $entry->channel === ReminderChannel::Mail ? $entry->member?->email : $entry->member?->phone;
+            $entry->load(['member.user', 'rehearsal.works']);
+            $allowed = config('chorale.reminders.enabled') && $entry->rehearsal?->status !== EventStatus::Annulee && $entry->member?->status === MemberStatus::Actif && match ($entry->channel) {
+                ReminderChannel::Mail => $entry->member?->canReceiveEmail(),
+                ReminderChannel::Sms => $entry->member?->canReceiveSms(),
+                ReminderChannel::Application => $entry->member?->user !== null,
+            };
+            $recipient = match ($entry->channel) {
+                ReminderChannel::Mail => $entry->member?->email,
+                ReminderChannel::Sms => $entry->member?->phone,
+                ReminderChannel::Application => (string) ($entry->member?->user?->id ?? ''),
+            };
             if (! $allowed || ! $entry->rehearsal || $recipient !== $entry->recipient) {
                 $entry->update(['status' => ReminderStatus::Ignore, 'error' => 'Destinataire ou préférences modifiés avant envoi.']);
 
@@ -134,10 +153,12 @@ final class ReminderDispatcher
         try {
             if ($entry->channel === ReminderChannel::Mail) {
                 Mail::to($entry->recipient)->send(new RehearsalReminder($entry->rehearsal, $entry->member, $entry->body));
-            } else {
+            } elseif ($entry->channel === ReminderChannel::Sms) {
                 if (! $this->sms->send($entry->recipient, $entry->body)) {
                     throw new DeliveryRejected('Le fournisseur a refusé le SMS.');
                 }
+            } else {
+                $entry->member->user->notify(new RehearsalReminderNotification($entry->rehearsal, $entry->member, $entry->body));
             }
         } catch (Throwable $e) {
             $this->finish($id, $token, ['status' => $e instanceof DeliveryRejected ? 'echec' : 'incertain', 'sending_at' => null, 'error' => mb_substr($e->getMessage(), 0, 2000)]);

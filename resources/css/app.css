@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    [x-cloak] { display: none !important; }
+    button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+    :focus-visible { scroll-margin: 6rem; }
+}
+
+@layer components {
+    /* Les tableaux restent lisibles sur téléphone sans réduire les zones tactiles. */
+    .overflow-x-auto { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+    .overflow-x-auto:focus-within { scrollbar-color: #64748b transparent; }
+}
+
 /* ==========================================================================
    Chorale — Système de design
    Tokens, primitives et composants partagés de l'application.

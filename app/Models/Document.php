@@ -33,6 +33,9 @@ class Document extends Model
         'category',
         'original_name',
         'path',
+        'preview_path',
+        'preview_status',
+        'preview_error',
         'mime_type',
         'size',
         'member_id',
@@ -81,6 +84,10 @@ class Document extends Model
 
     public function previewMimeType(): ?string
     {
+        if ($this->preview_status === 'ready' && filled($this->preview_path)) {
+            return 'application/pdf';
+        }
+
         return match (strtolower(pathinfo($this->original_name, PATHINFO_EXTENSION))) {
             'pdf' => 'application/pdf',
             'jpg', 'jpeg' => 'image/jpeg',
@@ -107,6 +114,16 @@ class Document extends Model
     public function isPreviewable(): bool
     {
         return $this->previewMimeType() !== null;
+    }
+
+    public function requiresGeneratedPreview(): bool
+    {
+        return in_array(strtolower(pathinfo($this->original_name, PATHINFO_EXTENSION)), ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'], true);
+    }
+
+    public function previewFilePath(): string
+    {
+        return $this->preview_status === 'ready' && filled($this->preview_path) ? $this->preview_path : $this->path;
     }
 
     public function scopeReadable(Builder $query, ?User $user): Builder

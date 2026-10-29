@@ -20,6 +20,12 @@ services:
         sync: false
       - key: APP_KEY
         sync: false
+      - key: WEBPUSH_PUBLIC_KEY
+        sync: false
+      - key: WEBPUSH_PRIVATE_KEY
+        sync: false
+      - key: WEBPUSH_SUBJECT
+        sync: false
       - key: PRIVATE_FILES_ROOT
         value: /var/data/chorale/private
       - key: APP_URL
@@ -57,6 +63,12 @@ services:
         fromService: {type: web, name: chorale-web, envVarKey: APP_KEY}
       - key: APP_URL
         fromService: {type: web, name: chorale-web, envVarKey: APP_URL}
+      - key: WEBPUSH_PUBLIC_KEY
+        fromService: {type: web, name: chorale-web, envVarKey: WEBPUSH_PUBLIC_KEY}
+      - key: WEBPUSH_PRIVATE_KEY
+        fromService: {type: web, name: chorale-web, envVarKey: WEBPUSH_PRIVATE_KEY}
+      - key: WEBPUSH_SUBJECT
+        fromService: {type: web, name: chorale-web, envVarKey: WEBPUSH_SUBJECT}
       - key: MAIL_HOST
         fromService: {type: web, name: chorale-web, envVarKey: MAIL_HOST}
       - key: MAIL_USERNAME

@@ -26,6 +26,12 @@ services:
       - {key: TRUSTED_PROXIES, value: ''}
       - key: DB_URL
         sync: false
+      - key: WEBPUSH_PUBLIC_KEY
+        sync: false
+      - key: WEBPUSH_PRIVATE_KEY
+        sync: false
+      - key: WEBPUSH_SUBJECT
+        sync: false
       - {key: DB_CONNECTION, value: pgsql}
       - {key: DB_SSLMODE, value: verify-full}
       - {key: DB_SSLROOTCERT, value: /etc/ssl/certs/ca-certificates.crt}

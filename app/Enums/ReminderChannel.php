@@ -11,6 +11,7 @@ enum ReminderChannel: string
 {
     case Mail = 'mail';
     case Sms = 'sms';
+    case Application = 'application';
 
     use HasLabel;
 
@@ -19,6 +20,7 @@ enum ReminderChannel: string
         return [
             self::Mail->value => 'E-mail',
             self::Sms->value => 'SMS',
+            self::Application->value => 'Application',
         ];
     }
 }

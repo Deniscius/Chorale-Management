@@ -1,0 +1,44 @@
+name: Rappels quotidiens
+
+on:
+  schedule:
+    # Africa/Lome reste sur UTC toute l’année.
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Simulation sans envoi
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: production-reminders
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Déclencher les rappels sur Render
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+        run: |
+          oidc_response=$(curl --fail-with-body --silent --show-error \
+            --header "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=chorale-management-reminders")
+          oidc_token=$(printf '%s' "$oidc_response" | jq -er '.value')
+          endpoint='https://chorale-management.onrender.com/internal/reminders/run'
+          if [ "$DRY_RUN" = 'true' ]; then endpoint="$endpoint?dry_run=1"; fi
+          curl --fail-with-body --silent --show-error \
+            --retry 5 --retry-delay 10 --retry-all-errors \
+            --connect-timeout 20 --max-time 300 \
+            --request POST \
+            --header "Authorization: Bearer $oidc_token" \
+            --header 'Accept: application/json' \
+            "$endpoint"

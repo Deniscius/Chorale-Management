@@ -19,6 +19,7 @@ use App\Http\Controllers\MemberReportController;
 use App\Http\Controllers\NotificationCenterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Controllers\RunReminderSchedulerController;
 use App\Http\Controllers\TenantAddressController;
 use App\Http\Controllers\TenantRegistrationController;
 use App\Http\Controllers\VoiceResourceAudioController;
@@ -53,6 +54,9 @@ use App\Livewire\Works\Index as WorksIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
+
+Route::post('/internal/reminders/run', RunReminderSchedulerController::class)
+    ->middleware('throttle:6,1')->name('internal.reminders.run');
 
 require __DIR__.'/platform.php';
 

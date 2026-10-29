@@ -18,6 +18,8 @@ return [
         'lease_minutes' => (int) env('REMINDERS_LEASE_MINUTES', 60),
         'days_before' => (int) env('REMINDERS_DAYS_BEFORE', 2),
         'send_at' => env('REMINDERS_SEND_AT', '08:00'),
+        'oidc_audience' => env('REMINDERS_OIDC_AUDIENCE', 'chorale-management-reminders'),
+        'oidc_repository' => env('REMINDERS_OIDC_REPOSITORY', 'Deniscius/Chorale-Management'),
         'sms_enabled' => (bool) env('REMINDERS_SMS_ENABLED', false),
         'sms_driver' => env('REMINDERS_SMS_DRIVER', 'log'),
         'sms_from' => env('REMINDERS_SMS_FROM', 'CHORALE'),

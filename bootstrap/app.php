@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->replace(TrustProxies::class, TrustDeploymentProxies::class);
         $middleware->append(SecurityHeaders::class);
         $middleware->web(append: [EstablishTenant::class, RecordPlatformUsage::class]);
+        $middleware->validateCsrfTokens(except: ['internal/reminders/run']);
         $middleware->prependToPriorityList(SubstituteBindings::class, EstablishTenant::class);
         $middleware->prependToPriorityList(SubstituteBindings::class, PlatformAccess::class);
         $middleware->alias([

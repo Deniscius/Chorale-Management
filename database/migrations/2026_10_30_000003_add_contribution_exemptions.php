@@ -19,6 +19,9 @@ return new class extends Migration
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
             $table->unique(['tenant_id', 'id']);
+            $table->index('member_id');
+            $table->index('type_code');
+            $table->index('approved_by');
             $table->index(['tenant_id', 'member_id', 'type_code', 'starts_on'], 'contribution_exemption_lookup');
             $table->foreign(['tenant_id', 'member_id'])->references(['tenant_id', 'id'])->on('members');
             $table->foreign(['tenant_id', 'type_code'])->references(['tenant_id', 'code'])->on('financial_types');

@@ -1,6 +1,8 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Http\Controllers\ManagementYearSelectionController;
+use App\Livewire\Settings\ManagementYears;
 use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BillingController;
@@ -79,6 +81,8 @@ Route::get('/chorale/logo', ChoraleLogoController::class)
     ->name('chorale.logo');
 
 Route::middleware(['auth', 'chorale.session'])->group(function () {
+    Route::post('/periode-de-travail', ManagementYearSelectionController::class)->name('management-years.select');
+    Route::get('/parametres/annees', ManagementYears::class)->middleware('can:manage-settings')->name('settings.management-years');
     Route::get('/notifications', [NotificationCenterController::class, 'index'])->middleware('throttle:120,1')->name('notifications.index');
     Route::post('/notifications/tout-lire', [NotificationCenterController::class, 'readAll'])->middleware('throttle:60,1')->name('notifications.read-all');
     Route::post('/notifications/{notification}/lire', [NotificationCenterController::class, 'read'])->whereUuid('notification')->middleware('throttle:120,1')->name('notifications.read');

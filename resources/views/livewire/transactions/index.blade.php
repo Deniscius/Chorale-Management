@@ -123,9 +123,9 @@
                     </td>
                     <td class="px-4 py-3">
                         <p class="text-sm text-slate-800">{{ $transaction->description }}</p>
-                        @if ($transaction->member || $transaction->activity)
+                        @if ($transaction->member || $transaction->activity || $transaction->performance)
                             <p class="mt-0.5 text-xs text-slate-500">
-                                {{ $transaction->member?->full_name ?? $transaction->activity?->title }}
+                                {{ $transaction->member?->full_name ?? $transaction->activity?->title ?? $transaction->performance?->title }}
                             </p>
                         @endif
                     </td>
@@ -148,12 +148,9 @@
                         @if ($this->canManage())
                             <div class="flex items-center justify-end gap-1">
                                 @if ($transaction->status->value === 'brouillon')
-                                    <button type="button" wire:click="validateTransaction({{ $transaction->id }})"
-                                        wire:confirm="Valider cette écriture ?"
-                                        class="rounded-lg p-2 text-slate-500 transition hover:bg-emerald-50 hover:text-emerald-600"
-                                        title="Valider l'écriture">
-                                        <x-icon name="sparkles" class="h-4 w-4" />
-                                    </button>
+                                    <x-confirm-action :call="'validateTransaction('.$transaction->id.')'" title="Valider l’écriture"
+                                        message="Cette écriture entrera dans les soldes comptables." label="Valider l’écriture"
+                                        icon="sparkles" icon-only trigger-class="rounded-lg p-2 text-slate-500 transition hover:bg-emerald-50 hover:text-emerald-600" />
                                 @endif
                                 @if (! $transaction->isLocked())
                                 <x-row-actions edit="edit" :id="$transaction->id" remove="delete"

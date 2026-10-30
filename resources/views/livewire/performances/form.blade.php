@@ -10,7 +10,7 @@
 
             <div>
                 <x-input-label for="performances-form-type" value="Type d'événement" />
-                <select id="performances-form-type" aria-describedby="performances-form-type-error" aria-invalid="{{ $errors->has('type') ? 'true' : 'false' }}" wire:model="type"
+                <select id="performances-form-type" aria-describedby="performances-form-type-error" aria-invalid="{{ $errors->has('type') ? 'true' : 'false' }}" wire:model.live="type"
                     class="form-select mt-1">
                     @foreach ($this->typeOptions as $value => $label)
                         <option value="{{ $value }}">{{ $label }}</option>
@@ -53,9 +53,10 @@
             </div>
 
             <div>
-                <x-input-label for="performances-form-budget" value="Budget prévu" />
+                <x-input-label for="performances-form-budget" value="Fonds de soutien prévus" />
                 <x-text-input id="performances-form-budget" type="number" step="0.01" name="budget" aria-describedby="performances-form-budget-error" aria-invalid="{{ $errors->has('budget') ? 'true' : 'false' }}" wire:model="budget" class="mt-1 block w-full" min="0" />
                 <x-input-error id="performances-form-budget-error" :messages="$errors->get('budget')" class="mt-1" />
+                <p class="mt-1 text-xs text-slate-500">Prérempli selon la règle de la chorale, ajustable pour cet événement.</p>
             </div>
 
             <div>

@@ -134,7 +134,7 @@ class Index extends Component
     public function transactions()
     {
         return Transaction::query()
-            ->with(['account', 'budget', 'member', 'activity'])
+            ->with(['account', 'budget', 'member', 'activity', 'performance'])
             ->when($this->overview === 'validees', fn ($q) => $q->validated())
             ->when($this->search !== '', function (Builder $query) {
                 $like = '%'.$this->search.'%';

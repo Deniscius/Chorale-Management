@@ -97,10 +97,10 @@
             <div class="flex flex-wrap justify-end gap-3 border-t border-slate-200 px-5 py-4">
                 @if($this->isFinalized())
                     <a href="{{ route('attendance.report', [$eventType === 'rehearsal' ? 'repetition' : 'activite', $eventId]) }}" target="_blank" rel="noopener" class="btn btn-primary"><x-icon name="archive" class="h-4 w-4" />Voir le rapport officiel</a>
-                    @can('finalize-attendance')<button type="button" wire:click="reopen" wire:confirm="Rouvrir cette fiche ? Les incidents du rapport courant seront annulés." class="btn btn-secondary">Corriger la fiche</button>@endcan
+                    @can('finalize-attendance')<x-confirm-action call="reopen" title="Corriger la fiche" message="Les incidents du rapport courant seront annulés." label="Corriger la fiche" />@endcan
                 @elseif(count($rows) > 0)
                     @can('manage-attendance')<button type="button" wire:click="saveDraft" class="btn btn-secondary">Enregistrer le brouillon</button>@endcan
-                    @can('finalize-attendance')<button type="button" wire:click="finalize" wire:confirm="Finaliser et transmettre les absences et retards non excusés à la comptabilité ?" class="btn btn-primary">Finaliser la fiche</button>@endcan
+                    @can('finalize-attendance')<x-confirm-action call="finalize" title="Finaliser la fiche" message="Les absences et retards non excusés seront transmis à la comptabilité." label="Finaliser la fiche" trigger-class="btn btn-primary" />@endcan
                 @endif
             </div>
         </div>

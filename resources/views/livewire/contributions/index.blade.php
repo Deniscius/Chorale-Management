@@ -5,6 +5,7 @@
         <x-slot name="actions">
             @can('manage-settings')<a href="{{ route('settings.financial-types') }}" class="btn btn-secondary">Configurer les types</a>@endcan
             @if ($this->canManage())
+                <button type="button" wire:click="openSync" class="btn btn-secondary"><x-icon name="calendar" class="h-4 w-4" /> Actualiser les échéances</button>
                 <button type="button" wire:click="create"
                     class="btn btn-primary">
                     <x-icon name="plus" class="h-4 w-4" />
@@ -124,12 +125,9 @@
                         @if ($this->canManage())
                             <div class="flex items-center justify-end gap-1">
                                 @unless ($contribution->isPaid())
-                                    <button type="button" wire:click="markAsPaid({{ $contribution->id }})"
-                                        wire:confirm="Enregistrer le règlement de cette cotisation ?"
-                                        class="rounded-lg p-2 text-slate-500 transition hover:bg-emerald-50 hover:text-emerald-600"
-                                        title="Marquer comme payée">
-                                        <x-icon name="sparkles" class="h-4 w-4" />
-                                    </button>
+                                    <x-confirm-action :call="'markAsPaid('.$contribution->id.')'" title="Enregistrer le règlement"
+                                        message="Le montant restant sera enregistré comme encaissé aujourd’hui." label="Marquer comme payée"
+                                        icon="sparkles" icon-only trigger-class="rounded-lg p-2 text-slate-500 transition hover:bg-emerald-50 hover:text-emerald-600" />
                                 @endunless
                                 <x-row-actions edit="edit" :id="$contribution->id" remove="delete"
                                     :confirm="'Supprimer cette cotisation ?'" />
@@ -149,6 +147,16 @@
         <x-modal-panel :title="$editingId ? 'Modifier la cotisation' : 'Nouvelle cotisation'"
             subtitle="Enregistrez la cotisation attendue et son règlement.">
             <livewire:contributions.form :contribution="$this->editingContribution" />
+        </x-modal-panel>
+    @endif
+
+    @if($showSyncModal)
+        <x-modal-panel title="Actualiser les échéances" subtitle="Créer toutes les cotisations arrivées à échéance jusqu’à aujourd’hui." close-event="close-sync" size="md">
+            <div class="space-y-4">
+                <p class="text-sm text-slate-600">Le calcul utilise la date d’adhésion, la date de départ de la règle, sa périodicité et son jour d’échéance. Une relance ne crée aucun doublon.</p>
+                <div class="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">Aucun montant déjà dû ou payé ne sera modifié.</div>
+                <div class="flex justify-end gap-3"><button type="button" wire:click="$dispatch('close-sync')" class="btn btn-secondary">Annuler</button><button type="button" wire:click="syncSchedules" wire:loading.attr="disabled" class="btn btn-primary">Générer maintenant</button></div>
+            </div>
         </x-modal-panel>
     @endif
 </div>

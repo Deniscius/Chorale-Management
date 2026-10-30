@@ -44,11 +44,8 @@
                         Annuler la sélection
                     </button>
                 @elseif (app(\App\Services\ChoraleIdentity::class)->hasLogo())
-                    <button type="button" wire:click="removeLogo" wire:confirm="Supprimer le logo de la chorale ?"
-                        class="btn btn-ghost btn-sm text-red-600 hover:bg-red-50">
-                        <x-icon name="trash" class="h-4 w-4" />
-                        Supprimer le logo
-                    </button>
+                    <x-confirm-action call="removeLogo" title="Supprimer le logo" message="Le logo de la chorale ne sera plus affiché sur ses documents et espaces authentifiés."
+                        label="Supprimer le logo" icon="trash" trigger-class="btn btn-ghost btn-sm text-red-600 hover:bg-red-50" button-class="btn bg-red-600 text-white hover:bg-red-700" />
                 @endif
             </div>
         </x-card>

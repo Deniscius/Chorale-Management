@@ -120,12 +120,9 @@
                         @if ($this->canManage())
                             <div class="flex items-center justify-end gap-1">
                                 @unless ($movement->isClosed())
-                                    <button type="button" wire:click="close({{ $movement->id }})"
-                                        wire:confirm="Confirmer que le matériel a été rendu aujourd’hui ? La date de retour sera enregistrée à aujourd’hui."
-                                        class="help-control inline-flex items-center gap-2 rounded-lg p-2 text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800"
-                                        title="Enregistrer le retour aujourd’hui">
-                                        <x-icon name="check-circle" class="h-5 w-5" /><span>Matériel rendu</span>
-                                    </button>
+                                    <x-confirm-action :call="'close('.$movement->id.')'" title="Confirmer le retour"
+                                        message="La date de retour du matériel sera enregistrée à aujourd’hui." label="Matériel rendu" icon="check-circle"
+                                        trigger-class="help-control inline-flex items-center gap-2 rounded-lg p-2 text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800" />
                                 @endunless
                                 <x-row-actions edit="edit" :id="$movement->id" remove="delete"
                                     :confirm="'Supprimer ce mouvement ?'" />

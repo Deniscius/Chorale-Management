@@ -7,6 +7,7 @@ use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Contribution;
 use App\Models\Member;
+use App\Services\ContributionSchedule;
 use App\Services\ReceiptLedger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -44,6 +45,8 @@ class Index extends Component
     public bool $showForm = false;
 
     public ?int $editingId = null;
+
+    public bool $showSyncModal = false;
 
     public function mount(): void
     {
@@ -111,6 +114,27 @@ class Index extends Component
         ]);
 
         $this->dispatch('toast', type: 'success', message: 'Cotisation marquée comme payée.');
+    }
+
+    public function openSync(): void
+    {
+        $this->authorizeManage();
+        $this->showSyncModal = true;
+    }
+
+    #[On('close-sync')]
+    public function closeSync(): void
+    {
+        $this->showSyncModal = false;
+    }
+
+    public function syncSchedules(): void
+    {
+        $this->authorizeManage();
+        $created = app(ContributionSchedule::class)->sync();
+        $this->showSyncModal = false;
+        unset($this->contributions, $this->stats, $this->years);
+        $this->dispatch('toast', type: 'success', message: $created.' échéance(s) créée(s). Les lignes existantes ont été conservées.');
     }
 
     #[Computed]

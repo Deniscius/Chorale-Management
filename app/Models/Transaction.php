@@ -35,6 +35,7 @@ class Transaction extends Model
         'status',
         'member_id',
         'activity_id',
+        'performance_id',
         'document_path',
         'validated_by',
         'validated_at',
@@ -101,6 +102,11 @@ class Transaction extends Model
     public function activity(): BelongsTo
     {
         return $this->belongsTo(Activity::class);
+    }
+
+    public function performance(): BelongsTo
+    {
+        return $this->belongsTo(Performance::class);
     }
 
     public function validator(): BelongsTo

@@ -17,11 +17,15 @@
     @endif
 
     @if ($remove)
-        <button type="button" wire:click="{{ $remove }}({{ $id }})"
-            @if ($confirm) wire:confirm="{{ $confirm }}" @endif
-            title="{{ $removeLabel }}" aria-label="{{ $removeLabel }}"
-            class="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-1">
-            <x-icon name="trash" class="h-4 w-4" />
-        </button>
+        @if($confirm)
+            <x-confirm-action :call="$remove.'('.$id.')'" :message="$confirm" :label="$removeLabel" icon="trash" icon-only
+                trigger-class="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-1"
+                button-class="btn bg-rose-600 text-white hover:bg-rose-700" />
+        @else
+            <button type="button" wire:click="{{ $remove }}({{ $id }})" title="{{ $removeLabel }}" aria-label="{{ $removeLabel }}"
+                class="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-1">
+                <x-icon name="trash" class="h-4 w-4" />
+            </button>
+        @endif
     @endif
 </div>

@@ -11,6 +11,7 @@ use App\Livewire\Concerns\SearchesMembers;
 use App\Models\Account;
 use App\Models\Activity;
 use App\Models\Budget;
+use App\Models\Performance;
 use App\Models\Transaction;
 use App\Services\TransactionWriter;
 use Illuminate\Contracts\View\View;
@@ -61,6 +62,9 @@ class Form extends Component
     #[Validate('nullable|exists:activities,id')]
     public ?string $activity_id = null;
 
+    #[Validate('nullable|exists:performances,id')]
+    public ?string $performance_id = null;
+
     #[Validate('nullable|string|max:2000')]
     public ?string $notes = null;
 
@@ -93,6 +97,7 @@ class Form extends Component
                 'status' => $transaction->status->value,
                 'member_id' => $transaction->member_id,
                 'activity_id' => $transaction->activity_id,
+                'performance_id' => $transaction->performance_id,
                 'notes' => $transaction->notes,
             ]);
         } else {
@@ -118,6 +123,7 @@ class Form extends Component
             'status' => $this->status,
             'member_id' => $this->member_id !== null && $this->member_id !== '' ? (int) $this->member_id : null,
             'activity_id' => $this->activity_id !== null && $this->activity_id !== '' ? (int) $this->activity_id : null,
+            'performance_id' => $this->performance_id !== null && $this->performance_id !== '' ? (int) $this->performance_id : null,
             'notes' => $this->notes,
         ];
 
@@ -144,6 +150,12 @@ class Form extends Component
     public function activities()
     {
         return Activity::query()->orderByDesc('starts_at')->get();
+    }
+
+    #[Computed]
+    public function performances()
+    {
+        return Performance::query()->orderByDesc('scheduled_at')->limit(200)->get();
     }
 
     #[Computed]

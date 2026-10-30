@@ -41,7 +41,7 @@
                         <td class="p-3">{{ $unit->retired_at ? 'Retiré de l’inventaire' : 'En inventaire' }}</td>
                         <td class="p-3">
                             @if($this->canManage())
-                                <button type="button" wire:click="retire({{ $unit->id }}, {{ $unit->retired_at ? 'false' : 'true' }})" wire:confirm="{{ $unit->retired_at ? 'Réintégrer cet objet avec son code d’origine et augmenter la quantité de 1 ?' : 'Retirer cet objet de l’inventaire et diminuer la quantité de 1 ? Son code sera conservé. Pour un prêt temporaire, annulez et utilisez Prêts et retours.' }}" class="help-control text-sm text-slate-700 underline">{{ $unit->retired_at ? 'Réintégrer cet objet' : 'Retirer de l’inventaire' }}</button>
+                                <x-confirm-action :call="'retire('.$unit->id.', '.($unit->retired_at ? 'false' : 'true').')'" :title="$unit->retired_at ? 'Réintégrer cet objet' : 'Retirer de l’inventaire'" :message="$unit->retired_at ? 'Le code d’origine sera conservé et la quantité augmentera de 1.' : 'La quantité diminuera de 1 et le code sera conservé. Pour un prêt temporaire, utilisez Prêts et retours.'" :label="$unit->retired_at ? 'Réintégrer' : 'Retirer'" trigger-class="help-control text-sm text-slate-700 underline" />
                             @endif
                         </td>
                     </tr>

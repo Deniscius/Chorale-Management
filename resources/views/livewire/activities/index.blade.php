@@ -137,12 +137,9 @@
                         @if ($this->canManage())
                             <div class="flex items-center justify-end gap-1">
                                 @unless (in_array($activity->status->value, ['terminee', 'annulee'], true))
-                                    <button type="button" wire:click="close({{ $activity->id }})"
-                                        wire:confirm="Marquer cette activité comme terminée ?"
-                                        class="rounded-lg p-2 text-slate-500 transition hover:bg-emerald-50 hover:text-emerald-600"
-                                        title="Marquer comme terminée">
-                                        <x-icon name="sparkles" class="h-4 w-4" />
-                                    </button>
+                                    <x-confirm-action :call="'close('.$activity->id.')'" title="Terminer l’activité"
+                                        message="L’activité sera marquée comme terminée." label="Marquer comme terminée" icon="sparkles" icon-only
+                                        trigger-class="rounded-lg p-2 text-slate-500 transition hover:bg-emerald-50 hover:text-emerald-600" />
                                 @endunless
                                 <x-row-actions edit="edit" :id="$activity->id" remove="delete"
                                     :confirm="'Supprimer l\'activité « '.$activity->title.' » ?'" />

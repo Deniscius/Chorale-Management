@@ -92,7 +92,7 @@
             </div>
         </div>
 
-        <div class="grid gap-4 sm:grid-cols-2">
+        <div class="grid gap-4 sm:grid-cols-3">
             <div>
                 <x-input-label for="transactions-form-member_id" value="Choriste / tiers" />
                 <x-input id="transactions-form-memberSearch" name="memberSearch" label="Rechercher un choriste" wire:model.live.debounce.300ms="memberSearch" placeholder="Nom ou prénom" />
@@ -117,6 +117,17 @@
                     @endforeach
                 </select>
                 <x-input-error id="transactions-form-activity_id-error" :messages="$errors->get('activity_id')" class="mt-1" />
+            </div>
+            <div>
+                <x-input-label for="transactions-form-performance_id" value="Célébration / messe liée" />
+                <select id="transactions-form-performance_id" aria-describedby="transactions-form-performance_id-error" wire:model="performance_id" class="form-select mt-1">
+                    <option value="">—</option>
+                    @foreach ($this->performances as $performance)
+                        <option value="{{ $performance->id }}">{{ $performance->scheduled_at->format('d/m/Y') }} — {{ $performance->title }}</option>
+                    @endforeach
+                </select>
+                <x-input-error id="transactions-form-performance_id-error" :messages="$errors->get('performance_id')" class="mt-1" />
+                <p class="mt-1 text-xs text-slate-500">Associez ici les fonds réellement engagés pour l’événement.</p>
             </div>
         </div>
 

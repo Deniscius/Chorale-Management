@@ -93,6 +93,8 @@ class Index extends Component
     {
         return Performance::query()
             ->with('works')
+            ->withSum(['transactions as spent_amount' => fn (Builder $query) => $query
+                ->where('type', 'depense')->whereIn('status', ['validee', 'cloturee'])], 'amount')
             ->when($this->search !== '', function (Builder $query) {
                 $like = '%'.$this->search.'%';
 

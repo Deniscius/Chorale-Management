@@ -9,7 +9,10 @@ use Illuminate\Support\Collection;
 
 final class MonthlyContributionArrears
 {
-    public function __construct(private readonly FinancialCatalog $catalog) {}
+    public function __construct(
+        private readonly FinancialCatalog $catalog,
+        private readonly ContributionSchedule $schedule,
+    ) {}
 
     /**
      * Calcule la situation mensuelle sans créer d'écriture comptable.
@@ -22,10 +25,13 @@ final class MonthlyContributionArrears
      */
     public function for(Member $member): array
     {
-        $through = CarbonImmutable::today()->startOfMonth();
-        if ($member->left_on && $member->left_on->lt($through)) {
-            $through = CarbonImmutable::instance($member->left_on)->startOfMonth();
-        }
+        $today = CarbonImmutable::today();
+        $through = $member->left_on && $member->left_on->lt($today)
+            ? CarbonImmutable::instance($member->left_on)
+            : $today;
+
+        $type = $this->catalog->all()->firstWhere('code', 'mensuelle');
+        $periods = $type ? $this->schedule->duePeriods($member, $type, $today) : collect();
 
         $monthly = $member->contributions()
             ->where('type_code', 'mensuelle')
@@ -33,10 +39,8 @@ final class MonthlyContributionArrears
                 ->orWhere(fn ($current) => $current->where('year', $through->year)->where('month', '<=', $through->month)))
             ->get();
 
-        $defaultAmount = (float) ($this->catalog->all()->firstWhere('code', 'mensuelle')?->default_amount ?? 0);
-        $from = $member->joined_on
-            ? CarbonImmutable::instance($member->joined_on)->startOfMonth()
-            : null;
+        $defaultAmount = (float) ($type?->default_amount ?? 0);
+        $from = $periods->first()['period'] ?? null;
 
         if ($from === null || $from->gt($through)) {
             return $this->fromRecordedOnly($monthly, $through, $defaultAmount);
@@ -47,9 +51,8 @@ final class MonthlyContributionArrears
         $recorded = 0;
         $missing = 0;
         $outstanding = 0.0;
-        $cursor = $from;
-
-        while ($cursor->lte($through)) {
+        foreach ($periods as $period) {
+            $cursor = $period['period'];
             $expected++;
             $entry = $byPeriod->get($cursor->format('Y-m'));
             if ($entry) {
@@ -59,7 +62,6 @@ final class MonthlyContributionArrears
                 $missing++;
                 $outstanding += $defaultAmount;
             }
-            $cursor = $cursor->addMonth();
         }
 
         return [

@@ -25,6 +25,8 @@ class Contribution extends Model
         'choir_id',
         'year',
         'month',
+        'period_starts_on',
+        'due_on',
         'due_amount',
         'paid_amount',
         'paid_on',
@@ -42,6 +44,8 @@ class Contribution extends Model
         return [
             'year' => 'integer',
             'month' => 'integer',
+            'period_starts_on' => 'date',
+            'due_on' => 'date',
             'due_amount' => 'decimal:2',
             'paid_amount' => 'decimal:2',
             'paid_on' => 'date',

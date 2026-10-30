@@ -44,18 +44,10 @@
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <a class="btn btn-secondary" href="{{ route('settings.letterheads.file', [$template, 'original']) }}"><x-icon name="download" class="h-4 w-4" />Original</a>
-                            <button
-                                type="button"
-                                wire:click="delete({{ $template->id }})"
-                                wire:confirm="{{ $template->status === 'active' ? 'Supprimer l’en-tête actif ? Les prochains documents utiliseront l’en-tête standard de la chorale jusqu’à l’activation d’un autre fichier.' : 'Supprimer définitivement ce fichier et tous ses aperçus ?' }}"
-                                wire:loading.attr="disabled"
-                                wire:target="delete({{ $template->id }})"
-                                class="btn btn-secondary text-red-700 hover:border-red-300 hover:bg-red-50"
-                                aria-label="Supprimer {{ $template->original_name }}"
-                            >
-                                <x-icon name="trash" class="h-4 w-4" />
-                                Supprimer
-                            </button>
+                            <x-confirm-action :call="'delete('.$template->id.')'" title="Supprimer l’en-tête"
+                                :message="$template->status === 'active' ? 'Les prochains documents utiliseront l’en-tête standard jusqu’à l’activation d’un autre fichier.' : 'Ce fichier et tous ses aperçus seront supprimés définitivement.'"
+                                label="Supprimer" icon="trash" trigger-class="btn btn-secondary text-red-700 hover:border-red-300 hover:bg-red-50"
+                                button-class="btn bg-red-600 text-white hover:bg-red-700" />
                         </div>
                     </div>
 
@@ -72,7 +64,7 @@
                                 <div class="flex items-center gap-2"><x-text-input id="height-{{ $template->id }}" type="number" min="20" max="100" wire:model="heights.{{ $template->id }}" class="w-24" /><span class="text-sm text-slate-500">mm</span></div>
                                 <button type="button" wire:click="reprocess({{ $template->id }})" class="btn btn-secondary">Recalculer l’aperçu</button>
                                 @if($template->status !== 'active' && $template->isUsable())
-                                    <button type="button" wire:click="activate({{ $template->id }})" wire:confirm="Utiliser cet en-tête pour les rapports et documents officiels ?" class="btn btn-primary">Activer après vérification</button>
+                                    <x-confirm-action :call="'activate('.$template->id.')'" title="Activer cet en-tête" message="Il sera utilisé pour les prochains rapports et documents officiels." label="Activer après vérification" trigger-class="btn btn-primary" />
                                 @endif
                                 @if($template->status === 'active')
                                     <a href="{{ route('settings.letterheads.sample') }}" target="_blank" class="btn btn-secondary">Voir le document d’essai</a>

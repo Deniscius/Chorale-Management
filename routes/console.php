@@ -1,6 +1,7 @@
 <?php
 
 use App\Console\Commands\SendRehearsalReminders;
+use App\Console\Commands\SyncContributionSchedules;
 use App\Console\Commands\SyncSubscriptions;
 use App\Models\Tenant;
 use App\Services\ReminderDispatcher;
@@ -18,6 +19,9 @@ Schedule::call(fn () => DB::table('platform_usage_daily')->where('day', '<', tod
 
 Schedule::command(SyncSubscriptions::class)->everyFiveMinutes()->withoutOverlapping(30)
     ->when(fn () => (bool) config('tenancy.chariow.api_key') && (bool) config('tenancy.chariow.product_id'));
+
+Schedule::command(SyncContributionSchedules::class)
+    ->dailyAt('00:15')->withoutOverlapping()->onOneServer();
 
 // Rappels de répétition : chaque matin, à l'heure configurée.
 Schedule::command(SendRehearsalReminders::class)

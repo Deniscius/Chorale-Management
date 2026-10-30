@@ -116,7 +116,8 @@
                         @endif
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
-                        <x-money :value="$performance->budget" />
+                        <p><span class="text-xs text-slate-500">Prévu</span> <x-money :value="$performance->budget" /></p>
+                        <p class="mt-1"><span class="text-xs text-slate-500">Engagé</span> <x-money :value="$performance->spent_amount ?? 0" /></p>
                     </td>
                     <td class="whitespace-nowrap px-4 py-3">
                         <x-enum-badge :enum="$performance->status" />

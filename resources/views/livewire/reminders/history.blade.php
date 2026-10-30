@@ -94,8 +94,8 @@
                         <x-enum-badge :enum="$reminder->status" />
                         @if ($reminder->status === \App\Enums\ReminderStatus::Incertain && $this->canManage())
                             <div class="mt-2 flex flex-wrap gap-2">
-                                <button class="btn btn-secondary" wire:click="resolve({{ $reminder->id }}, 'sent')" wire:confirm="Confirmez-vous avoir vérifié que le fournisseur a bien envoyé ce rappel ?">Déjà envoyé</button>
-                                <button class="btn btn-secondary" wire:click="resolve({{ $reminder->id }}, 'retry')" wire:confirm="Après vérification du fournisseur, confirmez la relance. Elle peut créer un doublon si le premier envoi a déjà abouti.">Relancer</button>
+                                <x-confirm-action :call="'resolve('.$reminder->id.', \'sent\')'" title="Confirmer l’envoi" message="Confirmez après avoir vérifié que le fournisseur a bien envoyé ce rappel." label="Déjà envoyé" />
+                                <x-confirm-action :call="'resolve('.$reminder->id.', \'retry\')'" title="Relancer le rappel" message="Vérifiez d’abord le fournisseur : une relance peut créer un doublon si le premier envoi a abouti." label="Relancer" />
                                 <button class="btn btn-secondary" wire:click="resolve({{ $reminder->id }}, 'ignore')">Ignorer</button>
                             </div>
                         @endif

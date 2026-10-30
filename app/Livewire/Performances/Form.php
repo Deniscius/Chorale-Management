@@ -8,6 +8,7 @@ use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Performance;
 use App\Models\Work;
+use App\Services\PerformanceFundingPolicy;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -89,6 +90,14 @@ class Form extends Component
             ]);
         } else {
             $this->scheduled_at = now()->addWeek()->startOfHour()->format('Y-m-d\TH:i');
+            $this->budget = (string) app(PerformanceFundingPolicy::class)->defaultFor($this->type);
+        }
+    }
+
+    public function updatedType(string $type): void
+    {
+        if (! $this->performance && PerformanceType::tryFrom($type)) {
+            $this->budget = (string) app(PerformanceFundingPolicy::class)->defaultFor($type);
         }
     }
 

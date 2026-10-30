@@ -12,11 +12,17 @@ final class FinancialType extends Model
 {
     use BelongsToTenant;
 
-    protected $fillable = ['label', 'default_amount', 'is_active'];
+    protected $fillable = ['label', 'default_amount', 'frequency_months', 'starts_on', 'due_day', 'is_active'];
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean', 'default_amount' => 'decimal:2'];
+        return [
+            'is_active' => 'boolean',
+            'default_amount' => 'decimal:2',
+            'frequency_months' => 'integer',
+            'starts_on' => 'date',
+            'due_day' => 'integer',
+        ];
     }
 
     protected static function booted(): void

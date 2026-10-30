@@ -8,6 +8,7 @@ use App\Models\Setting;
 use App\Tenancy\TenantContext;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 final class FinancialCatalog
@@ -23,6 +24,13 @@ final class FinancialCatalog
             $defaults[] = ['code' => $type->value, 'kind' => 'donation', 'label' => $type->label(), 'default_amount' => null, 'base_type' => $type->value];
         }
         foreach ($defaults as $row) {
+            if (Schema::hasColumn('financial_types', 'frequency_months')) {
+                $row += [
+                    'frequency_months' => $row['code'] === 'mensuelle' ? 1 : 0,
+                    'starts_on' => null,
+                    'due_day' => $row['code'] === 'mensuelle' ? 1 : null,
+                ];
+            }
             DB::table('financial_types')->insertOrIgnore($row + ['tenant_id' => $tenant, 'label_key' => mb_strtolower($row['label']), 'is_active' => true, 'created_at' => now(), 'updated_at' => now()]);
         }
     }

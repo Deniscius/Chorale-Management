@@ -27,7 +27,7 @@
         @endif
         <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
             @if ($this->existingAccount || $this->invitation)
-                <button type="button" wire:click="revoke" wire:loading.attr="disabled" wire:target="save,revoke" wire:confirm="Retirer l’accès et désactiver le lien de ce membre ?" class="btn btn-ghost text-red-600">Retirer l’accès</button>
+                <x-confirm-action call="revoke" title="Retirer l’accès" message="Le compte sera désactivé et le lien d’activation ne sera plus utilisable." label="Retirer l’accès" trigger-class="btn btn-ghost text-red-600" button-class="btn bg-red-600 text-white hover:bg-red-700" />
             @endif
             <div class="ml-auto flex flex-wrap items-center gap-3">
                 <button type="button" wire:click="$dispatch('close-access')" class="btn btn-secondary">Fermer</button>

@@ -10,6 +10,7 @@ use App\Models\Contribution;
 use App\Models\Donation;
 use App\Models\Member;
 use App\Models\Transaction;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -73,6 +74,15 @@ final class ReceiptLedger
             $contribution = $contribution?->exists ? Contribution::query()->lockForUpdate()->findOrFail($contribution->id) : new Contribution;
             $type = app(FinancialCatalog::class)->forWrite('contribution', $data['type_code'] ?? $contribution->type_code ?? 'mensuelle', $contribution->exists ? $contribution->type_code : null);
             $data['type_code'] = $type->code;
+            if (! $contribution->exists && $type->frequency_months > 0 && isset($data['year'], $data['month'])) {
+                $period = CarbonImmutable::create((int) $data['year'], (int) $data['month'], 1);
+                $dueOn = $period->day(min((int) ($type->due_day ?: 1), $period->daysInMonth));
+                $data['period_starts_on'] = $period->toDateString();
+                $data['due_on'] = $dueOn->toDateString();
+                if ((float) ($data['paid_amount'] ?? 0) <= 0 && $dueOn->lt(CarbonImmutable::today())) {
+                    $data['status'] = ContributionStatus::Retard;
+                }
+            }
             $entries = $contribution->exists ? $contribution->receipts()->lockForUpdate()->get() : collect();
             $validated = $entries->filter(fn (Transaction $entry) => $entry->isLocked())->sum(fn ($entry) => $this->cents($entry->amount));
             $previousPaidOn = $contribution->paid_on;

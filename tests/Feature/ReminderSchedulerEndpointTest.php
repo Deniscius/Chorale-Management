@@ -33,4 +33,20 @@ class ReminderSchedulerEndpointTest extends TestCase
             ->assertJson(['ok' => true, 'mode' => 'simulation'])
             ->assertHeader('Cache-Control', 'no-store, private');
     }
+
+    public function test_authenticated_daily_run_syncs_contributions_before_reminders(): void
+    {
+        $this->mock(GitHubActionsTokenVerifier::class)->shouldReceive('verify')->once()->with('valid-oidc-token')->andReturnTrue();
+        $this->mock(Kernel::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('call')->once()->with('chorale:sync-contributions')->ordered()->andReturn(0);
+            $mock->shouldReceive('call')->once()->with('chorale:send-reminders', [])->ordered()->andReturn(0);
+        });
+
+        $this->withToken('valid-oidc-token')->postJson(route('internal.reminders.run'))
+            ->assertOk()->assertJson([
+                'ok' => true,
+                'mode' => 'delivery',
+                'contributions_synced' => true,
+            ]);
+    }
 }

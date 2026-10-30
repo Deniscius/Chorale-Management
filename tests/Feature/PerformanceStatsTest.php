@@ -183,7 +183,7 @@ class PerformanceStatsTest extends TestCase
             'total' => Contribution::count(),
             'du' => $du,
             'encaisse' => $encaisse,
-            'reste' => max(0.0, $du - $encaisse),
+            'reste' => $du - $encaisse,
             'impayees' => Contribution::whereIn('status', [
                 ContributionStatus::Due->value,
                 ContributionStatus::Retard->value,

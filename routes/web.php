@@ -84,7 +84,7 @@ Route::get('/chorale/logo', ChoraleLogoController::class)
 Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::post('/periode-de-travail', ManagementYearSelectionController::class)->name('management-years.select');
     Route::get('/parametres/annees', ManagementYears::class)->middleware('can:manage-settings')->name('settings.management-years');
-    Route::get('/cotisations/reinitialisation', CounterResets::class)->middleware('can:manage-module,'.UserRole::MODULE_COMPTABILITE)->name('contributions.counter-resets');
+    Route::get('/cotisations/reinitialisation', CounterResets::class)->middleware('can:manage-settings')->name('contributions.counter-resets');
     Route::get('/notifications', [NotificationCenterController::class, 'index'])->middleware('throttle:120,1')->name('notifications.index');
     Route::post('/notifications/tout-lire', [NotificationCenterController::class, 'readAll'])->middleware('throttle:60,1')->name('notifications.read-all');
     Route::post('/notifications/{notification}/lire', [NotificationCenterController::class, 'read'])->whereUuid('notification')->middleware('throttle:120,1')->name('notifications.read');

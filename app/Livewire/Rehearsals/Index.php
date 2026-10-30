@@ -150,7 +150,9 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        $row = Rehearsal::query()->selectRaw(
+        $row = Rehearsal::query()
+            ->when(app(ManagementYearContext::class)->selected(), fn ($q, $year) => $q->whereDate('date', '>=', $year->starts_on)->whereDate('date', '<=', $year->ends_on))
+            ->selectRaw(
             'COUNT(*) AS total, COALESCE(SUM(CASE WHEN date >= ? THEN 1 ELSE 0 END), 0) AS avenir, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS terminees',
             [today()->toDateString(), EventStatus::Terminee->value]
         )->toBase()->first();

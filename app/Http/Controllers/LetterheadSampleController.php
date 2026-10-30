@@ -11,6 +11,7 @@ final class LetterheadSampleController
     {
         return view('documents.letterhead-sample', [
             'header' => $letterhead->headerDataUri(),
+            'headerHeightMm' => $letterhead->headerHeightMm(),
             'identity' => $identity,
         ]);
     }

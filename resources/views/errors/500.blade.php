@@ -1,0 +1,1 @@
+@include('errors.layout', ['status' => 500, 'title' => 'Un imprévu est survenu', 'message' => 'L’application n’a pas pu terminer cette opération. Vos données saisies n’ont pas été publiées automatiquement.', 'icon' => '⚠'])

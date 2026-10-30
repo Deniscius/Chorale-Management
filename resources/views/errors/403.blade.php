@@ -1,0 +1,1 @@
+@include('errors.layout', ['status' => 403, 'title' => 'Accès non autorisé', 'message' => 'Votre rôle ne vous donne pas accès à cette information. Demandez une habilitation à un responsable si nécessaire.', 'icon' => '♯'])

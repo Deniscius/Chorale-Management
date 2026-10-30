@@ -113,4 +113,49 @@ final class PlatformRemindersAndPersonalNotebookTest extends TestCase
     {
         $this->get(route('personal-notebook.show'))->assertRedirect(route('login'));
     }
+
+    public function test_personal_notebook_calculates_monthly_and_attendance_arrears_from_membership_date(): void
+    {
+        $member = Member::factory()->active()->create([
+            'first_name' => 'Ama',
+            'joined_on' => today()->subMonths(2)->startOfMonth(),
+        ]);
+        $user = User::factory()->role(UserRole::Choriste)->create(['member_id' => $member->id]);
+
+        Contribution::factory()->create([
+            'member_id' => $member->id, 'type_code' => 'mensuelle',
+            'year' => today()->subMonths(2)->year, 'month' => today()->subMonths(2)->month,
+            'due_amount' => 2000, 'paid_amount' => 2000, 'status' => 'payee',
+        ]);
+        Contribution::factory()->create([
+            'member_id' => $member->id, 'type_code' => 'mensuelle',
+            'year' => today()->subMonth()->year, 'month' => today()->subMonth()->month,
+            'due_amount' => 2000, 'paid_amount' => 500, 'status' => 'partiel',
+        ]);
+        AttendanceIncident::query()->create([
+            'member_id' => $member->id, 'source_type' => 'rehearsal', 'occurred_on' => today(),
+            'event_label' => 'Répétition', 'incident_type' => 'absence', 'amount' => 1000, 'status' => 'pending',
+        ]);
+        AttendanceIncident::query()->create([
+            'member_id' => $member->id, 'source_type' => 'activity', 'occurred_on' => today(),
+            'event_label' => 'Sortie', 'incident_type' => 'late', 'minutes_late' => 15,
+            'amount' => 500, 'status' => 'pending',
+        ]);
+        AttendanceIncident::query()->create([
+            'member_id' => $member->id, 'source_type' => 'activity', 'occurred_on' => today(),
+            'event_label' => 'Ancienne sortie', 'incident_type' => 'absence', 'amount' => 9000, 'status' => 'waived',
+        ]);
+
+        $notebook = app(PersonalNotebook::class)->for($member);
+
+        $this->assertSame(3, $notebook['monthlyArrears']['expected_months']);
+        $this->assertSame(1, $notebook['monthlyArrears']['missing_months']);
+        $this->assertSame(3500.0, $notebook['outstanding']);
+        $this->assertSame(1500.0, $notebook['incidentAmount']);
+        $this->assertSame(1, $notebook['incidentBreakdown']['absence']['count']);
+        $this->actingAs($user)->get(route('personal-notebook.show'))
+            ->assertOk()
+            ->assertSee('rendez-vous dans les 45 prochains jours')
+            ->assertDontSee('45.');
+    }
 }

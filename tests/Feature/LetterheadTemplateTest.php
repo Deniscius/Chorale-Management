@@ -109,14 +109,17 @@ class LetterheadTemplateTest extends TestCase
         $files->storeContents($oldPath, base64_decode(self::PNG), 'image/png');
         $files->storeContents($newPath, base64_decode(self::PNG), 'image/png');
         $old = LetterheadTemplate::create(['original_name' => 'ancien.docx', 'status' => 'active', 'header_path' => $oldPath, 'uploaded_by' => $admin->id, 'activated_at' => now()->subDay()]);
-        $new = LetterheadTemplate::create(['original_name' => 'nouveau.docx', 'status' => 'ready', 'header_path' => $newPath, 'uploaded_by' => $admin->id]);
+        $new = LetterheadTemplate::create(['original_name' => 'nouveau.docx', 'status' => 'ready', 'header_path' => $newPath, 'header_height_mm' => 52, 'uploaded_by' => $admin->id]);
 
         app(LetterheadManager::class)->activate($new);
 
         $this->assertSame(LetterheadTemplate::STATUS_REPLACED, $old->fresh()->status);
         $this->assertSame(LetterheadTemplate::STATUS_ACTIVE, $new->fresh()->status);
         $this->assertTrue($files->exists($oldPath));
-        $this->actingAs($admin)->get(route('settings.letterheads.sample'))->assertOk()->assertSee('data:image/png;base64,', false);
+        $this->actingAs($admin)->get(route('settings.letterheads.sample'))
+            ->assertOk()
+            ->assertSee('data:image/png;base64,', false)
+            ->assertSee('width:210mm;height:52mm', false);
     }
 
     public function test_a_non_administrator_cannot_manage_or_read_letterhead_files(): void

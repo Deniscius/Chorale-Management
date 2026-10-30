@@ -11,6 +11,8 @@ use App\Models\Rehearsal;
 
 final class PersonalNotebook
 {
+    public function __construct(private readonly MonthlyContributionArrears $arrears) {}
+
     /**
      * Assemble uniquement des données concernant le choriste connecté.
      * Les événements communs sont visibles, les activités ciblées exigent sa participation.
@@ -24,7 +26,8 @@ final class PersonalNotebook
         }
 
         $from = now();
-        $until = now()->addDays(max(7, (int) config('chorale.reminders.notebook_days', 45)))->endOfDay();
+        $notebookDays = max(7, (int) config('chorale.reminders.notebook_days', 45));
+        $until = now()->addDays($notebookDays)->endOfDay();
         $upcomingStatuses = ['planifiee', 'en_cours', 'reportee'];
 
         $rehearsals = Rehearsal::query()
@@ -71,6 +74,14 @@ final class PersonalNotebook
             ->orderByDesc('year')->orderByDesc('month')->get();
 
         $incidents = $member->attendanceIncidents()->where('status', 'pending')->latest('occurred_on')->get();
+        $incidentBreakdown = $incidents->groupBy('incident_type')->map(fn ($items) => [
+            'count' => $items->count(),
+            'amount' => (float) $items->sum('amount'),
+        ])->all();
+        $monthlyArrears = $this->arrears->for($member);
+        $otherContributionOutstanding = (float) $contributions
+            ->where('type_code', '!=', 'mensuelle')
+            ->sum(fn ($item) => max(0, (float) $item->due_amount - (float) $item->paid_amount));
         $tasks = Correspondence::query()->open()->where('assigned_to', $member->id)->get()
             ->map(fn (Correspondence $item) => [
                 'title' => 'Courrier à traiter', 'detail' => $item->subject,
@@ -92,8 +103,11 @@ final class PersonalNotebook
             'contributions' => $contributions,
             'incidents' => $incidents,
             'attendance' => $attendanceRows->countBy(fn ($row) => $row->status->value)->all(),
-            'outstanding' => (float) $contributions->sum(fn ($item) => max(0, (float) $item->due_amount - (float) $item->paid_amount)),
+            'notebookDays' => $notebookDays,
+            'monthlyArrears' => $monthlyArrears,
+            'outstanding' => $monthlyArrears['outstanding'] + $otherContributionOutstanding,
             'incidentAmount' => (float) $incidents->sum('amount'),
+            'incidentBreakdown' => $incidentBreakdown,
             'until' => $until,
         ];
     }

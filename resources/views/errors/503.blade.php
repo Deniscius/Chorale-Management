@@ -1,0 +1,1 @@
+@include('errors.layout', ['status' => 503, 'title' => 'Service momentanément indisponible', 'message' => 'Une maintenance ou une surcharge empêche temporairement l’accès. Réessayez dans quelques instants.', 'icon' => '♭'])

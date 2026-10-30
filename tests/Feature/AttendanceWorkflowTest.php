@@ -158,13 +158,15 @@ class AttendanceWorkflowTest extends TestCase
         );
         LetterheadTemplate::query()->create([
             'original_name' => 'papier-officiel.docx', 'header_path' => $path,
-            'status' => LetterheadTemplate::STATUS_ACTIVE, 'activated_at' => now(), 'uploaded_by' => $secretary->id,
+            'header_height_mm' => 52, 'status' => LetterheadTemplate::STATUS_ACTIVE,
+            'activated_at' => now(), 'uploaded_by' => $secretary->id,
         ]);
 
         $this->actingAs($secretary)->get(route('attendance.report', ['repetition', $rehearsal->id]))
             ->assertOk()
             ->assertHeader('Cache-Control', 'no-store, private')
             ->assertSee('data:image/png;base64,', false)
+            ->assertSee('width:210mm;height:52mm', false)
             ->assertSee('Alice')
             ->assertSee('Rapport de présence');
     }

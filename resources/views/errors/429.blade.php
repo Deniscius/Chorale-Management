@@ -1,0 +1,1 @@
+@include('errors.layout', ['status' => 429, 'title' => 'Trop de tentatives', 'message' => 'Pour protéger votre compte, les demandes sont temporairement limitées. Patientez un instant avant de réessayer.', 'icon' => '◷'])

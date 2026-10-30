@@ -49,7 +49,9 @@ final class LetterheadProcessor
             $previewBase = $directory.'/preview';
             $this->run(['pdftoppm', '-f', '1', '-l', '1', '-singlefile', '-png', '-r', '110', $pdf, $previewBase], 30);
 
-            $dpi = 180;
+            // Une résolution plus élevée préserve les logos fins, cachets et
+            // petites coordonnées lors de l'impression des rapports.
+            $dpi = 240;
             $headerPoints = min($heightPoints, $template->header_height_mm / 25.4 * 72);
             $headerBase = $directory.'/header';
             $this->run([

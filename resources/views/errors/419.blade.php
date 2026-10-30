@@ -1,0 +1,1 @@
+@include('errors.layout', ['status' => 419, 'title' => 'Session expirée', 'message' => 'La page est restée ouverte trop longtemps. Rechargez-la avant d’envoyer de nouveau le formulaire.', 'icon' => '↻'])

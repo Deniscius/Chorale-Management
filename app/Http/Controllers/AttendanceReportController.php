@@ -40,7 +40,8 @@ final class AttendanceReportController
         $filename = 'rapport-presence-'.$eventType.'-'.$date->format('Y-m-d').'.html';
 
         return response()->view('documents.attendance-report', [
-            'header' => $letterhead->headerDataUri(), 'identity' => $identity, 'record' => $record,
+            'header' => $letterhead->headerDataUri(), 'headerHeightMm' => $letterhead->headerHeightMm(),
+            'identity' => $identity, 'record' => $record,
             'title' => $title, 'label' => $label, 'date' => $date, 'venue' => $venue, 'rows' => $rows,
             'counts' => $counts, 'statusLabels' => ParticipationStatus::labels(),
             'backUrl' => Gate::allows('view-attendance-finance')

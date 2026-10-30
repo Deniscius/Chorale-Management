@@ -1,0 +1,1 @@
+@include('errors.layout', ['status' => 401, 'title' => 'Connexion nécessaire', 'message' => 'Votre session ne permet pas encore d’accéder à cette page. Connectez-vous puis réessayez.', 'icon' => '♩'])

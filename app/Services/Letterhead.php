@@ -19,4 +19,9 @@ final class Letterhead
 
         return $path ? $this->files->imageDataUri($path, 5 * 1024 * 1024) : null;
     }
+
+    public function headerHeightMm(): int
+    {
+        return max(20, min(100, (int) ($this->active()?->header_height_mm ?? 45)));
+    }
 }

@@ -1,0 +1,1 @@
+@include('errors.layout', ['status' => 422, 'title' => 'Informations à corriger', 'message' => 'Certaines informations ne peuvent pas être traitées. Revenez au formulaire et vérifiez les champs signalés.', 'icon' => '✎'])

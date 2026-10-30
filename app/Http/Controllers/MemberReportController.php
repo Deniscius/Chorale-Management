@@ -26,6 +26,7 @@ final class MemberReportController extends Controller
 
         return response()->view('documents.member-report', [
             'header' => $letterhead->headerDataUri(),
+            'headerHeightMm' => $letterhead->headerHeightMm(),
             'identity' => $identity,
             'members' => $members,
             'statusCounts' => $statusCounts,

@@ -33,7 +33,7 @@
                 </div>
                 <div class="rounded-xl bg-white/10 px-5 py-3 text-center backdrop-blur">
                     <p class="text-3xl font-bold">{{ $timeline->count() }}</p>
-                    <p class="text-xs text-slate-300">rendez-vous dans les {{ now()->diffInDays($until) }} prochains jours</p>
+                    <p class="text-xs text-slate-300">rendez-vous dans les {{ $notebookDays }} prochains jours</p>
                 </div>
             </div>
         </section>
@@ -83,11 +83,20 @@
                 <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
                     <header class="border-b border-slate-200 px-5 py-4"><h2 class="font-semibold text-slate-900">Ma situation</h2></header>
                     <div class="space-y-4 p-5 text-sm">
-                        <div class="flex items-center justify-between gap-3"><span class="text-slate-600">Cotisations à régulariser</span><strong>{{ $contributions->count() }}</strong></div>
-                        <div class="flex items-center justify-between gap-3"><span class="text-slate-600">Solde des cotisations</span><strong>{{ number_format($outstanding, 0, ',', ' ') }} FCFA</strong></div>
-                        <div class="flex items-center justify-between gap-3"><span class="text-slate-600">Incidents à traiter</span><strong>{{ $incidents->count() }}</strong></div>
+                        <div class="flex items-center justify-between gap-3"><span class="text-slate-600">Mois attendus depuis l’adhésion</span><strong>{{ $monthlyArrears['expected_months'] }}</strong></div>
+                        <div class="flex items-center justify-between gap-3"><span class="text-slate-600">Mois sans cotisation enregistrée</span><strong>{{ $monthlyArrears['missing_months'] }}</strong></div>
+                        <div class="flex items-center justify-between gap-3"><span class="text-slate-600">Arriéré de cotisations</span><strong>{{ number_format($outstanding, 0, ',', ' ') }} FCFA</strong></div>
+                        <div class="border-t border-slate-100 pt-3">
+                            <div class="flex items-center justify-between gap-3"><span class="text-slate-600">Absences à régulariser</span><strong>{{ $incidentBreakdown['absence']['count'] ?? 0 }} · {{ number_format($incidentBreakdown['absence']['amount'] ?? 0, 0, ',', ' ') }} FCFA</strong></div>
+                            <div class="mt-2 flex items-center justify-between gap-3"><span class="text-slate-600">Retards à régulariser</span><strong>{{ $incidentBreakdown['late']['count'] ?? 0 }} · {{ number_format($incidentBreakdown['late']['amount'] ?? 0, 0, ',', ' ') }} FCFA</strong></div>
+                        </div>
                         <div class="flex items-center justify-between gap-3"><span class="text-slate-600">Tâches confiées</span><strong>{{ $tasks->count() }}</strong></div>
                     </div>
+                    @if(!$member->joined_on)
+                        <p class="mx-5 mb-5 rounded-lg bg-amber-50 p-3 text-xs text-amber-900">Renseignez la date d’adhésion pour calculer automatiquement les mois de cotisation manquants.</p>
+                    @elseif($monthlyArrears['missing_months'] > 0)
+                        <p class="mx-5 mb-5 text-xs text-slate-500">Les mois sans écriture sont estimés au tarif mensuel actuel de {{ number_format($monthlyArrears['default_amount'], 0, ',', ' ') }} FCFA. Les mois déjà enregistrés conservent leur montant historique.</p>
+                    @endif
                 </section>
 
                 @if($tasks->isNotEmpty())

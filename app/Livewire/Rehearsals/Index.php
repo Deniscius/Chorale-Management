@@ -8,6 +8,7 @@ use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Rehearsal;
 use App\Services\ChoraleAssistant;
+use App\Services\ManagementYearContext;
 use App\Tenancy\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -109,6 +110,7 @@ class Index extends Component
     public function rehearsals()
     {
         return Rehearsal::query()
+            ->when(app(ManagementYearContext::class)->selected(), fn ($q, $selected) => $q->whereDate('date', '>=', $selected->starts_on)->whereDate('date', '<=', $selected->ends_on))
             ->with('works')
             ->withCount('attendances')
             ->when($this->overview === 'presences', fn ($q) => $q->whereHas('attendances', fn ($q) => $q->where('status', 'present')))

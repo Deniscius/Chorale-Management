@@ -206,7 +206,7 @@ class Index extends Component
         $du = (float) $row->du;
         $encaisse = (float) $row->encaisse;
 
-        return ['total' => (int) $row->total, 'du' => $du, 'encaisse' => $encaisse, 'reste' => max(0, $du - $encaisse), 'impayees' => (int) $row->impayees];
+        return ['total' => (int) $row->total, 'du' => $du, 'encaisse' => $encaisse, 'reste' => max(0.0, $du - $encaisse), 'impayees' => (int) $row->impayees];
     }
 
     public function render(): View

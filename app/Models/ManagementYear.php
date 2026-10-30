@@ -36,7 +36,7 @@ final class ManagementYear extends Model
         if ($data['type'] === 'civile') {
             $start = CarbonImmutable::parse($data['starts_on']);
             $end = CarbonImmutable::parse($data['ends_on']);
-            if (! $start->isStartOfYear() || ! $end->isSameDay($start->endOfYear())) {
+            if (! ($start->month === 1 && $start->day === 1) || ! $end->isSameDay($start->endOfYear())) {
                 throw ValidationException::withMessages([
                     'starts_on' => 'Une année civile doit commencer le 1er janvier et se terminer le 31 décembre de la même année.',
                 ]);

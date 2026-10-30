@@ -9,13 +9,13 @@
         <h2 class="font-semibold">{{ $editingId ? 'Modifier une année' : 'Créer une année' }}</h2>
         <div class="grid gap-4 md:grid-cols-2">
             <label class="block text-sm">Type
-                <select wire:model="type" class="mt-1 w-full rounded-lg border-slate-300">
+                <select wire:model.live="type" class="mt-1 w-full rounded-lg border-slate-300">
                     <option value="pastorale">Pastorale</option>
                     <option value="civile">Civile</option>
                 </select>
             </label>
             <label class="block text-sm">Libellé
-                <input wire:model="label" class="mt-1 w-full rounded-lg border-slate-300" placeholder="2026-2027" required />
+                <input wire:model.live="label" class="mt-1 w-full rounded-lg border-slate-300" placeholder="2026-2027 ou 2027" required />
                 @error('label') <span class="text-red-600">{{ $message }}</span> @enderror
             </label>
             <label class="block text-sm">Début

@@ -17,7 +17,7 @@
         </label>
         <div class="grid gap-4 sm:grid-cols-2">
             <label class="block text-sm">Choriste
-                <select wire:model="member_id" class="mt-1 w-full rounded-lg border-slate-300" required>
+                <select wire:model.live="member_id" class="mt-1 w-full rounded-lg border-slate-300" required>
                     <option value="">Choisir un choriste</option>
                     @foreach($members as $member)
                         <option value="{{ $member->id }}">{{ $member->last_name }} {{ $member->first_name }}</option>
@@ -26,7 +26,7 @@
                 @error('member_id') <span class="text-red-600">{{ $message }}</span> @enderror
             </label>
             <label class="block text-sm">Type de cotisation
-                <select wire:model="type_code" class="mt-1 w-full rounded-lg border-slate-300">
+                <select wire:model.live="type_code" class="mt-1 w-full rounded-lg border-slate-300">
                     <option value="">Tous les types (nouveau départ uniquement)</option>
                     @foreach($types as $type)<option value="{{ $type->code }}">{{ $type->label }}</option>@endforeach
                 </select>
@@ -41,6 +41,9 @@
                 @error('ends_on') <span class="text-red-600">{{ $message }}</span> @enderror
             </label>
         </div>
+        @if($this->selectedMemberArrears !== null)
+            <p class="rounded-lg bg-slate-50 p-3 text-sm font-semibold">Arriérés courants calculés : {{ \App\Support\Money::compact($this->selectedMemberArrears) }}</p>
+        @endif
         <label class="block text-sm">Motif administratif obligatoire
             <textarea wire:model="reason" rows="3" class="mt-1 w-full rounded-lg border-slate-300" required></textarea>
             @error('reason') <span class="text-red-600">{{ $message }}</span> @enderror

@@ -8,6 +8,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Contribution;
 use App\Models\Member;
 use App\Services\ContributionSchedule;
+use App\Services\ManagementYearContext;
 use App\Services\ReceiptLedger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -106,6 +107,7 @@ class Index extends Component
         $this->authorizeManage();
 
         $contribution = Contribution::findOrFail($contributionId);
+        abort_if($contribution->status === ContributionStatus::Exoneree, 422, 'Échéance exonérée.');
 
         app(ReceiptLedger::class)->saveContribution($contribution, [
             'status' => ContributionStatus::Payee->value,
@@ -142,6 +144,7 @@ class Index extends Component
     {
         return Contribution::query()
             ->with('member')
+            ->when(app(ManagementYearContext::class)->selected(), fn ($q, $selected) => $q->whereDate('period_starts_on', '>=', $selected->starts_on)->whereDate('period_starts_on', '<=', $selected->ends_on))
             ->when($this->typeCode !== '', fn ($q) => $q->where('type_code', $this->typeCode))
             ->when($this->overview === 'reglees', fn ($q) => $q->where('paid_amount', '>', 0))
             ->when($this->overview === 'impayees', fn ($q) => $q->whereColumn('paid_amount', '<', 'due_amount'))
@@ -194,14 +197,16 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        $row = Contribution::query()->selectRaw(
+        $row = Contribution::query()
+            ->when(app(ManagementYearContext::class)->selected(), fn ($q, $selected) => $q->whereDate('period_starts_on', '>=', $selected->starts_on)->whereDate('period_starts_on', '<=', $selected->ends_on))
+            ->selectRaw(
             'COUNT(*) AS total, COALESCE(SUM(due_amount), 0) AS du, COALESCE(SUM(paid_amount), 0) AS encaisse, COALESCE(SUM(CASE WHEN status IN (?, ?) THEN 1 ELSE 0 END), 0) AS impayees',
             [ContributionStatus::Due->value, ContributionStatus::Retard->value]
         )->toBase()->first();
         $du = (float) $row->du;
         $encaisse = (float) $row->encaisse;
 
-        return ['total' => (int) $row->total, 'du' => $du, 'encaisse' => $encaisse, 'reste' => $du - $encaisse, 'impayees' => (int) $row->impayees];
+        return ['total' => (int) $row->total, 'du' => $du, 'encaisse' => $encaisse, 'reste' => max(0, $du - $encaisse), 'impayees' => (int) $row->impayees];
     }
 
     public function render(): View

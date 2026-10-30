@@ -72,6 +72,9 @@ final class ReceiptLedger
     {
         return DB::transaction(function () use ($contribution, $data): Contribution {
             $contribution = $contribution?->exists ? Contribution::query()->lockForUpdate()->findOrFail($contribution->id) : new Contribution;
+            if ($contribution->exists && $contribution->status === ContributionStatus::Exoneree) {
+                throw ValidationException::withMessages(['status' => 'Échéance exonérée : la décision doit être révisée dans une procédure administrative dédiée.']);
+            }
             $type = app(FinancialCatalog::class)->forWrite('contribution', $data['type_code'] ?? $contribution->type_code ?? 'mensuelle', $contribution->exists ? $contribution->type_code : null);
             $data['type_code'] = $type->code;
             if (! $contribution->exists && $type->frequency_months > 0 && isset($data['year'], $data['month'])) {

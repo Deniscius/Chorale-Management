@@ -3,6 +3,7 @@
     <x-page-header :title="app(\App\Services\FinancialCatalog::class)->section('contribution')" icon="users"
         :subtitle="'Suivi par type, mois et exercice — '.$this->stats['total'].' ligne(s).'">
         <x-slot name="actions">
+            @can('manage-settings')<a href="{{ route('contributions.counter-resets') }}" wire:navigate class="btn btn-secondary">Gérer les arriérés</a>@endcan
             @can('manage-settings')<a href="{{ route('settings.financial-types') }}" class="btn btn-secondary">Configurer les types</a>@endcan
             @if ($this->canManage())
                 <button type="button" wire:click="openSync" class="btn btn-secondary"><x-icon name="calendar" class="h-4 w-4" /> Actualiser les échéances</button>
@@ -124,7 +125,7 @@
                     <td class="whitespace-nowrap px-4 py-3 text-right">
                         @if ($this->canManage())
                             <div class="flex items-center justify-end gap-1">
-                                @unless ($contribution->isPaid())
+                                @unless ($contribution->isPaid() || $contribution->status === \App\Enums\ContributionStatus::Exoneree)
                                     <x-confirm-action :call="'markAsPaid('.$contribution->id.')'" title="Enregistrer le règlement"
                                         message="Le montant restant sera enregistré comme encaissé aujourd’hui." label="Marquer comme payée"
                                         icon="sparkles" icon-only trigger-class="rounded-lg p-2 text-slate-500 transition hover:bg-emerald-50 hover:text-emerald-600" />

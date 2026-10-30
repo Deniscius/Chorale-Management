@@ -205,10 +205,15 @@ try {
         .click();
     await dialog.waitFor({ state: 'detached' });
     const loan = page.getByRole('row').filter({ hasText: name });
-    page.once('dialog', (d) => d.accept());
     await loan
         .getByRole('button', { name: 'Matériel rendu', exact: true })
         .click();
+    const returnDialog = page.locator('[role="dialog"][aria-modal="true"]');
+    await returnDialog.waitFor();
+    await returnDialog
+        .getByRole('button', { name: 'Matériel rendu', exact: true })
+        .click();
+    await returnDialog.waitFor({ state: 'detached' });
     await loan.getByText(/Rendu le/).waitFor();
     await audit('material-loan-return');
     await page.setViewportSize({ width: 320, height: 844 });

@@ -7,6 +7,7 @@ use App\Enums\PerformanceType;
 use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Performance;
+use App\Services\ManagementYearContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -92,6 +93,7 @@ class Index extends Component
     public function performances()
     {
         return Performance::query()
+            ->when(app(ManagementYearContext::class)->selected(), fn ($q, $selected) => $q->whereDate('scheduled_at', '>=', $selected->starts_on)->whereDate('scheduled_at', '<=', $selected->ends_on))
             ->with('works')
             ->withSum(['transactions as spent_amount' => fn (Builder $query) => $query
                 ->where('type', 'depense')->whereIn('status', ['validee', 'cloturee'])], 'amount')

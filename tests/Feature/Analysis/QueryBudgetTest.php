@@ -37,7 +37,8 @@ class QueryBudgetTest extends TestCase
      *
      * Les valeurs correspondent aux mesures relevées après correction du
      * cache des propriétés calculées Livewire (5 à 9 requêtes par écran),
-     * majorées d'une marge de sécurité. Un retour à l'ancienne
+     * majorées d'une marge de sécurité. Les écrans incluent désormais une
+     * requête partagée pour charger le sélecteur global des années. Un retour à l'ancienne
      * implémentation (40 à 75 requêtes) fait échouer le test.
      *
      * @return array<string, array{0: string, 1: int}>
@@ -46,21 +47,21 @@ class QueryBudgetTest extends TestCase
     {
         return [
             'tableau de bord' => ['/dashboard', 20],
-            'membres' => ['/membres', 10],
-            'oeuvres' => ['/oeuvres', 10],
-            'repetitions' => ['/repetitions', 10],
-            'celebrations' => ['/celebrations', 9],
+            'membres' => ['/membres', 11],
+            'oeuvres' => ['/oeuvres', 11],
+            'repetitions' => ['/repetitions', 11],
+            'celebrations' => ['/celebrations', 10],
             'temps liturgiques' => ['/temps-liturgiques', 11],
-            'instruments' => ['/instruments', 8],
+            'instruments' => ['/instruments', 9],
             'mouvements' => ['/instruments/mouvements', 10],
             'maintenance' => ['/instruments/maintenance', 9],
             'ensembles' => ['/instruments/ensembles', 12],
-            'courriers' => ['/courriers', 9],
-            'activites' => ['/activites', 7],
-            'transactions' => ['/transactions', 9],
-            'budgets' => ['/budgets', 9],
-            'cotisations' => ['/cotisations', 9],
-            'dons' => ['/dons', 10],
+            'courriers' => ['/courriers', 10],
+            'activites' => ['/activites', 8],
+            'transactions' => ['/transactions', 10],
+            'budgets' => ['/budgets', 10],
+            'cotisations' => ['/cotisations', 10],
+            'dons' => ['/dons', 11],
             'archives' => ['/documents', 12],
             'utilisateurs' => ['/utilisateurs', 9],
         ];

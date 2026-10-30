@@ -52,7 +52,7 @@ class PerformanceStatsTest extends TestCase
 
     public static function modules(): array
     {
-        return [['Performances', 1], ['Activities', 1], ['Correspondences', 1], ['Rehearsals', 2], ['Instruments', 1], ['Transactions', 1], ['Contributions', 1], ['Donations', 2]];
+        return [['Performances', 2], ['Activities', 1], ['Correspondences', 1], ['Rehearsals', 3], ['Instruments', 1], ['Transactions', 1], ['Contributions', 2], ['Donations', 2]];
     }
 
     #[DataProvider('modules')]

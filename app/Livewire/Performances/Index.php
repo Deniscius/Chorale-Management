@@ -135,7 +135,9 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        $row = Performance::query()->selectRaw(
+        $row = Performance::query()
+            ->when(app(ManagementYearContext::class)->selected(), fn ($q, $year) => $q->whereDate('scheduled_at', '>=', $year->starts_on)->whereDate('scheduled_at', '<=', $year->ends_on))
+            ->selectRaw(
             'COUNT(*) AS total, COALESCE(SUM(CASE WHEN scheduled_at >= ? THEN 1 ELSE 0 END), 0) AS avenir, COALESCE(SUM(budget), 0) AS budget, COALESCE(SUM(revenue), 0) AS recettes', [now()]
         )->toBase()->first();
 

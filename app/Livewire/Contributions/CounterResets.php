@@ -11,6 +11,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Livewire\Attributes\Computed;
 
 final class CounterResets extends Component
 {
@@ -58,6 +59,15 @@ final class CounterResets extends Component
 
         $this->reset('starts_on', 'ends_on', 'reason');
         $this->dispatch('toast', type: 'success', message: $message);
+    }
+
+    #[Computed]
+    public function selectedMemberArrears(): ?float
+    {
+        if (! ctype_digit($this->member_id) || ! ($member = Member::find((int) $this->member_id))) {
+            return null;
+        }
+        return app(ContributionArrears::class)->currentArrears($member, $this->type_code ?: null);
     }
 
     public function render()

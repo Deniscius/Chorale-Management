@@ -93,6 +93,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Identité de la chorale : une instance par requête (valeurs mémorisées).
         $this->app->scoped(ChoraleIdentity::class);
+        $this->app->scoped(\App\Services\ManagementYearContext::class);
     }
 
     /**

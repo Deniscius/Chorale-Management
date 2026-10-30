@@ -22,6 +22,25 @@ final class ManagementYears extends Component
         Gate::authorize('manage-settings');
     }
 
+    public function updatedType(): void
+    {
+        $this->fillCivilDates();
+    }
+
+    public function updatedLabel(): void
+    {
+        $this->fillCivilDates();
+    }
+
+    private function fillCivilDates(): void
+    {
+        if ($this->type === 'civile' && preg_match('/^\\d{4}$/', $this->label)) {
+            $this->starts_on = $this->label.'-01-01';
+            $this->ends_on = $this->label.'-12-31';
+            $this->theme = '';
+        }
+    }
+
     public function edit(int $id): void
     {
         Gate::authorize('manage-settings');

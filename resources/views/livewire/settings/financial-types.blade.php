@@ -60,10 +60,14 @@
     @endif
 
     @if($showLabelsModal)
-        <x-modal-panel title="Noms des rubriques" subtitle="Adaptez les mots utilisés dans l’interface." close-event="close-labels" size="md">
+        <x-modal-panel title="Noms et exercice comptable" subtitle="Adaptez les mots utilisés dans l’interface et la période de référence de la chorale." close-event="close-labels" size="md">
             <form wire:submit="saveLabels" class="space-y-4">
                 <div><x-input-label for="contribution-label" value="Rubrique des cotisations" /><x-text-input id="contribution-label" wire:model="contribution_label" class="mt-1 w-full" maxlength="60" required /><x-input-error :messages="$errors->get('contribution_label')" /></div>
                 <div><x-input-label for="donation-label" value="Rubrique des dons" /><x-text-input id="donation-label" wire:model="donation_label" class="mt-1 w-full" maxlength="60" required /><x-input-error :messages="$errors->get('donation_label')" /></div>
+                <div><x-input-label for="exercise-mode" value="Année d’exercice" /><select id="exercise-mode" wire:model.live="exercise_mode" class="form-select mt-1"><option value="civil">Année civile (janvier à décembre)</option><option value="pastoral">Année pastorale</option></select><x-input-error :messages="$errors->get('exercise_mode')" /></div>
+                @if($exercise_mode === 'pastoral')
+                    <div><x-input-label for="pastoral-start-month" value="Mois de début de l’année pastorale" /><select id="pastoral-start-month" wire:model="pastoral_start_month" class="form-select mt-1">@foreach(range(1, 12) as $month)<option value="{{ $month }}">{{ \App\Support\Months::label($month) }}</option>@endforeach</select><x-input-error :messages="$errors->get('pastoral_start_month')" /></div>
+                @endif
                 <div class="flex justify-end gap-3 border-t pt-4"><button type="button" wire:click="$dispatch('close-labels')" class="btn btn-secondary">Annuler</button><button class="btn btn-primary" type="submit">Enregistrer</button></div>
             </form>
         </x-modal-panel>

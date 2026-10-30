@@ -52,11 +52,17 @@ class FinancialTypes extends Component
 
     public string $donation_label = 'Dons';
 
+    public string $exercise_mode = 'civil';
+
+    public int $pastoral_start_month = 9;
+
     public function mount(): void
     {
         $this->authorizeSettings();
         $this->contribution_label = app(FinancialCatalog::class)->section('contribution');
         $this->donation_label = app(FinancialCatalog::class)->section('donation');
+        $this->exercise_mode = Setting::get('finance.exercise_mode', 'civil');
+        $this->pastoral_start_month = (int) Setting::get('finance.pastoral_start_month', 9);
         $this->performance_budgets = app(PerformanceFundingPolicy::class)->all();
     }
 
@@ -73,8 +79,15 @@ class FinancialTypes extends Component
     public function saveLabels(): void
     {
         $this->authorizeSettings();
-        $this->validate(['contribution_label' => 'required|string|max:60', 'donation_label' => 'required|string|max:60']);
-        DB::transaction(fn () => Setting::setMany(['finance.label.contribution' => trim($this->contribution_label), 'finance.label.donation' => trim($this->donation_label)]));
+        $this->validate([
+            'contribution_label' => 'required|string|max:60', 'donation_label' => 'required|string|max:60',
+            'exercise_mode' => ['required', Rule::in(['civil', 'pastoral'])],
+            'pastoral_start_month' => ['required_if:exercise_mode,pastoral', 'integer', 'min:1', 'max:12'],
+        ]);
+        DB::transaction(fn () => Setting::setMany([
+            'finance.label.contribution' => trim($this->contribution_label), 'finance.label.donation' => trim($this->donation_label),
+            'finance.exercise_mode' => $this->exercise_mode, 'finance.pastoral_start_month' => $this->pastoral_start_month,
+        ]));
         $this->showLabelsModal = false;
         $this->redirectRoute('settings.financial-types');
     }

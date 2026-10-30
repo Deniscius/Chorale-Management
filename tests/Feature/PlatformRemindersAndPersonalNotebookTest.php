@@ -9,6 +9,7 @@ use App\Models\ActivityParticipant;
 use App\Models\AttendanceIncident;
 use App\Models\Contribution;
 use App\Models\Correspondence;
+use App\Models\Document;
 use App\Models\Member;
 use App\Models\NotificationDispatch;
 use App\Models\Performance;
@@ -29,6 +30,7 @@ final class PlatformRemindersAndPersonalNotebookTest extends TestCase
 
     public function test_calendar_reminders_are_personalized_targeted_and_idempotent(): void
     {
+        Carbon::setTestNow('2026-10-30 08:00:00');
         Notification::fake();
         $alice = Member::factory()->active()->create(['first_name' => 'Alice']);
         $bruno = Member::factory()->active()->create(['first_name' => 'Bruno']);
@@ -48,6 +50,7 @@ final class PlatformRemindersAndPersonalNotebookTest extends TestCase
         $this->assertSame(5, NotificationDispatch::count());
         Notification::assertSentToTimes($aliceUser, PlatformReminderNotification::class, 3);
         Notification::assertSentToTimes($brunoUser, PlatformReminderNotification::class, 2);
+        Carbon::setTestNow();
     }
 
     public function test_personal_obligations_notify_only_the_concerned_chorister(): void
@@ -154,6 +157,17 @@ final class PlatformRemindersAndPersonalNotebookTest extends TestCase
         $this->actingAs($user)->get(route('personal-notebook.show'))
             ->assertOk()->assertSee('Courriers de la chorale')->assertSee('Information pour toute la chorale')->assertSee('Courrier personnel Afi')
             ->assertDontSee('Courrier personnel Kossi')->assertDontSee('Courrier confidentiel de direction');
+    }
+
+    public function test_personal_notebook_lists_only_documents_allowed_by_visibility(): void
+    {
+        $member = Member::factory()->active()->create();
+        $user = User::factory()->role(UserRole::Choriste)->create(['member_id' => $member->id]);
+        Document::factory()->create(['title' => 'Programme partagé', 'visibility' => 'published']);
+        Document::factory()->create(['title' => 'Archive privée', 'visibility' => 'private']);
+
+        $this->actingAs($user)->get(route('personal-notebook.show'))
+            ->assertOk()->assertSee('Archives à consulter')->assertSee('Programme partagé')->assertDontSee('Archive privée');
     }
 
     public function test_direction_can_address_a_personal_letter_to_one_active_chorister(): void

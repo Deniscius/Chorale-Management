@@ -6,6 +6,7 @@ use App\Enums\ContributionFrequency;
 use App\Enums\ContributionStatus;
 use App\Enums\MemberStatus;
 use App\Models\Contribution;
+use App\Models\ContributionExemption;
 use App\Models\FinancialType;
 use App\Models\Member;
 use Carbon\CarbonImmutable;
@@ -68,7 +69,9 @@ final class ContributionSchedule
                 ->chunkById(100, function ($members) use ($types, $asOf, &$created): void {
                     foreach ($members as $member) {
                         foreach ($types as $type) {
+                            $exemptions = ContributionExemption::query()->where('member_id', $member->id)->where('type_code', $type->code)->get();
                             foreach ($this->duePeriods($member, $type, $asOf) as $period) {
+                                $exemption = $exemptions->first(fn (ContributionExemption $item) => $item->covers($period['period']));
                                 $entry = Contribution::firstOrCreate(
                                     [
                                         'member_id' => $member->id,
@@ -80,14 +83,18 @@ final class ContributionSchedule
                                         'choir_id' => $member->choir_id,
                                         'period_starts_on' => $period['period']->toDateString(),
                                         'due_on' => $period['due_on']->toDateString(),
-                                        'due_amount' => (float) ($type->default_amount ?? 0),
+                                        'exemption_id' => $exemption?->id,
+                                        'due_amount' => $exemption ? 0 : (float) ($type->default_amount ?? 0),
                                         'paid_amount' => 0,
-                                        'status' => $period['due_on']->lt($asOf) ? ContributionStatus::Retard : ContributionStatus::Due,
-                                        'notes' => 'Échéance générée automatiquement.',
+                                        'status' => $exemption ? ContributionStatus::Exoneree : ($period['due_on']->lt($asOf) ? ContributionStatus::Retard : ContributionStatus::Due),
+                                        'notes' => $exemption ? 'Exonération : '.($exemption->reason ?: 'décision de la chorale').'.' : 'Échéance générée automatiquement.',
                                     ],
                                 );
                                 if ($entry->wasRecentlyCreated) {
                                     $created++;
+                                } elseif ($exemption && (float) $entry->paid_amount === 0 && $entry->exemption_id !== $exemption->id) {
+                                    $entry->update(['exemption_id' => $exemption->id, 'due_amount' => 0, 'status' => ContributionStatus::Exoneree,
+                                        'notes' => 'Exonération : '.($exemption->reason ?: 'décision de la chorale').'.']);
                                 } elseif ((float) $entry->paid_amount <= 0 && $period['due_on']->lt($asOf) && $entry->status === ContributionStatus::Due) {
                                     $entry->update(['status' => ContributionStatus::Retard]);
                                 }

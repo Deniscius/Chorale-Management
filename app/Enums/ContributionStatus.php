@@ -11,6 +11,7 @@ enum ContributionStatus: string
     case Payee = 'payee';
     case Partiel = 'partiel';
     case Retard = 'retard';
+    case Exoneree = 'exoneree';
 
     use HasColor;
     use HasLabel;
@@ -22,6 +23,7 @@ enum ContributionStatus: string
             self::Payee->value => 'Payée',
             self::Partiel->value => 'Partiellement payée',
             self::Retard->value => 'En retard',
+            self::Exoneree->value => 'Exonérée',
         ];
     }
 
@@ -32,6 +34,7 @@ enum ContributionStatus: string
             self::Payee->value => 'green',
             self::Partiel->value => 'blue',
             self::Retard->value => 'red',
+            self::Exoneree->value => 'slate',
         ];
     }
 }

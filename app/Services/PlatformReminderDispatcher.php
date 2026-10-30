@@ -33,6 +33,7 @@ final class PlatformReminderDispatcher
         $members = $users->filter(fn (User $user) => $user->member?->status === MemberStatus::Actif)->values();
 
         $this->dispatchCalendar($members, $dryRun, $result);
+        $this->dispatchImminentCalendar($members, $dryRun, $result);
         $this->dispatchPersonalObligations($dryRun, $result);
         $this->dispatchOperationalDeadlines($users, $dryRun, $result);
 
@@ -42,6 +43,9 @@ final class PlatformReminderDispatcher
     private function dispatchCalendar(Collection $members, bool $dryRun, array &$result): void
     {
         foreach ($this->leadDays() as $days) {
+            if ($days === 0 && ! $this->isDailyReminderSlot()) {
+                continue;
+            }
             $date = today()->addDays($days);
 
             // Le rappel de répétition configuré (J-2 par défaut) conserve ses canaux
@@ -84,6 +88,40 @@ final class PlatformReminderDispatcher
                     ], $dryRun, $result);
                 });
         }
+    }
+
+    /** Reminders at 60, 45, 30 and 15 minutes before a scheduled event. */
+    private function dispatchImminentCalendar(Collection $members, bool $dryRun, array &$result): void
+    {
+        if (now()->minute % 15 !== 0) {
+            return;
+        }
+
+        $send = function (Collection $recipients, string $kind, object $event, $startsAt, string $title, ?string $venue, string $icon) use ($dryRun, &$result): void {
+            $minutes = now()->diffInMinutes($startsAt, false);
+            if ($minutes < 1 || $minutes > 60) {
+                return;
+            }
+            $this->sendTo($recipients, [
+                'key' => "urgent:{$kind}:{$event->id}:".now()->format('YmdHi'),
+                'kind' => $kind, 'subject' => $event, 'date' => $startsAt,
+                'title' => 'Rappel imminent',
+                'message' => $title.' commence dans '.$minutes.' minute'.($minutes > 1 ? 's' : '').($venue ? ' — '.$venue : '').'.',
+                'url' => route('personal-notebook.show', absolute: false), 'icon' => $icon,
+            ], $dryRun, $result);
+        };
+
+        Rehearsal::query()->whereDate('date', today())->whereIn('status', ['planifiee', 'reportee'])->get()
+            ->each(function (Rehearsal $event) use ($members, $send): void {
+                $send($members, 'rehearsal', $event, $event->date->copy()->setTimeFromTimeString($event->starts_at ?: '00:00'), 'La répétition', $event->venue, 'music');
+            });
+        Performance::query()->whereDate('scheduled_at', today())->whereIn('status', ['planifiee', 'reportee'])->get()
+            ->each(fn (Performance $event) => $send($members, 'performance', $event, $event->scheduled_at, $event->title, $event->venue, 'sparkles'));
+        Activity::query()->whereDate('starts_at', today())->whereIn('status', ['planifiee', 'reportee'])->with('participantRecords.member.user')->get()
+            ->each(function (Activity $event) use ($members, $send): void {
+                $recipients = $event->participantRecords->isEmpty() ? $members : $event->participantRecords->map(fn ($record) => $record->member?->user)->filter()->unique('id')->values();
+                $send($recipients, 'activity', $event, $event->starts_at, $event->title, $event->venue, 'calendar');
+            });
     }
 
     private function dispatchPersonalObligations(bool $dryRun, array &$result): void
@@ -237,6 +275,11 @@ final class PlatformReminderDispatcher
         $slot = $hours->filter(fn (int $hour) => $hour <= now()->hour)->last() ?? $hours->first() ?? now()->hour;
 
         return $key.':j'.today()->toDateString().":h{$slot}";
+    }
+
+    private function isDailyReminderSlot(): bool
+    {
+        return now()->minute < 15 && in_array(now()->hour, (array) config('chorale.reminders.day_of_reminder_hours', [8, 12, 17]), true);
     }
 
     private function moduleUsers(Collection $users, string $module): Collection

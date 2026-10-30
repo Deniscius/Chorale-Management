@@ -72,6 +72,10 @@
                     </div>
                 </section>
 
+                @if(auth()->user()->canManageModule(\App\Enums\UserRole::MODULE_COMPTABILITE))
+                    <livewire:members.contribution-exemptions :member="$member" />
+                @endif
+
                 <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
                     <div class="border-b border-slate-200 p-5">
                         <h2 class="font-semibold text-slate-900">Incidents de présence</h2>

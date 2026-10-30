@@ -27,6 +27,7 @@ class Contribution extends Model
         'month',
         'period_starts_on',
         'due_on',
+        'exemption_id',
         'due_amount',
         'paid_amount',
         'paid_on',
@@ -66,6 +67,11 @@ class Contribution extends Model
     public function choir(): BelongsTo
     {
         return $this->belongsTo(Choir::class);
+    }
+
+    public function exemption(): BelongsTo
+    {
+        return $this->belongsTo(ContributionExemption::class);
     }
 
     public function isPaid(): bool

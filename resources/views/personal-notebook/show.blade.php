@@ -163,5 +163,35 @@
                 </ul>
             @endif
         </section>
+
+        <section class="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm">
+            <header class="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
+                <div>
+                    <h2 class="font-semibold text-slate-900">Archives à consulter</h2>
+                    <p class="mt-1 text-sm text-slate-500">Documents partagés avec toute la chorale ou accessibles selon votre commission.</p>
+                </div>
+                <x-icon name="archive" class="h-5 w-5 shrink-0 text-slate-500" />
+            </header>
+            @if($documents->isEmpty())
+                <x-empty-state icon="document" title="Aucune archive accessible" description="Les documents autorisés apparaîtront ici." />
+            @else
+                <ul class="divide-y divide-slate-100">
+                    @foreach($documents as $document)
+                        <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+                            <div class="min-w-0">
+                                <p class="font-semibold text-slate-900">{{ $document->title }}</p>
+                                <p class="mt-1 text-xs text-slate-500">{{ $document->category ?: 'Document' }} · {{ $document->document_date?->format('d/m/Y') ?? 'Sans date' }} · {{ $document->humanSize() }}</p>
+                            </div>
+                            <div class="flex shrink-0 gap-2">
+                                @if($document->isPreviewable())
+                                    <a href="{{ route('documents.preview', $document) }}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">Aperçu</a>
+                                @endif
+                                <a href="{{ route('documents.download', $document) }}" class="btn btn-secondary btn-sm">Télécharger</a>
+                            </div>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </section>
     @endif
 </x-app-layout>

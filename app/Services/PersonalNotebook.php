@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Activity;
 use App\Models\Correspondence;
+use App\Models\Document;
 use App\Models\InstrumentMovement;
 use App\Models\Member;
 use App\Models\Performance;
@@ -22,7 +23,7 @@ final class PersonalNotebook
     public function for(?Member $member, int $limit = 50): array
     {
         if (! $member) {
-            return ['member' => null, 'timeline' => collect(), 'tasks' => collect(), 'correspondences' => collect(), 'contributions' => collect(), 'incidents' => collect(), 'attendance' => []];
+            return ['member' => null, 'timeline' => collect(), 'tasks' => collect(), 'correspondences' => collect(), 'documents' => collect(), 'contributions' => collect(), 'incidents' => collect(), 'attendance' => []];
         }
 
         $from = now();
@@ -101,6 +102,9 @@ final class PersonalNotebook
                     });
             })
             ->latest('correspondence_date')->latest('id')->take(12)->get();
+        $documents = Document::query()
+            ->readable($member->user)
+            ->latest('document_date')->latest('id')->take(12)->get();
         $attendanceRows = $member->rehearsalAttendances()->get(['status'])
             ->concat($member->activityParticipants()->whereNotNull('checked_at')->get(['status']));
 
@@ -109,6 +113,7 @@ final class PersonalNotebook
             'timeline' => $timeline,
             'tasks' => $tasks,
             'correspondences' => $correspondences,
+            'documents' => $documents,
             'contributions' => $contributions,
             'incidents' => $incidents,
             'attendance' => $attendanceRows->countBy(fn ($row) => $row->status->value)->all(),

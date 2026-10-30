@@ -21,7 +21,7 @@ final class ContributionArrears
      */
     public function startNewCounter(Member $member, CarbonImmutable $date, string $reason, ?string $typeCode = null): ContributionCounterReset
     {
-        Gate::authorize('manage-module', UserRole::MODULE_COMPTABILITE);
+        Gate::authorize('manage-settings');
         if (mb_strlen(trim($reason)) < 5) {
             throw ValidationException::withMessages(['reason' => 'Un motif de cinq caractères minimum est obligatoire.']);
         }
@@ -41,7 +41,7 @@ final class ContributionArrears
      */
     public function exemptUnpaid(Member $member, CarbonImmutable $from, CarbonImmutable $until, string $typeCode, string $reason): int
     {
-        Gate::authorize('manage-module', UserRole::MODULE_COMPTABILITE);
+        Gate::authorize('manage-settings');
         if ($until->lt($from) || mb_strlen(trim($reason)) < 5) {
             throw ValidationException::withMessages(['reason' => 'Période ou motif invalide (cinq caractères minimum).']);
         }

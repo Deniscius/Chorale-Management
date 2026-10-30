@@ -18,6 +18,7 @@ return [
         'lease_minutes' => (int) env('REMINDERS_LEASE_MINUTES', 60),
         'days_before' => (int) env('REMINDERS_DAYS_BEFORE', 2),
         'platform_days' => array_map('intval', explode(',', env('REMINDERS_PLATFORM_DAYS', '7,2,0'))),
+        'day_of_reminder_hours' => array_map('intval', explode(',', env('REMINDERS_DAY_OF_HOURS', '8,12,17'))),
         'notebook_days' => (int) env('PERSONAL_NOTEBOOK_DAYS', 45),
         'send_at' => env('REMINDERS_SEND_AT', '08:00'),
         'oidc_audience' => env('REMINDERS_OIDC_AUDIENCE', 'chorale-management-reminders'),

@@ -131,5 +131,37 @@
                 </a>
             </div>
         </div>
+
+        <section class="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm">
+            <header class="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
+                <div>
+                    <h2 class="font-semibold text-slate-900">Courriers de la chorale</h2>
+                    <p class="mt-1 text-sm text-slate-500">Les courriers adressés à toute la chorale et ceux qui vous sont personnellement destinés.</p>
+                </div>
+                <x-icon name="mail" class="h-5 w-5 shrink-0 text-slate-500" />
+            </header>
+            @if($correspondences->isEmpty())
+                <x-empty-state icon="mail" title="Aucun courrier à consulter" description="Les courriers partagés et personnels apparaîtront ici." />
+            @else
+                <ul class="divide-y divide-slate-100">
+                    @foreach($correspondences as $correspondence)
+                        <li class="px-5 py-4">
+                            <div class="flex flex-wrap items-start justify-between gap-2">
+                                <div class="min-w-0">
+                                    <p class="font-semibold text-slate-900">{{ $correspondence->subject }}</p>
+                                    <p class="mt-1 text-xs text-slate-500">{{ $correspondence->reference }} · {{ $correspondence->correspondence_date->format('d/m/Y') }} · {{ $correspondence->recipient_member_id ? 'Courrier personnel' : 'Courrier de la chorale' }}</p>
+                                </div>
+                                @if($correspondence->recipient_member_id)
+                                    <span class="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700">Personnel</span>
+                                @endif
+                            </div>
+                            @if($correspondence->body)
+                                <p class="mt-2 whitespace-pre-line text-sm text-slate-700">{{ $correspondence->body }}</p>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </section>
     @endif
 </x-app-layout>

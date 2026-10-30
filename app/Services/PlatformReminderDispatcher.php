@@ -50,7 +50,7 @@ final class PlatformReminderDispatcher
                 Rehearsal::query()->whereDate('date', $date)->whereIn('status', ['planifiee', 'reportee'])
                     ->each(function (Rehearsal $event) use ($members, $days, $dryRun, &$result) {
                         $this->sendTo($members, [
-                            'key' => "rehearsal:{$event->id}:{$event->date->toDateString()}:d{$days}",
+                            'key' => $this->calendarKey("rehearsal:{$event->id}:{$event->date->toDateString()}:d{$days}", $days),
                             'kind' => 'rehearsal', 'subject' => $event, 'date' => $event->date,
                             'title' => $days === 0 ? 'Répétition aujourd’hui' : 'Répétition à venir',
                             'message' => $this->whenMessage('la répétition', $event->date, $days, $event->starts_at, $event->venue),
@@ -62,7 +62,7 @@ final class PlatformReminderDispatcher
             Performance::query()->whereDate('scheduled_at', $date)->whereIn('status', ['planifiee', 'reportee'])
                 ->each(function (Performance $event) use ($members, $days, $dryRun, &$result) {
                     $this->sendTo($members, [
-                        'key' => "performance:{$event->id}:{$event->scheduled_at->toDateString()}:d{$days}",
+                        'key' => $this->calendarKey("performance:{$event->id}:{$event->scheduled_at->toDateString()}:d{$days}", $days),
                         'kind' => 'performance', 'subject' => $event, 'date' => $event->scheduled_at,
                         'title' => $days === 0 ? 'Événement aujourd’hui' : 'Événement à venir',
                         'message' => $this->whenMessage($event->title, $event->scheduled_at, $days, $event->scheduled_at->format('H:i'), $event->venue),
@@ -76,7 +76,7 @@ final class PlatformReminderDispatcher
                         ? $members
                         : $event->participantRecords->map(fn ($record) => $record->member?->user)->filter()->unique('id')->values();
                     $this->sendTo($participants, [
-                        'key' => "activity:{$event->id}:{$event->starts_at->toDateString()}:d{$days}",
+                        'key' => $this->calendarKey("activity:{$event->id}:{$event->starts_at->toDateString()}:d{$days}", $days),
                         'kind' => 'activity', 'subject' => $event, 'date' => $event->starts_at,
                         'title' => $days === 0 ? 'Activité aujourd’hui' : 'Activité à venir',
                         'message' => $this->whenMessage($event->title, $event->starts_at, $days, $event->starts_at->format('H:i'), $event->venue),
@@ -128,7 +128,7 @@ final class PlatformReminderDispatcher
             InstrumentMaintenance::query()->with('instrument')->whereDate('scheduled_for', $date)->where('status', 'planifiee')
                 ->each(function (InstrumentMaintenance $item) use ($users, $days, $date, $dryRun, &$result) {
                     $this->sendTo($this->moduleUsers($users, UserRole::MODULE_INSTRUMENTS), [
-                        'key' => "maintenance:{$item->id}:{$date->toDateString()}:d{$days}",
+                        'key' => $this->calendarKey("maintenance:{$item->id}:{$date->toDateString()}:d{$days}", $days),
                         'kind' => 'maintenance', 'subject' => $item, 'date' => $date,
                         'title' => 'Maintenance d’instrument',
                         'message' => $this->whenMessage('la maintenance de '.$item->instrument->name, $date, $days),
@@ -144,7 +144,7 @@ final class PlatformReminderDispatcher
                         $recipients = $this->moduleUsers($users, UserRole::MODULE_INSTRUMENTS);
                     }
                     $this->sendTo($recipients, [
-                        'key' => "instrument-return:{$item->id}:{$date->toDateString()}:d{$days}",
+                        'key' => $this->calendarKey("instrument-return:{$item->id}:{$date->toDateString()}:d{$days}", $days),
                         'kind' => 'instrument-return', 'subject' => $item, 'date' => $date,
                         'title' => 'Retour d’instrument',
                         'message' => $this->whenMessage('le retour de '.$item->instrument->name, $date, $days),
@@ -223,6 +223,20 @@ final class PlatformReminderDispatcher
         $days = array_map('intval', (array) config('chorale.reminders.platform_days', [7, 2, 0]));
 
         return array_values(array_unique(array_filter($days, fn (int $day) => $day >= 0 && $day <= 30)));
+    }
+
+    /** Advance reminders stay idempotent; day-J reminders repeat once per planned slot. */
+    private function calendarKey(string $key, int $days): string
+    {
+        if ($days !== 0) {
+            return $key;
+        }
+
+        $hours = collect((array) config('chorale.reminders.day_of_reminder_hours', [8, 12, 17]))
+            ->map(fn ($hour) => max(0, min(23, (int) $hour)))->unique()->sort()->values();
+        $slot = $hours->filter(fn (int $hour) => $hour <= now()->hour)->last() ?? $hours->first() ?? now()->hour;
+
+        return $key.':j'.today()->toDateString().":h{$slot}";
     }
 
     private function moduleUsers(Collection $users, string $module): Collection

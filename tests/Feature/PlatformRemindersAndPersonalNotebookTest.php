@@ -3,10 +3,12 @@
 namespace Tests\Feature;
 
 use App\Enums\UserRole;
+use App\Livewire\Correspondences\Form as CorrespondenceForm;
 use App\Models\Activity;
 use App\Models\ActivityParticipant;
 use App\Models\AttendanceIncident;
 use App\Models\Contribution;
+use App\Models\Correspondence;
 use App\Models\Member;
 use App\Models\NotificationDispatch;
 use App\Models\Performance;
@@ -16,7 +18,9 @@ use App\Notifications\PlatformReminderNotification;
 use App\Services\PersonalNotebook;
 use App\Services\PlatformReminderDispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 final class PlatformRemindersAndPersonalNotebookTest extends TestCase
@@ -89,6 +93,27 @@ final class PlatformRemindersAndPersonalNotebookTest extends TestCase
         Notification::assertSentToTimes($user, PlatformReminderNotification::class, 1);
     }
 
+    public function test_day_j_reminders_repeat_once_for_each_configured_time_slot(): void
+    {
+        Notification::fake();
+        config(['chorale.reminders.platform_days' => [0], 'chorale.reminders.day_of_reminder_hours' => [8, 12, 17]]);
+        $member = Member::factory()->active()->create();
+        $user = User::factory()->role(UserRole::Choriste)->create(['member_id' => $member->id]);
+        Performance::factory()->create(['scheduled_at' => Carbon::parse('2026-10-30 18:00:00'), 'status' => 'planifiee']);
+
+        Carbon::setTestNow('2026-10-30 08:05:00');
+        app(PlatformReminderDispatcher::class)->dispatchAll();
+        Carbon::setTestNow('2026-10-30 12:05:00');
+        app(PlatformReminderDispatcher::class)->dispatchAll();
+        Carbon::setTestNow('2026-10-30 17:05:00');
+        app(PlatformReminderDispatcher::class)->dispatchAll();
+        app(PlatformReminderDispatcher::class)->dispatchAll();
+        Carbon::setTestNow();
+
+        Notification::assertSentToTimes($user, PlatformReminderNotification::class, 3);
+        $this->assertSame(3, NotificationDispatch::query()->where('kind', 'performance')->count());
+    }
+
     public function test_personal_notebook_shows_common_and_assigned_events_without_leaking_another_members_activity(): void
     {
         $member = Member::factory()->active()->create(['first_name' => 'Afi', 'photo_path' => 'tenants/1/members/1/identity/afi.png']);
@@ -107,6 +132,47 @@ final class PlatformRemindersAndPersonalNotebookTest extends TestCase
         $this->actingAs($user)->get(route('personal-notebook.show'))
             ->assertOk()->assertSee('Carnet personnel de Afi')->assertSee('Activité Afi')
             ->assertSee(route('members.photo', $member), false)->assertDontSee('Activité privée autre');
+    }
+
+    public function test_personal_notebook_shows_shared_and_personal_letters_without_leaking_private_letters(): void
+    {
+        $member = Member::factory()->active()->create(['first_name' => 'Afi']);
+        $other = Member::factory()->active()->create(['first_name' => 'Kossi']);
+        $user = User::factory()->role(UserRole::Choriste)->create(['member_id' => $member->id]);
+        Correspondence::factory()->create(['subject' => 'Information pour toute la chorale', 'confidentiality' => 'normal']);
+        Correspondence::factory()->create(['subject' => 'Courrier personnel Afi', 'recipient_member_id' => $member->id, 'confidentiality' => 'confidentiel']);
+        Correspondence::factory()->create(['subject' => 'Courrier personnel Kossi', 'recipient_member_id' => $other->id, 'confidentiality' => 'confidentiel']);
+        Correspondence::factory()->create(['subject' => 'Courrier confidentiel de direction', 'confidentiality' => 'confidentiel']);
+
+        $notebook = app(PersonalNotebook::class)->for($member);
+
+        $this->assertTrue($notebook['correspondences']->contains('subject', 'Information pour toute la chorale'));
+        $this->assertTrue($notebook['correspondences']->contains('subject', 'Courrier personnel Afi'));
+        $this->assertFalse($notebook['correspondences']->contains('subject', 'Courrier personnel Kossi'));
+        $this->assertFalse($notebook['correspondences']->contains('subject', 'Courrier confidentiel de direction'));
+
+        $this->actingAs($user)->get(route('personal-notebook.show'))
+            ->assertOk()->assertSee('Courriers de la chorale')->assertSee('Information pour toute la chorale')->assertSee('Courrier personnel Afi')
+            ->assertDontSee('Courrier personnel Kossi')->assertDontSee('Courrier confidentiel de direction');
+    }
+
+    public function test_direction_can_address_a_personal_letter_to_one_active_chorister(): void
+    {
+        $director = User::factory()->role(UserRole::Directeur)->create();
+        $member = Member::factory()->active()->create(['first_name' => 'Afi', 'last_name' => 'Koffi']);
+
+        Livewire::actingAs($director)->test(CorrespondenceForm::class)
+            ->set('sender_name', 'Direction')
+            ->set('subject', 'Convocation personnelle')
+            ->set('recipient_member_id', (string) $member->id)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('correspondences', [
+            'recipient_member_id' => $member->id,
+            'recipient_name' => 'Afi Koffi',
+            'subject' => 'Convocation personnelle',
+        ]);
     }
 
     public function test_personal_notebook_requires_authentication(): void

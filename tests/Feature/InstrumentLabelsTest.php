@@ -78,6 +78,17 @@ class InstrumentLabelsTest extends TestCase
             ->assertDontSee('Un objet · un code permanent');
     }
 
+    public function test_long_instrument_names_wrap_on_the_label(): void
+    {
+        $this->actingAs(User::factory()->role(UserRole::Admin)->create());
+        $instrument = Instrument::factory()->create(['name' => 'Très grand instrument de percussion liturgique avec un nom particulièrement long', 'quantity' => 1]);
+        app(InstrumentIdentity::class)->generate($instrument->id);
+
+        $this->post(route('instruments.labels'), ['units' => [$instrument->units()->value('id')], 'start' => 1])
+            ->assertOk()->assertSee('overflow-wrap:anywhere', false)->assertSee('white-space:normal', false)
+            ->assertSee('Très grand instrument de percussion liturgique avec un nom particulièrement long');
+    }
+
     public function test_instrument_image_is_private_and_can_be_replaced(): void
     {
         Storage::fake('local');

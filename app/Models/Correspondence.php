@@ -32,6 +32,7 @@ class Correspondence extends Model
         'sender_name',
         'sender_organization',
         'recipient_name',
+        'recipient_member_id',
         'service_id',
         'subject',
         'body',
@@ -83,6 +84,12 @@ class Correspondence extends Model
     public function assignedMember(): BelongsTo
     {
         return $this->belongsTo(Member::class, 'assigned_to');
+    }
+
+    /** The chorister who alone receives a personal correspondence. */
+    public function recipientMember(): BelongsTo
+    {
+        return $this->belongsTo(Member::class, 'recipient_member_id');
     }
 
     public function author(): BelongsTo

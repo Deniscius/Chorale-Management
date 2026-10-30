@@ -13,6 +13,7 @@ use App\Models\Correspondence;
 use App\Models\CorrespondenceService;
 use App\Models\Member;
 use App\Services\DocumentArchive;
+use App\Tenancy\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -51,6 +52,9 @@ class Form extends Component
     #[Validate('nullable|string|max:255')]
     public ?string $recipient_name = null;
 
+    #[Validate]
+    public ?string $recipient_member_id = null;
+
     #[Validate('nullable|exists:correspondence_services,id')]
     public ?string $service_id = null;
 
@@ -85,6 +89,12 @@ class Form extends Component
             'channel' => ['required', Rule::enum(CorrespondenceChannel::class)],
             'confidentiality' => ['required', Rule::enum(Confidentiality::class)],
             'status' => ['required', Rule::enum(CorrespondenceStatus::class)],
+            'recipient_member_id' => [
+                'nullable',
+                Rule::exists('members', 'id')
+                    ->where('tenant_id', app(TenantContext::class)->requireId())
+                    ->where('status', 'actif'),
+            ],
         ];
     }
 
@@ -104,6 +114,7 @@ class Form extends Component
                 'sender_name' => $correspondence->sender_name,
                 'sender_organization' => $correspondence->sender_organization,
                 'recipient_name' => $correspondence->recipient_name,
+                'recipient_member_id' => $correspondence->recipient_member_id,
                 'service_id' => $correspondence->service_id,
                 'subject' => $correspondence->subject,
                 'body' => $correspondence->body,
@@ -133,6 +144,7 @@ class Form extends Component
             'sender_name' => $this->sender_name,
             'sender_organization' => $this->sender_organization,
             'recipient_name' => $this->recipient_name,
+            'recipient_member_id' => $this->recipient_member_id !== null && $this->recipient_member_id !== '' ? (int) $this->recipient_member_id : null,
             'service_id' => $this->service_id !== null && $this->service_id !== '' ? (int) $this->service_id : null,
             'subject' => $this->subject,
             'body' => $this->body,
@@ -163,6 +175,19 @@ class Form extends Component
 
         $this->dispatch('toast', type: 'success', message: $message);
         $this->dispatch('close-form');
+    }
+
+    /** Keep the printed recipient and the private notebook recipient aligned. */
+    public function updatedRecipientMemberId(?string $memberId): void
+    {
+        if (blank($memberId)) {
+            return;
+        }
+
+        $member = Member::query()->where('status', 'actif')->find($memberId);
+        if ($member) {
+            $this->recipient_name = $member->full_name;
+        }
     }
 
     /**

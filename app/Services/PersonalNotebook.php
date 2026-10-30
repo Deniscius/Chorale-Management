@@ -22,7 +22,7 @@ final class PersonalNotebook
     public function for(?Member $member, int $limit = 50): array
     {
         if (! $member) {
-            return ['member' => null, 'timeline' => collect(), 'tasks' => collect(), 'contributions' => collect(), 'incidents' => collect(), 'attendance' => []];
+            return ['member' => null, 'timeline' => collect(), 'tasks' => collect(), 'correspondences' => collect(), 'contributions' => collect(), 'incidents' => collect(), 'attendance' => []];
         }
 
         $from = now();
@@ -93,6 +93,14 @@ final class PersonalNotebook
                         'date' => $item->expected_return_on, 'icon' => 'cube',
                     ])
             )->sortBy(fn (array $task) => $task['date']?->timestamp ?? PHP_INT_MAX)->values();
+        $correspondences = Correspondence::query()
+            ->where(function ($query) use ($member) {
+                $query->where('recipient_member_id', $member->id)
+                    ->orWhere(function ($shared) {
+                        $shared->whereNull('recipient_member_id')->where('confidentiality', 'normal');
+                    });
+            })
+            ->latest('correspondence_date')->latest('id')->take(12)->get();
         $attendanceRows = $member->rehearsalAttendances()->get(['status'])
             ->concat($member->activityParticipants()->whereNotNull('checked_at')->get(['status']));
 
@@ -100,6 +108,7 @@ final class PersonalNotebook
             'member' => $member,
             'timeline' => $timeline,
             'tasks' => $tasks,
+            'correspondences' => $correspondences,
             'contributions' => $contributions,
             'incidents' => $incidents,
             'attendance' => $attendanceRows->countBy(fn ($row) => $row->status->value)->all(),

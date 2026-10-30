@@ -32,7 +32,7 @@
             </div>
         </div>
 
-        <div class="grid gap-4 sm:grid-cols-3">
+        <div class="grid gap-4 sm:grid-cols-4">
             <div>
                 <x-input-label for="correspondences-form-sender_name" value="Expéditeur" />
                 <x-text-input id="correspondences-form-sender_name" type="text" name="sender_name" aria-describedby="correspondences-form-sender_name-error" aria-invalid="{{ $errors->has('sender_name') ? 'true' : 'false' }}" wire:model="sender_name" class="mt-1 block w-full" required />
@@ -49,6 +49,18 @@
                 <x-input-label for="correspondences-form-recipient_name" value="Destinataire" />
                 <x-text-input id="correspondences-form-recipient_name" type="text" name="recipient_name" aria-describedby="correspondences-form-recipient_name-error" aria-invalid="{{ $errors->has('recipient_name') ? 'true' : 'false' }}" wire:model="recipient_name" class="mt-1 block w-full" />
                 <x-input-error id="correspondences-form-recipient_name-error" :messages="$errors->get('recipient_name')" class="mt-1" />
+            </div>
+
+            <div>
+                <x-input-label for="correspondences-form-recipient_member_id" value="Membre destinataire" />
+                <select id="correspondences-form-recipient_member_id" aria-describedby="correspondences-form-recipient_member_id-error" aria-invalid="{{ $errors->has('recipient_member_id') ? 'true' : 'false' }}" wire:model.live="recipient_member_id" class="form-select mt-1">
+                    <option value="">Toute la chorale</option>
+                    @foreach ($this->assignees as $member)
+                        <option value="{{ $member->id }}">{{ $member->full_name }}</option>
+                    @endforeach
+                </select>
+                <p class="mt-1 text-xs text-slate-500">Un courrier destiné à un membre apparaît uniquement dans son carnet.</p>
+                <x-input-error id="correspondences-form-recipient_member_id-error" :messages="$errors->get('recipient_member_id')" class="mt-1" />
             </div>
         </div>
 

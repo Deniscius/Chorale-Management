@@ -3,7 +3,7 @@
     <x-page-header :title="app(\App\Services\FinancialCatalog::class)->section('contribution')" icon="users"
         :subtitle="'Suivi par type, mois et exercice — '.$this->stats['total'].' ligne(s).'">
         <x-slot name="actions">
-            @if ($this->canManage())<a href="{{ route('contributions.counter-resets') }}" wire:navigate class="btn btn-secondary">Gérer les arriérés</a>@endif
+            @can('manage-settings')<a href="{{ route('contributions.counter-resets') }}" wire:navigate class="btn btn-secondary">Gérer les arriérés</a>@endcan
             @can('manage-settings')<a href="{{ route('settings.financial-types') }}" class="btn btn-secondary">Configurer les types</a>@endcan
             @if ($this->canManage())
                 <button type="button" wire:click="openSync" class="btn btn-secondary"><x-icon name="calendar" class="h-4 w-4" /> Actualiser les échéances</button>

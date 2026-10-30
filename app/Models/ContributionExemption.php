@@ -10,11 +10,11 @@ final class ContributionExemption extends Model
 {
     use BelongsToTenant;
 
-    protected $fillable = ['member_id', 'type_code', 'starts_on', 'ends_on', 'reason', 'approved_by'];
+    protected $fillable = ['member_id', 'type_code', 'starts_on', 'ends_on', 'clears_prior_arrears', 'reason', 'approved_by'];
 
     protected function casts(): array
     {
-        return ['starts_on' => 'date', 'ends_on' => 'date'];
+        return ['starts_on' => 'date', 'ends_on' => 'date', 'clears_prior_arrears' => 'boolean'];
     }
 
     public function member(): BelongsTo

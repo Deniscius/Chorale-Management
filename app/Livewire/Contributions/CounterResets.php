@@ -23,12 +23,12 @@ final class CounterResets extends Component
 
     public function mount(): void
     {
-        Gate::authorize('manage-module', UserRole::MODULE_COMPTABILITE);
+        Gate::authorize('manage-settings');
     }
 
     public function save(ContributionArrears $arrears): void
     {
-        Gate::authorize('manage-module', UserRole::MODULE_COMPTABILITE);
+        Gate::authorize('manage-settings');
         $this->validate([
             'method' => ['required', Rule::in(['exemption', 'new_start'])],
             'member_id' => ['required', 'integer', Rule::exists('members', 'id')],

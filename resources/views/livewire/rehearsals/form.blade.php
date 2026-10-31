@@ -51,6 +51,11 @@
             </div>
         </div>
 
+        <label class="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
+            <input type="checkbox" wire:model="is_special" class="mt-1 rounded border-slate-300">
+            <span><strong>Répétition spéciale ou exceptionnelle</strong><span class="block text-xs text-slate-600">Cette séance reste indépendante des créneaux habituels. Vous pouvez informer les choristes depuis la liste après enregistrement.</span></span>
+        </label>
+
         <div>
             <p id="rehearsals-program-label" class="form-label">Œuvres au programme</p>
             <div role="group" aria-labelledby="rehearsals-program-label" class="mt-1 max-h-56 overflow-y-auto rounded-lg border border-slate-300 p-2">

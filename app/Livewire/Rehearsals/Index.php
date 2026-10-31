@@ -9,6 +9,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Rehearsal;
 use App\Services\ChoraleAssistant;
 use App\Services\ManagementYearContext;
+use App\Services\ReminderDispatcher;
 use App\Tenancy\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -104,6 +105,16 @@ class Index extends Component
         Rehearsal::findOrFail($rehearsalId)->delete();
 
         $this->dispatch('toast', type: 'success', message: 'Répétition supprimée.');
+    }
+
+    public function notifySpecial(int $id): void
+    {
+        $this->authorizeManage();
+        $rehearsal = Rehearsal::findOrFail($id);
+        abort_unless($rehearsal->is_special && $rehearsal->date->gte(today()) && $rehearsal->status === EventStatus::Planifiee, 422);
+        abort_unless(config('chorale.reminders.enabled'), 422, 'Les notifications sont désactivées.');
+        $result = app(ReminderDispatcher::class)->dispatchForRehearsal($rehearsal);
+        $this->dispatch('toast', type: 'success', message: $result['queued'].' en file, '.$result['sent'].' envoyée(s), '.$result['skipped'].' déjà traitée(s), '.$result['failed'].' échec(s).');
     }
 
     #[Computed]

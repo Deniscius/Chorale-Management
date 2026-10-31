@@ -47,6 +47,7 @@ use App\Livewire\Instruments\Units;
 use App\Livewire\Members\Index as MembersIndex;
 use App\Livewire\Performances\Index as PerformancesIndex;
 use App\Livewire\Rehearsals\Index as RehearsalsIndex;
+use App\Livewire\Rehearsals\Rhythms as RehearsalRhythms;
 use App\Livewire\Reminders\History as RemindersHistory;
 use App\Livewire\Seasons\Index as SeasonsIndex;
 use App\Livewire\Settings\Chorale as SettingsChorale;
@@ -122,6 +123,10 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
         ->middleware(['module:'.UserRole::MODULE_LITURGIQUE, 'throttle:30,1'])->name('voice-space.destroy');
     Route::get('/mon-pupitre/{resource}/audio', VoiceResourceAudioController::class)
         ->middleware('module:'.UserRole::MODULE_LITURGIQUE)->name('voice-space.audio');
+
+    Route::get('/repetitions/rythmes', RehearsalRhythms::class)
+        ->middleware('module:'.UserRole::MODULE_LITURGIQUE)
+        ->name('rehearsals.rhythms');
 
     Route::get('/repetitions', RehearsalsIndex::class)
         ->middleware('module:'.UserRole::MODULE_LITURGIQUE)

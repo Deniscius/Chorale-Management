@@ -2,6 +2,7 @@
 
 use App\Console\Commands\SendRehearsalReminders;
 use App\Console\Commands\SyncContributionSchedules;
+use App\Console\Commands\SyncRehearsalRhythms;
 use App\Console\Commands\SyncSubscriptions;
 use App\Models\Tenant;
 use App\Services\ReminderDispatcher;
@@ -22,6 +23,9 @@ Schedule::command(SyncSubscriptions::class)->everyFiveMinutes()->withoutOverlapp
 
 Schedule::command(SyncContributionSchedules::class)
     ->dailyAt('00:15')->withoutOverlapping()->onOneServer();
+
+// Génère le planning à horizon glissant avant le passage des rappels.
+Schedule::command(SyncRehearsalRhythms::class)->dailyAt('00:20')->withoutOverlapping()->onOneServer();
 
 // Rappels de répétition : chaque matin, à l'heure configurée.
 Schedule::command(SendRehearsalReminders::class)

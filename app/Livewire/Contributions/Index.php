@@ -143,6 +143,7 @@ class Index extends Component
     public function contributions()
     {
         return Contribution::query()
+            ->accrued()
             ->with('member')
             ->when(app(ManagementYearContext::class)->selected(), fn ($q, $selected) => $q->whereDate('period_starts_on', '>=', $selected->starts_on)->whereDate('period_starts_on', '<=', $selected->ends_on))
             ->when($this->typeCode !== '', fn ($q) => $q->where('type_code', $this->typeCode))
@@ -198,6 +199,7 @@ class Index extends Component
     public function stats(): array
     {
         $row = Contribution::query()
+            ->accrued()
             ->when(app(ManagementYearContext::class)->selected(), fn ($q, $selected) => $q->whereDate('period_starts_on', '>=', $selected->starts_on)->whereDate('period_starts_on', '<=', $selected->ends_on))
             ->selectRaw(
             'COUNT(*) AS total, COALESCE(SUM(due_amount), 0) AS du, COALESCE(SUM(paid_amount), 0) AS encaisse, COALESCE(SUM(CASE WHEN status IN (?, ?) THEN 1 ELSE 0 END), 0) AS impayees',

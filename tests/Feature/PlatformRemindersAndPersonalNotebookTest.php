@@ -228,9 +228,9 @@ final class PlatformRemindersAndPersonalNotebookTest extends TestCase
 
         $notebook = app(PersonalNotebook::class)->for($member);
 
-        $this->assertSame(3, $notebook['monthlyArrears']['expected_months']);
-        $this->assertSame(1, $notebook['monthlyArrears']['missing_months']);
-        $this->assertSame(3500.0, $notebook['outstanding']);
+        $this->assertSame(2, $notebook['monthlyArrears']['expected_months']);
+        $this->assertSame(0, $notebook['monthlyArrears']['missing_months']);
+        $this->assertSame(1500.0, $notebook['outstanding']);
         $this->assertSame(1500.0, $notebook['incidentAmount']);
         $this->assertSame(1, $notebook['incidentBreakdown']['absence']['count']);
         $this->actingAs($user)->get(route('personal-notebook.show'))

@@ -6,6 +6,8 @@ use App\Enums\ContributionStatus;
 use App\Models\Contribution;
 use App\Models\ContributionCounterReset;
 use App\Models\ContributionExemption;
+use App\Models\FinancialType;
+use App\Enums\ContributionFrequency;
 use App\Enums\UserRole;
 use App\Models\Member;
 use Carbon\CarbonImmutable;
@@ -99,8 +101,18 @@ final class ContributionArrears
             })
             ->orderByDesc('starts_on')->orderByDesc('id')->first();
 
+        $monthlyCodes = FinancialType::query()->where('kind', 'contribution')
+            ->where('frequency_months', ContributionFrequency::Mensuelle->value)
+            ->pluck('code')->all();
+
         return (float) Contribution::query()
             ->where('member_id', $member->id)
+            // Compatibilité avec les anciennes échéances mensuelles créées
+            // avant cette correction : leur mois courant n'est pas en retard.
+            ->when($monthlyCodes !== [], fn ($q) => $q->where(fn ($scope) =>
+                $scope->whereNotIn('type_code', $monthlyCodes)
+                    ->orWhereDate('period_starts_on', '<', today()->startOfMonth())
+            ))
             ->when($typeCode !== null, fn ($q) => $q->where('type_code', $typeCode))
             ->when($reset, fn ($q) => $q->whereDate('period_starts_on', '>=', $reset->starts_on))
             ->whereNotIn('status', [ContributionStatus::Exoneree->value, ContributionStatus::Payee->value])

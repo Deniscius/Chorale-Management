@@ -36,7 +36,7 @@ final class MonthlyContributionArrears
         $monthly = $member->contributions()
             ->where('type_code', 'mensuelle')
             ->where(fn ($query) => $query->where('year', '<', $through->year)
-                ->orWhere(fn ($current) => $current->where('year', $through->year)->where('month', '<=', $through->month)))
+                ->orWhere(fn ($current) => $current->where('year', $through->year)->where('month', '<', $today->month)))
             ->get();
 
         $defaultAmount = (float) ($type?->default_amount ?? 0);

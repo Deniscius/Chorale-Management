@@ -176,15 +176,15 @@ class PerformanceStatsTest extends TestCase
 
     private function referenceContributions(): array
     {
-        $du = (float) Contribution::sum('due_amount');
-        $encaisse = (float) Contribution::sum('paid_amount');
+        $du = (float) Contribution::accrued()->sum('due_amount');
+        $encaisse = (float) Contribution::accrued()->sum('paid_amount');
 
         return [
-            'total' => Contribution::count(),
+            'total' => Contribution::accrued()->count(),
             'du' => $du,
             'encaisse' => $encaisse,
-            'reste' => $du - $encaisse,
-            'impayees' => Contribution::whereIn('status', [
+            'reste' => max(0.0, $du - $encaisse),
+            'impayees' => Contribution::accrued()->whereIn('status', [
                 ContributionStatus::Due->value,
                 ContributionStatus::Retard->value,
             ])->count(),

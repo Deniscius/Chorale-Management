@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\ContributionStatus;
+use App\Enums\ContributionFrequency;
+use Illuminate\Database\Eloquent\Builder;
 use App\Services\FinancialCatalog;
 use App\Support\Months;
 use App\Tenancy\BelongsToTenant;
@@ -72,6 +74,19 @@ class Contribution extends Model
     public function exemption(): BelongsTo
     {
         return $this->belongsTo(ContributionExemption::class);
+    }
+
+    /** Échéances comptabilisables : le mois courant mensuel reste exclu. */
+    public function scopeAccrued(Builder $query): Builder
+    {
+        return $query->where(function (Builder $q): void {
+            $q->whereNotIn('contributions.type_code', FinancialType::query()
+                    ->select('code')->where('kind', 'contribution')
+                    ->where('frequency_months', ContributionFrequency::Mensuelle->value))
+                ->orWhere('contributions.year', '<', today()->year)
+                ->orWhere(fn (Builder $currentYear) => $currentYear->where('contributions.year', today()->year)
+                    ->where('contributions.month', '<', today()->month));
+        });
     }
 
     public function isPaid(): bool

@@ -9,6 +9,7 @@ use App\Models\Donation;
 use App\Models\Member;
 use App\Services\FinancialCatalog;
 use App\Services\ReceiptLedger;
+use App\Services\ManagementYearContext;
 use App\Support\CalendarYears;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -98,6 +99,7 @@ class Index extends Component
     public function donations()
     {
         return Donation::query()
+            ->when(app(ManagementYearContext::class)->selected(), fn (Builder $q, $year) => $q->whereDate('donated_on', '>=', $year->starts_on)->whereDate('donated_on', '<=', $year->ends_on))
             ->with('member')
             ->when($this->overview === 'montant', fn ($q) => $q->orderByDesc('amount'))
             ->when($this->search !== '', function (Builder $query) {
@@ -152,10 +154,14 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        $row = Donation::query()->selectRaw('COUNT(*) AS nombre, COALESCE(SUM(amount), 0) AS total, COALESCE(MAX(amount), 0) AS maximum')->toBase()->first();
+        $row = Donation::query()
+            ->when(app(ManagementYearContext::class)->selected(), fn (Builder $q, $year) => $q->whereDate('donated_on', '>=', $year->starts_on)->whereDate('donated_on', '<=', $year->ends_on))
+            ->selectRaw('COUNT(*) AS nombre, COALESCE(SUM(amount), 0) AS total, COALESCE(MAX(amount), 0) AS maximum')->toBase()->first();
         $total = (float) $row->total;
         $count = (int) $row->nombre;
-        $parType = Donation::query()->selectRaw('COALESCE(type_code, donation_type) AS nature_code, COUNT(*) as nombre, SUM(amount) as total')->groupByRaw('COALESCE(type_code, donation_type)')->orderByDesc('total')->orderBy('nature_code')->toBase()->first();
+        $parType = Donation::query()
+            ->when(app(ManagementYearContext::class)->selected(), fn (Builder $q, $year) => $q->whereDate('donated_on', '>=', $year->starts_on)->whereDate('donated_on', '<=', $year->ends_on))
+            ->selectRaw('COALESCE(type_code, donation_type) AS nature_code, COUNT(*) as nombre, SUM(amount) as total')->groupByRaw('COALESCE(type_code, donation_type)')->orderByDesc('total')->orderBy('nature_code')->toBase()->first();
 
         return ['total' => $total, 'nombre' => $count, 'moyenne' => $count > 0 ? $total / $count : 0, 'max' => (float) $row->maximum, 'type_dominant' => $parType?->nature_code, 'type_dominant_montant' => $parType ? (float) $parType->total : 0.0];
     }

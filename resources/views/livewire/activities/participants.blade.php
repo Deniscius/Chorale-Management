@@ -37,6 +37,8 @@
         </form>
     </section>
 
+    <details class="rounded-xl border border-slate-200 bg-white">
+        <summary class="cursor-pointer px-4 py-3 text-sm font-semibold text-slate-800">Ajout individuel avec détails (optionnel)</summary>
     <form wire:submit="add" class="rounded-lg border border-slate-200 bg-slate-50 p-4">
         <p class="text-sm font-semibold text-slate-800">Ajouter un participant</p>
 
@@ -96,6 +98,7 @@
             </div>
         </div>
     </form>
+    </details>
 
     <div>
         <div class="mb-2 flex items-center justify-between">

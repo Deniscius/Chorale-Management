@@ -72,12 +72,20 @@ try {
     await member
         .getByLabel('Profession ou activité', { exact: true })
         .fill('Activité de test');
+    const profileUpdate = member.waitForResponse((response) =>
+        new URL(response.url()).pathname === '/profile'
+        && response.request().method() !== 'GET',
+    );
     await member
         .getByRole('button', {
             name: 'Enregistrer mes informations',
             exact: true,
         })
         .click();
+    const profileResponse = await profileUpdate;
+    console.log('Profile update HTTP status: ' + profileResponse.status());
+    assert.ok(profileResponse.status() < 400,
+        'Profile update failed with HTTP ' + profileResponse.status());
     await member
         .getByRole('status')
         .filter({

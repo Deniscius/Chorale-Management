@@ -162,14 +162,7 @@ class Index extends Component
             ->when(app(ManagementYearContext::class)->selected(), fn (Builder $query, $year) => $query->whereDate('starts_at', '>=', $year->starts_on)->whereDate('starts_at', '<=', $year->ends_on))
             ->with('commission:id,name')
             ->withCount('participants')
-            ->when($this->search !== '', function (Builder $query) {
-                $like = '%'.$this->search.'%';
-
-                $query->where(function (Builder $q) use ($like) {
-                    $q->whereLike('title', $like)
-                        ->orWhereLike('description', $like)
-                        ->orWhereLike('venue', $like);
-                });
+            ->when(trim($this->search) !== '', fn (Builder $query) => \App\Support\SearchTerms::apply($query, $this->search, ['title','description','venue']));
             })
             ->when($this->type !== '', fn (Builder $query) => $query->where('type', $this->type))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))

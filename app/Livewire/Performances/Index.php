@@ -97,15 +97,7 @@ class Index extends Component
             ->with('works')
             ->withSum(['transactions as spent_amount' => fn (Builder $query) => $query
                 ->where('type', 'depense')->whereIn('status', ['validee', 'cloturee'])], 'amount')
-            ->when($this->search !== '', function (Builder $query) {
-                $like = '%'.$this->search.'%';
-
-                $query->where(function (Builder $q) use ($like) {
-                    $q->whereLike('title', $like)
-                        ->orWhereLike('venue', $like)
-                        ->orWhereLike('audience', $like);
-                });
-            })
+            ->when(trim($this->search) !== '', fn (Builder $query) => \App\Support\SearchTerms::apply($query, $this->search, ['title','venue','audience']))
             ->when($this->type !== '', fn (Builder $query) => $query->where('type', $this->type))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->period === 'avenir', fn (Builder $query) => $query->where('scheduled_at', '>=', now()))

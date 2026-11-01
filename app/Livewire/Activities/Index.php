@@ -162,8 +162,7 @@ class Index extends Component
             ->when(app(ManagementYearContext::class)->selected(), fn (Builder $query, $year) => $query->whereDate('starts_at', '>=', $year->starts_on)->whereDate('starts_at', '<=', $year->ends_on))
             ->with('commission:id,name')
             ->withCount('participants')
-            ->when(trim($this->search) !== '', fn (Builder $query) => \App\Support\SearchTerms::apply($query, $this->search, ['title','description','venue']));
-            })
+            ->when(trim($this->search) !== '', fn (Builder $query) => \App\Support\SearchTerms::apply($query, $this->search, ['title','description','venue']))
             ->when($this->type !== '', fn (Builder $query) => $query->where('type', $this->type))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->choirId, fn (Builder $query) => $query->where('choir_id', $this->choirId))

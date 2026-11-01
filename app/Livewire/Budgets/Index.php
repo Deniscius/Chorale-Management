@@ -142,7 +142,6 @@ class Index extends Component
         )->toBase()->first();
         $allocated = (float) $row->alloue;
         $realized = (float) $row->ouverture + (float) Transaction::validated()->where('type', 'depense')
-            ->when(app(ManagementYearContext::class)->selected(), fn (Builder $q, $year) => $q->whereDate('transaction_date', '>=', $year->starts_on)->whereDate('transaction_date', '<=', $year->ends_on))
             ->whereHas('budget', fn (Builder $q) => $q->when(app(ManagementYearContext::class)->selected(), fn (Builder $scope, $year) => $scope->whereBetween('year', [$year->starts_on->year, $year->ends_on->year])))->sum('amount');
 
         return [

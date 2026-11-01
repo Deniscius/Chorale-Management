@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\ContributionStatus;
-use App\Enums\ContributionFrequency;
 use App\Enums\DonationType;
 use App\Enums\DonorType;
 use App\Enums\TransactionStatus;
@@ -80,11 +79,7 @@ final class ReceiptLedger
             $data['type_code'] = $type->code;
             if (! $contribution->exists && $type->frequency_months > 0 && isset($data['year'], $data['month'])) {
                 $period = CarbonImmutable::create((int) $data['year'], (int) $data['month'], 1);
-                if ((int) $type->frequency_months === ContributionFrequency::Mensuelle->value) {
-                    $dueOn = $period->endOfMonth();
-                } else {
-                    $dueOn = $period->day(min((int) ($type->due_day ?: 1), $period->daysInMonth));
-                }
+                $dueOn = $period->day(min((int) ($type->due_day ?: 1), $period->daysInMonth));
                 $data['period_starts_on'] = $period->toDateString();
                 $data['due_on'] = $dueOn->toDateString();
                 if ((float) ($data['paid_amount'] ?? 0) <= 0 && $dueOn->lt(CarbonImmutable::today())) {

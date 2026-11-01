@@ -52,6 +52,7 @@
         [
             'label' => 'Comptabilité',
             'items' => [
+                ['route' => 'accounting.dashboard', 'label' => 'Synthèse comptable', 'icon' => 'chart', 'module' => UserRole::MODULE_COMPTABILITE],
                 ['route' => 'transactions.index', 'label' => 'Recettes & dépenses', 'icon' => 'banknotes', 'module' => UserRole::MODULE_COMPTABILITE],
                 ['route' => 'budgets.index', 'label' => 'Budgets', 'icon' => 'chart', 'module' => UserRole::MODULE_COMPTABILITE],
                 ['route' => 'contributions.index', 'label' => app(\App\Services\FinancialCatalog::class)->section('contribution'), 'icon' => 'users', 'module' => UserRole::MODULE_COMPTABILITE],

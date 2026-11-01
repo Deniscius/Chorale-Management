@@ -1,4 +1,44 @@
 <div class="space-y-5">
+    <section class="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4" aria-labelledby="batch-participants-title">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h3 id="batch-participants-title" class="font-semibold text-slate-900">Ajouter plusieurs participants</h3>
+                <p class="mt-1 text-xs text-slate-600">Cochez les choristes à inscrire. Le rôle, les heures et la présence pourront être renseignés après l'inscription.</p>
+            </div>
+            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-indigo-800">{{ count($selectedMemberIds) }} sélectionné(s)</span>
+        </div>
+        <div class="mt-4">
+            <label for="participant-batch-search" class="form-label">Rechercher un choriste</label>
+            <input id="participant-batch-search" type="search" wire:model.live.debounce.300ms="memberSearch"
+                placeholder="Nom, prénom, e-mail…" class="form-input mt-1 w-full" />
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2">
+            <button type="button" wire:click="selectAllVisible" class="btn btn-secondary btn-sm">Tout sélectionner dans la liste</button>
+            <button type="button" wire:click="clearSelection" class="btn btn-secondary btn-sm">Effacer la sélection</button>
+        </div>
+        <form wire:submit="addSelected" class="mt-3">
+            <fieldset class="max-h-64 space-y-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-2" aria-describedby="participant-batch-help">
+                <legend class="sr-only">Choristes à inscrire</legend>
+                @forelse($this->availableMembers as $member)
+                    <label wire:key="member-check-{{ $member->id }}" class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-slate-50 focus-within:ring-2 focus-within:ring-indigo-500">
+                        <input type="checkbox" value="{{ $member->id }}" wire:model.live="selectedMemberIds" class="h-4 w-4 rounded border-slate-300 text-indigo-700" />
+                        <span class="font-medium text-slate-800">{{ $member->full_name }}</span>
+                    </label>
+                @empty
+                    <p class="p-3 text-sm text-slate-500">Aucun choriste disponible pour ce filtre.</p>
+                @endforelse
+            </fieldset>
+            <p id="participant-batch-help" class="mt-2 text-xs text-slate-600">Les participants déjà inscrits ne seront pas dupliqués. Aucun statut de présence ne sera attribué automatiquement.</p>
+            <x-input-error :messages="$errors->get('selectedMemberIds')" class="mt-2" />
+            <x-input-error :messages="$errors->get('selectedMemberIds.*')" class="mt-2" />
+            <button type="submit" class="btn btn-primary mt-4" @disabled(count($selectedMemberIds) === 0) wire:loading.attr="disabled" wire:target="addSelected">
+                Inscrire les {{ count($selectedMemberIds) }} participant(s) sélectionné(s)
+            </button>
+        </form>
+    </section>
+
+    <details class="rounded-xl border border-slate-200 bg-white">
+        <summary class="cursor-pointer px-4 py-3 text-sm font-semibold text-slate-800">Ajout individuel avec détails (optionnel)</summary>
     <form wire:submit="add" class="rounded-lg border border-slate-200 bg-slate-50 p-4">
         <p class="text-sm font-semibold text-slate-800">Ajouter un participant</p>
 
@@ -58,6 +98,7 @@
             </div>
         </div>
     </form>
+    </details>
 
     <div>
         <div class="mb-2 flex items-center justify-between">

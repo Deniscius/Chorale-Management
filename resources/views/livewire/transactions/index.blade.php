@@ -3,6 +3,7 @@
     <x-page-header title="Recettes & dépenses" icon="banknotes"
         :subtitle="'Journal des opérations de la chorale — '.$this->stats['total'].' écriture(s).'">
         <x-slot name="actions">
+            <a href="{{ route('accounting.dashboard') }}" wire:navigate class="btn btn-secondary">Synthèse comptable</a>
             @if ($this->canManage())
                 <button type="button" wire:click="create"
                     class="btn btn-primary">

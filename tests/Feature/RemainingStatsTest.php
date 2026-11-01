@@ -29,7 +29,7 @@ class RemainingStatsTest extends TestCase
     public static function modules(): array
     {
         return [
-            ['Members/Index', 2], ['Works/Index', 2], ['Budgets/Index', 2],
+            ['Members/Index', 2], ['Works/Index', 2], ['Budgets/Index', 3],
             ['Instruments/Movements', 1], ['Instruments/Maintenances', 1],
             ['Seasons/Index', 2], ['Users/Index', 1],
         ];

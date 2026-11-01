@@ -52,6 +52,7 @@
         [
             'label' => 'Comptabilité',
             'items' => [
+                ['route' => 'accounting.dashboard', 'label' => 'Synthèse comptable', 'icon' => 'chart', 'module' => UserRole::MODULE_COMPTABILITE],
                 ['route' => 'transactions.index', 'label' => 'Recettes & dépenses', 'icon' => 'banknotes', 'module' => UserRole::MODULE_COMPTABILITE],
                 ['route' => 'budgets.index', 'label' => 'Budgets', 'icon' => 'chart', 'module' => UserRole::MODULE_COMPTABILITE],
                 ['route' => 'contributions.index', 'label' => app(\App\Services\FinancialCatalog::class)->section('contribution'), 'icon' => 'users', 'module' => UserRole::MODULE_COMPTABILITE],
@@ -81,12 +82,12 @@
     class="fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-slate-900 transition-transform duration-200 lg:translate-x-0 lg:w-64"
     aria-label="Navigation principale">
 
-    <div class="flex h-16 shrink-0 items-center gap-3 border-b border-slate-800/80 px-5">
-        <span class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-amber-400 text-slate-900 shadow-sm shadow-amber-400/20">
-            <x-chorale-logo icon-class="h-5 w-5" />
+    <div class="flex min-h-20 shrink-0 items-center gap-3 border-b border-slate-800/80 px-4 py-3">
+        <span class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-700 bg-white p-1 text-slate-900 shadow-sm" aria-hidden="true">
+            <x-chorale-logo icon-class="h-7 w-7" class="block h-full w-full object-contain" />
         </span>
-        <div class="min-w-0">
-            <p class="truncate text-sm font-semibold text-white">{{ $chorale->name() }}</p>
+        <div class="min-w-0 flex-1">
+            <p class="break-words text-sm font-semibold leading-snug text-white">{{ $chorale->name() }}</p>
             <p class="truncate text-xs text-slate-400">{{ $chorale->tagline() }}</p>
         </div>
         <button type="button" @click="close()" aria-label="Fermer le menu"

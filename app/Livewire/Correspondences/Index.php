@@ -12,6 +12,7 @@ use App\Models\CorrespondenceEvent;
 use App\Models\CorrespondenceService;
 use App\Models\Member;
 use App\Support\CalendarYears;
+use App\Services\ManagementYearContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
@@ -205,6 +206,7 @@ class Index extends Component
     public function correspondences()
     {
         return Correspondence::query()
+            ->when(app(ManagementYearContext::class)->selected(), fn (Builder $q, $year) => $q->whereDate('correspondence_date', '>=', $year->starts_on)->whereDate('correspondence_date', '<=', $year->ends_on))
             ->with('service')
             ->with('assignedMember')
             ->when($this->overview === 'ouverts', fn ($q) => $q->whereIn('status', CorrespondenceStatus::open()))
@@ -271,7 +273,9 @@ class Index extends Component
     {
         $open = CorrespondenceStatus::open();
         $placeholders = implode(',', array_fill(0, count($open), '?'));
-        $row = Correspondence::query()->selectRaw(
+        $row = Correspondence::query()
+            ->when(app(ManagementYearContext::class)->selected(), fn (Builder $q, $year) => $q->whereDate('correspondence_date', '>=', $year->starts_on)->whereDate('correspondence_date', '<=', $year->ends_on))
+            ->selectRaw(
             "COUNT(*) AS total, COALESCE(SUM(CASE WHEN type = ? THEN 1 ELSE 0 END), 0) AS entrants, COALESCE(SUM(CASE WHEN type = ? THEN 1 ELSE 0 END), 0) AS sortants, COALESCE(SUM(CASE WHEN status IN ($placeholders) THEN 1 ELSE 0 END), 0) AS a_traiter, COALESCE(SUM(CASE WHEN confidentiality = ? THEN 1 ELSE 0 END), 0) AS confidentiels",
             [CorrespondenceType::Entrant->value, CorrespondenceType::Sortant->value, ...$open, 'confidentiel']
         )->toBase()->first();

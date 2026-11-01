@@ -22,14 +22,19 @@
     @php($selectedYear = $managementYears->selected())
     @php($availableYears = $managementYears->available())
     @if($availableYears->isNotEmpty())
-        <form method="POST" action="{{ route('management-years.select') }}" class="flex items-center gap-2">
+        <form method="POST" action="{{ route('management-years.select') }}" class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2">
             @csrf
-            <label for="management-year-selector" class="sr-only">Année de travail</label>
-            <select id="management-year-selector" name="management_year_id" onchange="this.form.submit()" class="max-w-48 rounded-lg border-slate-300 text-xs sm:text-sm">
+            <label for="management-year-selector" class="text-xs font-semibold text-slate-600">Année de travail</label>
+            <select id="management-year-selector" name="management_year_id" onchange="this.form.submit()" class="max-w-44 rounded-lg border-slate-300 bg-white text-xs font-medium sm:max-w-52 sm:text-sm" aria-describedby="management-year-range">
                 @foreach($availableYears as $year)
                     <option value="{{ $year->id }}" @selected($selectedYear?->id === $year->id)>{{ $year->type === 'pastorale' ? 'Pastorale' : 'Civile' }} {{ $year->label }}</option>
                 @endforeach
             </select>
+            @if($selectedYear)
+                <span id="management-year-range" class="hidden text-xs text-slate-500 xl:inline">{{ $selectedYear->starts_on->format('d/m/Y') }} – {{ $selectedYear->ends_on->format('d/m/Y') }}</span>
+            @else
+                <span id="management-year-range" class="sr-only">Sélectionner une année pour filtrer les données</span>
+            @endif
         </form>
     @endif
     @can('manage-settings')

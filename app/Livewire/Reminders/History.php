@@ -8,6 +8,7 @@ use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Reminder;
 use App\Services\ReminderDispatcher;
+use App\Services\ManagementYearContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -67,6 +68,7 @@ class History extends Component
     public function reminders()
     {
         return Reminder::query()
+            ->when(app(ManagementYearContext::class)->selected(), fn (Builder $q, $year) => $q->whereDate('created_at', '>=', $year->starts_on)->whereDate('created_at', '<=', $year->ends_on))
             ->with(['rehearsal', 'member'])
             ->when($this->search !== '', function (Builder $query) {
                 $like = '%'.$this->search.'%';
@@ -87,6 +89,7 @@ class History extends Component
     public function stats(): array
     {
         $counts = Reminder::query()
+            ->when(app(ManagementYearContext::class)->selected(), fn (Builder $q, $year) => $q->whereDate('created_at', '>=', $year->starts_on)->whereDate('created_at', '<=', $year->ends_on))
             ->selectRaw('status, count(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
@@ -96,7 +99,7 @@ class History extends Component
             'envoyes' => (int) ($counts['envoye'] ?? 0),
             'echecs' => (int) ($counts['echec'] ?? 0),
             'incertains' => (int) ($counts['incertain'] ?? 0),
-            'sms' => Reminder::where('channel', ReminderChannel::Sms->value)->count(),
+            'sms' => Reminder::query()->when(app(ManagementYearContext::class)->selected(), fn (Builder $q, $year) => $q->whereDate('created_at', '>=', $year->starts_on)->whereDate('created_at', '<=', $year->ends_on))->where('channel', ReminderChannel::Sms->value)->count(),
         ];
     }
 

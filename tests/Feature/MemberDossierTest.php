@@ -63,7 +63,14 @@ final class MemberDossierTest extends TestCase
         $treasurer = User::factory()->role(UserRole::Tresorier)->create();
         $soprano = Member::factory()->voice('soprano')->create(['first_name' => 'Sophie', 'last_name' => 'Voix']);
         $bass = Member::factory()->voice('bass')->create(['first_name' => 'Basile', 'last_name' => 'Voix']);
-        Contribution::factory()->create(['member_id' => $soprano->id, 'due_amount' => 4000, 'paid_amount' => 1000, 'status' => 'partiel']);
+        Contribution::factory()->create([
+            'member_id' => $soprano->id,
+            'year' => today()->subMonth()->year,
+            'month' => today()->subMonth()->month,
+            'due_amount' => 4000,
+            'paid_amount' => 1000,
+            'status' => 'partiel',
+        ]);
         AttendanceIncident::query()->create([
             'member_id' => $soprano->id, 'source_type' => 'rehearsal', 'occurred_on' => today(),
             'event_label' => 'Répétition', 'incident_type' => 'absence', 'amount' => 500, 'status' => 'pending',

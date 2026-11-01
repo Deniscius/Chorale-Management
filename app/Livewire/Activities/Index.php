@@ -8,6 +8,7 @@ use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Activity;
 use App\Models\Choir;
+use App\Services\ManagementYearContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -158,6 +159,7 @@ class Index extends Component
     public function activities()
     {
         return Activity::query()
+            ->when(app(ManagementYearContext::class)->selected(), fn (Builder $query, $year) => $query->whereDate('starts_at', '>=', $year->starts_on)->whereDate('starts_at', '<=', $year->ends_on))
             ->with('commission:id,name')
             ->withCount('participants')
             ->when($this->search !== '', function (Builder $query) {
@@ -214,7 +216,9 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        $row = Activity::query()->selectRaw(
+        $row = Activity::query()
+            ->when(app(ManagementYearContext::class)->selected(), fn (Builder $query, $year) => $query->whereDate('starts_at', '>=', $year->starts_on)->whereDate('starts_at', '<=', $year->ends_on))
+            ->selectRaw(
             'COUNT(*) AS total, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS planifiees, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS terminees, COALESCE(SUM(CASE WHEN starts_at >= ? THEN 1 ELSE 0 END), 0) AS a_venir, COALESCE(SUM(budget_allocated), 0) AS budget, COALESCE(SUM(budget_spent), 0) AS depense',
             [ActivityStatus::Planifiee->value, ActivityStatus::Terminee->value, now()->startOfDay()]
         )->toBase()->first();

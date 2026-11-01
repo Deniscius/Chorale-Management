@@ -3,6 +3,7 @@
         :subtitle="'Planning des répétitions et œuvres au programme — '.$this->stats['total'].' séance(s).'">
         <x-slot name="actions">
             @if ($this->canManage())
+                <a href="{{ route('rehearsals.rhythms') }}" wire:navigate class="btn btn-secondary">Rythmes habituels</a>
                 <button type="button" wire:click="create"
                     class="btn btn-primary">
                     <x-icon name="plus" class="h-4 w-4" />
@@ -104,6 +105,7 @@
                     </td>
                     <td class="whitespace-nowrap px-4 py-3">
                         <x-enum-badge :enum="$rehearsal->type" />
+                        @if($rehearsal->is_special)<span class="ml-1 rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">Spéciale</span>@endif
                     </td>
                     <td class="px-4 py-3 text-sm text-slate-600">
                         @if ($rehearsal->venue)
@@ -133,6 +135,9 @@
                     <td class="whitespace-nowrap px-4 py-3 text-right">
                         @if ($this->canManage())
                             <div class="flex items-center justify-end gap-1">
+                                @if ($rehearsal->is_special && $rehearsal->date->gte(today()) && $rehearsal->status === \App\Enums\EventStatus::Planifiee)
+                                    <button type="button" wire:click="notifySpecial({{ $rehearsal->id }})" wire:confirm="Envoyer les notifications de cette répétition spéciale aux choristes ? Les rappels déjà envoyés ne seront pas dupliqués." class="btn btn-soft btn-xs">Notifier</button>
+                                @endif
                                 @if ($this->aiEnabled)
                                     <button type="button" wire:click="openReport({{ $rehearsal->id }})"
                                         class="btn btn-soft btn-xs" title="Compte rendu assisté">

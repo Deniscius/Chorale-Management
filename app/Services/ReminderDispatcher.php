@@ -54,6 +54,7 @@ final class ReminderDispatcher
         $rehearsal->loadMissing('works');
         $result = ['sent' => 0, 'queued' => 0, 'skipped' => 0, 'failed' => 0];
         $members = Member::with('user')->where('status', MemberStatus::Actif->value)
+            ->when($rehearsal->choir_id, fn ($q) => $q->where('choir_id', $rehearsal->choir_id))
             ->where(fn ($q) => $q->where('notify_email', true)->orWhere('notify_sms', true)->orWhereHas('user'))
             ->orderBy('id')->lazyById(200);
         foreach ($members as $member) {
@@ -215,7 +216,7 @@ final class ReminderDispatcher
 
     public function subject(Rehearsal $rehearsal): string
     {
-        return 'Rappel : répétition du '.$rehearsal->date?->translatedFormat('l j F').' à '.($rehearsal->starts_at ?: '—');
+        return ($rehearsal->is_special ? 'Répétition spéciale : ' : 'Rappel : répétition du ').$rehearsal->date?->translatedFormat('l j F').' à '.($rehearsal->starts_at ?: '—');
     }
 
     /**
@@ -227,7 +228,7 @@ final class ReminderDispatcher
         $time = $rehearsal->timeRange();
         $venue = $rehearsal->venue;
 
-        $parts = ['Rappel de la répétition du '.$when];
+        $parts = [($rehearsal->is_special ? 'Répétition spéciale du ' : 'Rappel de la répétition du ').$when];
 
         if ($time) {
             $parts[] = 'de '.$time;

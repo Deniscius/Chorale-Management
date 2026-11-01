@@ -63,6 +63,11 @@ class Choir extends Model
         return $this->hasMany(Performance::class);
     }
 
+    public function rehearsalRhythms(): HasMany
+    {
+        return $this->hasMany(RehearsalRhythm::class);
+    }
+
     public function rehearsals(): HasMany
     {
         return $this->hasMany(Rehearsal::class);

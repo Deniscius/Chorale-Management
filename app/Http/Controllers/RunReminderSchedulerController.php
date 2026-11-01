@@ -16,13 +16,15 @@ final class RunReminderSchedulerController extends Controller
 
         $dryRun = $request->boolean('dry_run');
         $syncExit = $dryRun ? 0 : $console->call('chorale:sync-contributions');
+        $rehearsalSyncExit = $dryRun ? 0 : $console->call('chorale:sync-rehearsals');
         $reminderExit = $console->call('chorale:send-reminders', $dryRun ? ['--dry-run' => true] : []);
-        $exit = max($syncExit, $reminderExit);
+        $exit = max($syncExit, $rehearsalSyncExit, $reminderExit);
 
         return response()->json([
             'ok' => $exit === 0,
             'mode' => $dryRun ? 'simulation' : 'delivery',
             'contributions_synced' => ! $dryRun && $syncExit === 0,
+            'rehearsals_synced' => ! $dryRun && $rehearsalSyncExit === 0,
             'ran_at' => now()->toIso8601String(),
         ], $exit === 0 ? 200 : 500)->header('Cache-Control', 'no-store, private');
     }

@@ -38,6 +38,9 @@ class Form extends Component
     #[Validate]
     public string $type = 'repetition';
 
+    #[Validate('boolean')]
+    public bool $is_special = false;
+
     #[Validate]
     public string $status = 'planifiee';
 
@@ -75,6 +78,7 @@ class Form extends Component
                 'ends_at' => $rehearsal->ends_at ? substr($rehearsal->ends_at, 0, 5) : null,
                 'venue' => $rehearsal->venue,
                 'type' => $rehearsal->type->value,
+                'is_special' => (bool) $rehearsal->is_special,
                 'status' => $rehearsal->status->value,
                 'works' => $rehearsal->works->pluck('id')->all(),
                 'notes' => $rehearsal->notes,
@@ -96,6 +100,7 @@ class Form extends Component
             'ends_at' => $this->ends_at ?: null,
             'venue' => $this->venue,
             'type' => $this->type,
+            'is_special' => $this->is_special,
             'status' => $this->status,
             'notes' => $this->notes,
         ];

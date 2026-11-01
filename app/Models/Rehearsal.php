@@ -22,6 +22,8 @@ class Rehearsal extends Model
 
     protected $fillable = [
         'choir_id',
+        'rehearsal_rhythm_id',
+        'is_special',
         'date',
         'starts_at',
         'ends_at',
@@ -40,6 +42,7 @@ class Rehearsal extends Model
     {
         return [
             'date' => 'date',
+            'is_special' => 'boolean',
             'type' => RehearsalType::class,
             'status' => EventStatus::class,
             'ai_report_generated_at' => 'datetime',
@@ -91,6 +94,11 @@ class Rehearsal extends Model
         return blank($this->ends_at)
             ? $this->starts_at
             : $this->starts_at.' – '.$this->ends_at;
+    }
+
+    public function rhythm(): BelongsTo
+    {
+        return $this->belongsTo(RehearsalRhythm::class, 'rehearsal_rhythm_id');
     }
 
     public function choir(): BelongsTo

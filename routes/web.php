@@ -30,6 +30,7 @@ use App\Http\Controllers\VoiceResourceAudioController;
 use App\Http\Controllers\VoiceSpaceController;
 use App\Http\Middleware\TenantAddress;
 use App\Livewire\Accounting\MemberOverview as AccountingMemberOverview;
+use App\Livewire\Accounting\Dashboard as AccountingDashboard;
 use App\Livewire\Activities\Index as ActivitiesIndex;
 use App\Livewire\Attendance\FinancialReport as AttendanceFinancialReport;
 use App\Livewire\Attendance\Sheet as AttendanceSheet;
@@ -95,6 +96,7 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::post('/abonnement/activer', [BillingController::class, 'activate'])->middleware('throttle:5,1,billing-activation:')->name('billing.activate');
     Route::post('/abonnement/actualiser', [BillingController::class, 'refresh'])->middleware('throttle:5,1,billing-refresh:')->name('billing.refresh');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/comptabilite/synthese', AccountingDashboard::class)->middleware('module:'.UserRole::MODULE_COMPTABILITE)->name('accounting.dashboard');
     Route::get('/mon-carnet', PersonalNotebookController::class)->name('personal-notebook.show');
 
     Route::get('/commissions', App\Livewire\Commissions\Index::class)->middleware('module:'.UserRole::MODULE_MEMBERS)->name('commissions.index');

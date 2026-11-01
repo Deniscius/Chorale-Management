@@ -8,6 +8,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Budget;
 use App\Models\Choir;
 use App\Models\Transaction;
+use App\Services\ManagementYearContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -90,6 +91,7 @@ class Index extends Component
     public function budgets()
     {
         return Budget::query()
+            ->when(app(ManagementYearContext::class)->selected(), fn (Builder $q, $year) => $q->whereBetween('year', [$year->starts_on->year, $year->ends_on->year]))
             ->with('choir')
             ->withPostedExpenses()
             ->withCount('transactions')
@@ -133,11 +135,15 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        $row = Budget::query()->selectRaw(
+        $row = Budget::query()
+            ->when(app(ManagementYearContext::class)->selected(), fn (Builder $q, $year) => $q->whereBetween('year', [$year->starts_on->year, $year->ends_on->year]))
+            ->selectRaw(
             'COUNT(*) AS total, COALESCE(SUM(allocated_amount), 0) AS alloue, COALESCE(SUM(committed_amount), 0) AS engage, COALESCE(SUM(opening_realized_amount), 0) AS ouverture'
         )->toBase()->first();
         $allocated = (float) $row->alloue;
-        $realized = (float) $row->ouverture + (float) Transaction::validated()->where('type', 'depense')->whereHas('budget')->sum('amount');
+        $realized = (float) $row->ouverture + (float) Transaction::validated()->where('type', 'depense')
+            ->when(app(ManagementYearContext::class)->selected(), fn (Builder $q, $year) => $q->whereDate('transaction_date', '>=', $year->starts_on)->whereDate('transaction_date', '<=', $year->ends_on))
+            ->whereHas('budget', fn (Builder $q) => $q->when(app(ManagementYearContext::class)->selected(), fn (Builder $scope, $year) => $scope->whereBetween('year', [$year->starts_on->year, $year->ends_on->year])))->sum('amount');
 
         return [
             'total' => (int) $row->total,

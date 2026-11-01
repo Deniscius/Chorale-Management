@@ -95,7 +95,7 @@ class Index extends Component
             ->with('choir')
             ->withPostedExpenses()
             ->withCount('transactions')
-            ->when($this->search !== '', fn (Builder $query) => $query->whereLike('category', '%'.$this->search.'%'))
+            ->when(trim($this->search) !== '', fn (Builder $query) => \App\Support\SearchTerms::apply($query, $this->search, ['category', 'notes']))
             ->when($this->year !== '', fn (Builder $query) => $query->where('year', (int) $this->year))
             ->when($this->category !== '', fn (Builder $query) => $query->where('category', $this->category))
             ->orderByDesc('year')

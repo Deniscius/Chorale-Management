@@ -80,10 +80,12 @@ class Contribution extends Model
     public function scopeAccrued(Builder $query): Builder
     {
         return $query->where(function (Builder $q): void {
-            $q->whereDate('contributions.period_starts_on', '<', today()->startOfMonth())
-                ->orWhereNotIn('contributions.type_code', FinancialType::query()
+            $q->whereNotIn('contributions.type_code', FinancialType::query()
                     ->select('code')->where('kind', 'contribution')
-                    ->where('frequency_months', ContributionFrequency::Mensuelle->value));
+                    ->where('frequency_months', ContributionFrequency::Mensuelle->value))
+                ->orWhere('contributions.year', '<', today()->year)
+                ->orWhere(fn (Builder $currentYear) => $currentYear->where('contributions.year', today()->year)
+                    ->where('contributions.month', '<', today()->month));
         });
     }
 

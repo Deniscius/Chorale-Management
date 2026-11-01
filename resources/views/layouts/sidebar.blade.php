@@ -83,7 +83,7 @@
     aria-label="Navigation principale">
 
     <div class="flex min-h-20 shrink-0 items-center gap-3 border-b border-slate-800/80 px-4 py-3">
-        <span class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-700 bg-white p-1 shadow-sm" aria-hidden="true">
+        <span class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-700 bg-white p-1 text-slate-900 shadow-sm" aria-hidden="true">
             <x-chorale-logo icon-class="h-7 w-7" class="block h-full w-full object-contain" />
         </span>
         <div class="min-w-0 flex-1">

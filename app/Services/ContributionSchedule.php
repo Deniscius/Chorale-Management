@@ -37,6 +37,7 @@ final class ContributionSchedule
             $cursor = $cursor->addMonthsNoOverflow($frequency->value);
         }
 
+        $monthly = $frequency === ContributionFrequency::Mensuelle;
         $through = $member->left_on
             ? CarbonImmutable::instance($member->left_on)->min($asOf)
             : $asOf;
@@ -44,8 +45,13 @@ final class ContributionSchedule
         $periods = collect();
 
         while ($cursor->lte($through)) {
-            $dueOn = $cursor->day(min($dueDay, $cursor->daysInMonth));
-            if ($dueOn->gte($joined) && $dueOn->lte($through)) {
+            // Une cotisation mensuelle n'est exigible qu'après la clôture
+            // complète du mois : le 1er novembre, octobre est dû, pas novembre.
+            $dueOn = $monthly
+                ? $cursor->endOfMonth()->startOfDay()
+                : $cursor->day(min($dueDay, $cursor->daysInMonth));
+            if ($dueOn->gte($joined) && ($monthly ? $dueOn->lt($asOf->startOfDay()) : $dueOn->lte($through))
+                && (! $monthly || $cursor->startOfMonth()->lte($through))) {
                 $periods->push(['period' => $cursor, 'due_on' => $dueOn]);
             }
             $cursor = $cursor->addMonthsNoOverflow($frequency->value);

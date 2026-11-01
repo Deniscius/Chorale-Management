@@ -29,6 +29,11 @@ class Participants extends Component
 
     public ?int $memberId = null;
 
+    /** @var array<int, string> */
+    public array $selectedMemberIds = [];
+
+    public string $memberSearch = '';
+
     public string $role = '';
 
     public string $status = 'invite';
@@ -85,6 +90,56 @@ class Participants extends Component
         $this->status = 'invite';
 
         $this->dispatch('toast', type: 'success', message: 'Participant ajouté.');
+    }
+
+    /** Batch enrolment only: roles, presence and hours can be edited later. */
+    public function addSelected(): void
+    {
+        $this->authorizeManage();
+
+        $data = $this->validate([
+            'selectedMemberIds' => ['required', 'array', 'min:1', 'max:500'],
+            'selectedMemberIds.*' => ['required', 'integer', 'distinct'],
+        ]);
+
+        $ids = array_map('intval', $data['selectedMemberIds']);
+        $eligible = Member::query()->active()->whereIn('id', $ids)->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        if (count($eligible) !== count($ids)) {
+            $this->addError('selectedMemberIds', 'La sélection contient un choriste indisponible.');
+            return;
+        }
+
+        $added = DB::transaction(function () use ($eligible): int {
+            $activity = Activity::query()->lockForUpdate()->findOrFail($this->activity->id);
+            $existing = $activity->participants()->whereIn('members.id', $eligible)
+                ->pluck('members.id')->map(fn ($id) => (int) $id)->all();
+            $newIds = array_values(array_diff($eligible, $existing));
+            $records = [];
+            foreach ($newIds as $id) {
+                $records[$id] = ['status' => ParticipationStatus::Invite->value, 'hours' => 0];
+            }
+            if ($records !== []) {
+                $activity->participants()->attach($records);
+            }
+
+            return count($newIds);
+        }, 3);
+
+        $this->selectedMemberIds = [];
+        unset($this->availableMembers, $this->participants);
+        $this->dispatch('toast', type: 'success', message: $added.' participant(s) ajouté(s). Les inscriptions déjà présentes ont été conservées.');
+    }
+
+    public function selectAllVisible(): void
+    {
+        $this->authorizeManage();
+        $this->selectedMemberIds = $this->availableMembers->pluck('id')->map(fn ($id) => (string) $id)->all();
+    }
+
+    public function clearSelection(): void
+    {
+        $this->selectedMemberIds = [];
     }
 
     /**
@@ -145,7 +200,8 @@ class Participants extends Component
     public function availableMembers()
     {
         return Member::query()
-            ->where('status', 'actif')
+            ->active()
+            ->when(trim($this->memberSearch) !== '', fn (Builder $query) => $query->search(trim($this->memberSearch)))
             ->whereDoesntHave('activityParticipants', fn (Builder $query) => $query->where('activity_id', $this->activity->id))
             ->orderBy('last_name')
             ->orderBy('first_name')

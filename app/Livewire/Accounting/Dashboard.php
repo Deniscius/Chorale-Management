@@ -8,6 +8,7 @@ use App\Enums\TransactionType;
 use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Contribution;
+use App\Models\ContributionCounterReset;
 use App\Models\Donation;
 use App\Models\Transaction;
 use App\Services\ManagementYearContext;
@@ -66,6 +67,27 @@ final class Dashboard extends Component
                     ContributionStatus::Payee->value, today()->toDateString()]
             )->toBase()->first();
 
+        // The current counter excludes older debts deliberately moved to
+        // the historical counter by a tenant administrator. Their records
+        // remain untouched and available for auditing.
+        $arrears = Contribution::query()->accrued()
+            ->when($period['from'], fn ($q) => $q->whereDate('period_starts_on', '>=', $period['from']))
+            ->when($period['to'], fn ($q) => $q->whereDate('period_starts_on', '<=', $period['to']))
+            ->whereNotIn('status', [ContributionStatus::Payee->value, ContributionStatus::Exoneree->value])
+            ->whereDate('due_on', '<', today()->toDateString())
+            ->whereNotExists(function ($query): void {
+                $query->selectRaw('1')->from('contribution_counter_resets AS reset')
+                    ->whereColumn('reset.tenant_id', 'contributions.tenant_id')
+                    ->whereColumn('reset.member_id', 'contributions.member_id')
+                    ->where(function ($q): void {
+                        $q->whereNull('reset.type_code')
+                            ->orWhereColumn('reset.type_code', 'contributions.type_code');
+                    })
+                    ->whereColumn('reset.starts_on', '>', 'contributions.period_starts_on');
+            })
+            ->selectRaw('COALESCE(SUM(CASE WHEN due_amount > paid_amount THEN due_amount - paid_amount ELSE 0 END), 0) AS total')
+            ->toBase()->first();
+
         $donations = Donation::query()
             ->when($period['from'], fn ($q) => $q->whereDate('donated_on', '>=', $period['from']))
             ->when($period['to'], fn ($q) => $q->whereDate('donated_on', '<=', $period['to']))
@@ -79,7 +101,7 @@ final class Dashboard extends Component
             'pending' => (int) $transactions->pending,
             'expected' => (float) $contributions->expected,
             'declared_paid' => (float) $contributions->declared_paid,
-            'arrears' => (float) $contributions->arrears,
+            'arrears' => (float) $arrears->total,
             'exempt_count' => (int) $contributions->exempt_count,
             'donation_count' => (int) $donations->number,
             'donation_declared' => (float) $donations->declared,

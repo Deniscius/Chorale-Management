@@ -60,12 +60,13 @@ final class MemberOverview extends Component
                 ->accrued()
                 ->when($year, fn (Builder $q) => $q->whereDate('period_starts_on', '>=', $year->starts_on)
                     ->whereDate('period_starts_on', '<=', $year->ends_on))], 'paid_amount')
-            ->withSum(['attendanceIncidents as incident_amount' => fn (Builder $query) => $query->where('status', AttendanceIncident::PENDING)], 'amount')
+            ->withSum(['attendanceIncidents as incident_amount' => fn (Builder $query) => $query->where('status', AttendanceIncident::PENDING)
+                    ->when($year, fn (Builder $q) => $q->whereDate('occurred_on', '>=', $year->starts_on)->whereDate('occurred_on', '<=', $year->ends_on))], 'amount')
             ->withCount([
-                'rehearsalAttendances as rehearsal_absences' => fn (Builder $query) => $query->where('status', 'absent'),
-                'rehearsalAttendances as rehearsal_lates' => fn (Builder $query) => $query->where('status', 'late'),
-                'activityParticipants as activity_absences' => fn (Builder $query) => $query->where('status', 'absent'),
-                'activityParticipants as activity_lates' => fn (Builder $query) => $query->where('status', 'late'),
+                'rehearsalAttendances as rehearsal_absences' => fn (Builder $query) => $query->where('status', 'absent')->when($year, fn (Builder $q) => $q->whereHas('rehearsal', fn (Builder $r) => $r->whereDate('date', '>=', $year->starts_on)->whereDate('date', '<=', $year->ends_on))),
+                'rehearsalAttendances as rehearsal_lates' => fn (Builder $query) => $query->where('status', 'late')->when($year, fn (Builder $q) => $q->whereHas('rehearsal', fn (Builder $r) => $r->whereDate('date', '>=', $year->starts_on)->whereDate('date', '<=', $year->ends_on))),
+                'activityParticipants as activity_absences' => fn (Builder $query) => $query->where('status', 'absent')->when($year, fn (Builder $q) => $q->whereHas('activity', fn (Builder $a) => $a->whereDate('starts_at', '>=', $year->starts_on)->whereDate('starts_at', '<=', $year->ends_on))),
+                'activityParticipants as activity_lates' => fn (Builder $query) => $query->where('status', 'late')->when($year, fn (Builder $q) => $q->whereHas('activity', fn (Builder $a) => $a->whereDate('starts_at', '>=', $year->starts_on)->whereDate('starts_at', '<=', $year->ends_on))),
             ])
             ->orderBy('last_name')->orderBy('first_name')->paginate(20);
     }
@@ -87,6 +88,7 @@ final class MemberOverview extends Component
             ->selectRaw('COALESCE(SUM(due_amount), 0) AS due, COALESCE(SUM(paid_amount), 0) AS paid')->toBase()->first();
         $incidents = AttendanceIncident::query()->whereIn('member_id', clone $memberIds)
             ->where('status', AttendanceIncident::PENDING)
+            ->when($year, fn (Builder $q) => $q->whereDate('occurred_on', '>=', $year->starts_on)->whereDate('occurred_on', '<=', $year->ends_on))
             ->selectRaw("COUNT(*) AS count, COALESCE(SUM(amount), 0) AS amount, COALESCE(SUM(CASE WHEN incident_type = 'absence' THEN 1 ELSE 0 END), 0) AS absences, COALESCE(SUM(CASE WHEN incident_type = 'late' THEN 1 ELSE 0 END), 0) AS lates")
             ->toBase()->first();
 

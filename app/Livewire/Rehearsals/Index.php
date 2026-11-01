@@ -125,13 +125,7 @@ class Index extends Component
             ->with('works')
             ->withCount('attendances')
             ->when($this->overview === 'presences', fn ($q) => $q->whereHas('attendances', fn ($q) => $q->where('status', 'present')))
-            ->when($this->search !== '', function (Builder $query) {
-                $like = '%'.$this->search.'%';
-
-                $query->where(function (Builder $q) use ($like) {
-                    $q->whereLike('venue', $like)->orWhereLike('notes', $like);
-                });
-            })
+            ->when(trim($this->search) !== '', fn (Builder $query) => \App\Support\SearchTerms::apply($query, $this->search, ['venue','notes']))
             ->when($this->type !== '', fn (Builder $query) => $query->where('type', $this->type))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->period === 'avenir', fn (Builder $query) => $query->whereDate('date', '>=', today()))

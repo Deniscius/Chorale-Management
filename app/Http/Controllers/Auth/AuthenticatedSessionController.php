@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\AuditEvent;
+use App\Services\SessionAuditRecorder;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,14 +32,7 @@ class AuthenticatedSessionController extends Controller
         // Journaliser uniquement l'identité et l'heure, jamais les identifiants secrets.
         $user = $request->user();
         if ($user) {
-            AuditEvent::create([
-                'actor_id' => $user->id,
-                'subject_type' => $user->getMorphClass(),
-                'subject_id' => $user->id,
-                'action' => 'login',
-                'changes' => ['before' => [], 'after' => []],
-                'created_at' => now(),
-            ]);
+            app(SessionAuditRecorder::class)->record($user, 'login');
         }
 
         if ($tenant = $request->attributes->get('access_tenant')) {
@@ -58,14 +51,7 @@ class AuthenticatedSessionController extends Controller
     {
         $user = $request->user();
         if ($user) {
-            AuditEvent::create([
-                'actor_id' => $user->id,
-                'subject_type' => $user->getMorphClass(),
-                'subject_id' => $user->id,
-                'action' => 'logout',
-                'changes' => ['before' => [], 'after' => []],
-                'created_at' => now(),
-            ]);
+            app(SessionAuditRecorder::class)->record($user, 'logout');
         }
 
         Auth::guard('web')->logout();

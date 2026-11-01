@@ -6,6 +6,7 @@ use App\Enums\Voice;
 use App\Models\AttendanceIncident;
 use App\Models\Contribution;
 use App\Models\Member;
+use App\Services\ManagementYearContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
@@ -48,9 +49,17 @@ final class MemberOverview extends Component
     #[Computed]
     public function rows()
     {
+        $year = app(ManagementYearContext::class)->selected();
+
         return $this->memberQuery()
-            ->withSum('contributions as contribution_due', 'due_amount')
-            ->withSum('contributions as contribution_paid', 'paid_amount')
+            ->withSum(['contributions as contribution_due' => fn (Builder $query) => $query
+                ->accrued()
+                ->when($year, fn (Builder $q) => $q->whereDate('period_starts_on', '>=', $year->starts_on)
+                    ->whereDate('period_starts_on', '<=', $year->ends_on))], 'due_amount')
+            ->withSum(['contributions as contribution_paid' => fn (Builder $query) => $query
+                ->accrued()
+                ->when($year, fn (Builder $q) => $q->whereDate('period_starts_on', '>=', $year->starts_on)
+                    ->whereDate('period_starts_on', '<=', $year->ends_on))], 'paid_amount')
             ->withSum(['attendanceIncidents as incident_amount' => fn (Builder $query) => $query->where('status', AttendanceIncident::PENDING)], 'amount')
             ->withCount([
                 'rehearsalAttendances as rehearsal_absences' => fn (Builder $query) => $query->where('status', 'absent'),
@@ -71,7 +80,10 @@ final class MemberOverview extends Component
     public function totals(): array
     {
         $memberIds = $this->memberQuery()->select('id');
-        $contributions = Contribution::query()->whereIn('member_id', clone $memberIds)
+        $year = app(ManagementYearContext::class)->selected();
+        $contributions = Contribution::query()->accrued()->whereIn('member_id', clone $memberIds)
+            ->when($year, fn (Builder $q) => $q->whereDate('period_starts_on', '>=', $year->starts_on)
+                ->whereDate('period_starts_on', '<=', $year->ends_on))
             ->selectRaw('COALESCE(SUM(due_amount), 0) AS due, COALESCE(SUM(paid_amount), 0) AS paid')->toBase()->first();
         $incidents = AttendanceIncident::query()->whereIn('member_id', clone $memberIds)
             ->where('status', AttendanceIncident::PENDING)

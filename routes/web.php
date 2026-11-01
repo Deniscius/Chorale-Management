@@ -30,6 +30,7 @@ use App\Http\Controllers\VoiceResourceAudioController;
 use App\Http\Controllers\VoiceSpaceController;
 use App\Http\Middleware\TenantAddress;
 use App\Livewire\Accounting\MemberOverview as AccountingMemberOverview;
+use App\Livewire\Accounting\Dashboard as AccountingDashboard;
 use App\Livewire\Activities\Index as ActivitiesIndex;
 use App\Livewire\Attendance\FinancialReport as AttendanceFinancialReport;
 use App\Livewire\Attendance\Sheet as AttendanceSheet;
@@ -194,6 +195,9 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
         ->name('attendance.sheet');
 
     // Comptabilité
+    Route::get('/comptabilite/synthese', AccountingDashboard::class)
+        ->middleware('module:'.UserRole::MODULE_COMPTABILITE)->name('accounting.dashboard');
+
     Route::get('/transactions', TransactionsIndex::class)
         ->middleware('module:'.UserRole::MODULE_COMPTABILITE)
         ->name('transactions.index');

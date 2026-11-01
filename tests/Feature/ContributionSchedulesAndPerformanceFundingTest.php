@@ -61,7 +61,7 @@ class ContributionSchedulesAndPerformanceFundingTest extends TestCase
             $this->assertSame(8, Contribution::where('member_id', $member->id)->count());
             $this->assertFalse(Contribution::where('year', 2026)->where('month', 10)->exists());
             $this->assertSame('3500.00', Contribution::where('month', 3)->value('due_amount'));
-            $this->assertSame('2026-02-20', Contribution::where('month', 2)->value('due_on')->format('Y-m-d'));
+            $this->assertSame('2026-02-28', Contribution::where('month', 2)->value('due_on')->format('Y-m-d'));
         });
     }
 

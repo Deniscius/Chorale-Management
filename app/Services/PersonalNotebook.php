@@ -70,8 +70,7 @@ final class PersonalNotebook
 
         $contributions = $member->contributions()
             ->whereIn('status', ['due', 'partiel', 'retard'])
-            ->where(fn ($query) => $query->where('year', '<', today()->year)
-                ->orWhere(fn ($current) => $current->where('year', today()->year)->where('month', '<=', today()->month)))
+            ->accrued()
             ->orderByDesc('year')->orderByDesc('month')->get();
 
         $incidents = $member->attendanceIncidents()->where('status', 'pending')->latest('occurred_on')->get();

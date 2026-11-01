@@ -47,7 +47,7 @@ final class RehearsalPlanner
                     // Manual or special rehearsals at a different time may coexist.
                     $exists = Rehearsal::query()->where('choir_id', $rhythm->choir_id)
                         ->whereDate('date', $date)
-                        ->where('starts_at', $rhythm->starts_at)
+                        ->where('starts_at', substr($rhythm->starts_at, 0, 5).':00')
                         ->exists();
                     if ($exists) {
                         return;

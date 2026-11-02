@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use App\Models\AuditEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -29,6 +30,7 @@ class AuthenticationTest extends TestCase
 
         $this->assertAuthenticatedAs($user);
         $response->assertRedirect(route('dashboard', absolute: false));
+        $this->assertDatabaseHas('audit_events', ['actor_id' => $user->id, 'action' => 'login']);
     }
 
     public function test_users_can_authenticate_with_their_email_as_fallback(): void
@@ -53,6 +55,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertGuest();
+        $this->assertSame(0, AuditEvent::query()->where('action', 'login')->count());
     }
 
     public function test_users_can_not_authenticate_with_unknown_identifier(): void
@@ -73,5 +76,6 @@ class AuthenticationTest extends TestCase
 
         $this->assertGuest();
         $response->assertRedirect('/');
+        $this->assertDatabaseHas('audit_events', ['actor_id' => $user->id, 'action' => 'logout']);
     }
 }

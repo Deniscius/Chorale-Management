@@ -138,15 +138,7 @@ class Index extends Component
             ->when(app(ManagementYearContext::class)->selected(), fn (Builder $query, $year) => $query->whereDate('transaction_date', '>=', $year->starts_on)->whereDate('transaction_date', '<=', $year->ends_on))
             ->with(['account', 'budget', 'member', 'activity', 'performance'])
             ->when($this->overview === 'validees', fn ($q) => $q->validated())
-            ->when($this->search !== '', function (Builder $query) {
-                $like = '%'.$this->search.'%';
-
-                $query->where(function (Builder $q) use ($like) {
-                    $q->whereLike('reference', $like)
-                        ->orWhereLike('description', $like)
-                        ->orWhereLike('category', $like);
-                });
-            })
+            ->when(trim($this->search) !== '', fn (Builder $query) => \App\Support\SearchTerms::apply($query, $this->search, ['reference','description','category']))
             ->when($this->type !== '', fn (Builder $query) => $query->where('type', $this->type))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->category !== '', fn (Builder $query) => $query->where('category', $this->category))

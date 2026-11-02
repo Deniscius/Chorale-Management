@@ -113,15 +113,9 @@ class Correspondence extends Model
             return $query;
         }
 
-        $like = '%'.$term.'%';
-
-        return $query->where(function (Builder $q) use ($like) {
-            $q->whereLike('reference', $like)
-                ->orWhereLike('subject', $like)
-                ->orWhereLike('sender_name', $like)
-                ->orWhereLike('sender_organization', $like)
-                ->orWhereLike('recipient_name', $like);
-        });
+        return \App\Support\SearchTerms::apply($query, $term, [
+            'reference', 'subject', 'sender_name', 'sender_organization', 'recipient_name',
+        ]);
     }
 
     public function isOpen(): bool

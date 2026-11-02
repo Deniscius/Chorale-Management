@@ -170,13 +170,19 @@ class Member extends Model
             return $query;
         }
 
-        $like = '%'.$term.'%';
+        $words = preg_split('/\\s+/u', trim($term)) ?: [];
+        // "Sophie Mensah" works even when first and last names are stored
+        // in separate fields. Each word can match any indexed field.
+        foreach (array_slice($words, 0, 5) as $word) {
+            $like = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $word).'%';
+            $query->where(function (Builder $q) use ($like): void {
+                $q->whereLike('first_name', $like)
+                    ->orWhereLike('last_name', $like)
+                    ->orWhereLike('email', $like)
+                    ->orWhereLike('phone', $like);
+            });
+        }
 
-        return $query->where(function (Builder $q) use ($like) {
-            $q->whereLike('first_name', $like)
-                ->orWhereLike('last_name', $like)
-                ->orWhereLike('email', $like)
-                ->orWhereLike('phone', $like);
-        });
+        return $query;
     }
 }

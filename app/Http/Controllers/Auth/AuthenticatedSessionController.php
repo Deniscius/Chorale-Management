@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\SessionAuditRecorder;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,6 +29,12 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Journaliser uniquement l'identité et l'heure, jamais les identifiants secrets.
+        $user = $request->user();
+        if ($user) {
+            app(SessionAuditRecorder::class)->record($user, 'login');
+        }
+
         if ($tenant = $request->attributes->get('access_tenant')) {
             $request->session()->forget('url.intended');
 
@@ -42,6 +49,11 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = $request->user();
+        if ($user) {
+            app(SessionAuditRecorder::class)->record($user, 'logout');
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

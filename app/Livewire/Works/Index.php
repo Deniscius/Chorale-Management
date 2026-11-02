@@ -117,16 +117,7 @@ class Index extends Component
         return Work::query()
             ->with('season')
             ->when($this->overview === 'saisons', fn ($q) => $q->whereNotNull('season_id'))
-            ->when($this->search !== '', function (Builder $query) {
-                $like = '%'.$this->search.'%';
-
-                $query->where(function (Builder $q) use ($like) {
-                    $q->whereLike('title', $like)
-                        ->orWhereLike('composer', $like)
-                        ->orWhereLike('arranger', $like)
-                        ->orWhereLike('text_author', $like);
-                });
-            })
+            ->when(trim($this->search) !== '', fn (Builder $query) => \App\Support\SearchTerms::apply($query, $this->search, ['title','composer','arranger','text_author']))
             ->when($this->type !== '', fn (Builder $query) => $query->where('type', $this->type))
             ->when($this->seasonId, fn (Builder $query) => $query->where('season_id', $this->seasonId))
             ->when($this->difficulty !== '', fn (Builder $query) => $query->where('difficulty', $this->difficulty))

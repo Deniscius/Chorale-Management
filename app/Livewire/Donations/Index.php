@@ -102,14 +102,7 @@ class Index extends Component
             ->when(app(ManagementYearContext::class)->selected(), fn (Builder $q, $year) => $q->whereDate('donated_on', '>=', $year->starts_on)->whereDate('donated_on', '<=', $year->ends_on))
             ->with('member')
             ->when($this->overview === 'montant', fn ($q) => $q->orderByDesc('amount'))
-            ->when($this->search !== '', function (Builder $query) {
-                $like = '%'.$this->search.'%';
-
-                $query->where(function (Builder $q) use ($like) {
-                    $q->whereLike('donor_name', $like)
-                        ->orWhereLike('purpose', $like);
-                });
-            })
+            ->when(trim($this->search) !== '', fn (Builder $query) => \App\Support\SearchTerms::apply($query, $this->search, ['donor_name','purpose']))
             ->when($this->donorType !== '', fn (Builder $query) => $query->where('donor_type', $this->donorType))
             ->when($this->donationType !== '', fn (Builder $query) => $query->where(fn ($q) => $q->where('type_code', $this->donationType)->orWhere(fn ($legacy) => $legacy->whereNull('type_code')->where('donation_type', $this->donationType))))
             ->when($this->year !== '', fn (Builder $query) => $query->whereYear('donated_on', (int) $this->year))

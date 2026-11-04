@@ -12,7 +12,7 @@ final class Index extends Component
 {
     public function mount(): void
     {
-        abort_unless(auth()->user()?->can('view-module', UserRole::MODULE_LITURGIQUE), 403);
+        abort_unless(auth()->user()?->can('manage-module', UserRole::MODULE_LITURGIQUE), 403);
     }
 
     public function render(): View

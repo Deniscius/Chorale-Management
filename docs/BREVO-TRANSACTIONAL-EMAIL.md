@@ -60,8 +60,11 @@ SMTP depuis le service web via `fromService`.
 - Vérifier les variables SMTP du web, et celles du worker si présent.
 - Déployer les variables, puis vider le cache de configuration Laravel via
   le processus de déploiement prévu, sans toucher à la base.
-- Envoyer **un seul** courriel transactionnel depuis un compte de test
-  explicitement autorisé, idéalement vers une boîte de test.
+- Lors d'une fenêtre de test contrôlée, activer temporairement \`MAIL_MAILER=smtp\`
+  et \`MAIL_DELIVERY_ENABLED=true\` uniquement dans un environnement isolé
+  avec une boîte destinataire de test ; envoyer **un seul** courriel, puis
+  désactiver la livraison tant que les résultats ne sont pas validés.
+  Ne pas activer ces variables en production pour faire un simple essai.
 - Vérifier la réception, le dossier spam, la signature DKIM et le tableau de
   transactions Brevo. Un serveur SMTP qui accepte le message ne garantit pas
   sa livraison dans la boîte de réception.
@@ -84,7 +87,9 @@ e-mails contenant des liens de réinitialisation.
 - Multi-tenants : aucun destinataire d'une autre chorale.
 - Limites Brevo : vérifier quota, statut et réputation de l'expéditeur.
 
-Les e-mails métier restent pilotés par l'application. Ne pas utiliser Brevo
+Le drapeau \`MAIL_DELIVERY_ENABLED=false\` bloque aussi les réservations de
+rappels e-mail et les e-mails en attente dans les workers (les SMS et notifications
+applicatives restent indépendants).\n\nLes e-mails métier restent pilotés par l'application. Ne pas utiliser Brevo
 comme source de vérité des présences, inscriptions, cotisations ou rappels.
 
 ## Retour arrière

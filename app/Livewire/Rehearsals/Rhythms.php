@@ -11,6 +11,7 @@ use App\Services\RehearsalRhythmRemoval;
 use App\Services\RehearsalRhythmSynchronizer;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 
@@ -68,10 +69,15 @@ final class Rhythms extends Component
         $data['ends_at'] = $data['ends_at'] ?: null;
         $data['effective_until'] = $data['effective_until'] ?: null;
         try {
-            $rhythm = $this->editingId ? RehearsalRhythm::findOrFail($this->editingId) : new RehearsalRhythm;
-            $previous = $rhythm->exists ? $rhythm->getRawOriginal() : null;
-            $rhythm->fill($data)->save();
-            $sync = $synchronizer->synchronize($rhythm, $previous);
+            $sync = DB::transaction(function () use ($data, $synchronizer): array {
+                $rhythm = $this->editingId
+                    ? RehearsalRhythm::query()->lockForUpdate()->findOrFail($this->editingId)
+                    : new RehearsalRhythm;
+                $previous = $rhythm->exists ? $rhythm->getRawOriginal() : null;
+                $rhythm->fill($data)->save();
+
+                return $synchronizer->synchronize($rhythm, $previous);
+            }, 3);
         } catch (UniqueConstraintViolationException) {
             $this->addError('weekday', 'Ce rythme est déjà enregistré pour cette chorale.');
             return;

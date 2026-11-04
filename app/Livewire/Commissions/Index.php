@@ -108,7 +108,7 @@ class Index extends Component
 
     public function delegate(int $id): void
     {
-        $this->authorize('manage-commissions');
+        abort_unless(auth()->user()?->isAdmin(), 403);
         ChoirCommission::findOrFail($id);
         $this->showForm = false;
         $this->viewingId = null;

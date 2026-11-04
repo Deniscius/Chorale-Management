@@ -10,5 +10,5 @@
 @endif
 
 Bien fraternellement,  
-{{ config('app.name') }}
+{{ $tenantName }} · via {{ config('app.name') }}
 </x-mail::message>

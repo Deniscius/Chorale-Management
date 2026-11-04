@@ -8,6 +8,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Mail\TenantAnnouncement;
 use App\Models\Contribution;
 use App\Models\Member;
+use App\Services\ChoraleIdentity;
 use App\Services\ContributionSchedule;
 use App\Services\ManagementYearContext;
 use App\Services\ReceiptLedger;
@@ -131,6 +132,7 @@ class Index extends Component
         Mail::to($member->email)->send(new TenantAnnouncement(
             'Rappel de cotisation — '.$contribution->typeLabel(),
             'Bonjour '.$member->first_name.",\n\nVotre cotisation de ".$contribution->monthLabel().' '.$contribution->year.' présente un reste de '.number_format($contribution->balance(), 0, ',', ' ').' FCFA. Merci de vous rapprocher de la trésorerie.',
+            app(ChoraleIdentity::class)->name(),
             route('personal-notebook.show', absolute: false),
             'Consulter mon carnet',
         ));

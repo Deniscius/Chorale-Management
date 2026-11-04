@@ -126,7 +126,7 @@ final class DashboardController extends Controller
         $sent = 0;
         try {
             foreach ($emails as $email) {
-                Mail::to($email)->send(new TenantAnnouncement($data['subject'], $data['message'], route('tenant.entry', $tenant->slug), 'Ouvrir la chorale'));
+                Mail::to($email)->send(new TenantAnnouncement($data['subject'], $data['message'], $tenant->name, route('tenant.entry', $tenant->slug), 'Ouvrir la chorale'));
                 $sent++;
             }
         } catch (\Throwable $exception) {

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\EventStatus;
 use App\Enums\RehearsalType;
 use App\Models\Rehearsal;
+use App\Models\NotificationDispatch;
 use App\Models\RehearsalRhythm;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -44,6 +45,16 @@ final class RehearsalRhythmSynchronizer
                     ->withExists(['attendances', 'reminders', 'works'])
                     ->orderBy('date')->lockForUpdate()->get();
 
+                // In-app/push reminders are tracked separately from the legacy
+                // e-mail/SMS Reminder relation. Those recipients may have already
+                // received the original time, so keep the appointment for review.
+                $notifiedIds = NotificationDispatch::query()
+                    ->where('kind', 'rehearsal')
+                    ->where('subject_type', (new Rehearsal)->getMorphClass())
+                    ->whereIn('subject_id', $sessions->modelKeys())
+                    ->whereNotNull('notified_at')
+                    ->pluck('subject_id')->map(fn ($id) => (int) $id)->flip();
+
                 foreach ($sessions as $session) {
                     // Match the old rhythm precisely, so manual changes are not overwritten.
                     $untouched = $session->status === EventStatus::Planifiee
@@ -51,6 +62,7 @@ final class RehearsalRhythmSynchronizer
                         && $session->type === RehearsalType::Repetition
                         && $session->notes === self::GENERATED_NOTE
                         && ! $session->attendances_exists && ! $session->reminders_exists && ! $session->works_exists
+                        && ! $notifiedIds->has((int) $session->id)
                         && ($repairLegacy
                             ? ($session->created_by === null && $session->created_at->equalTo($session->updated_at))
                             : ((int) $session->choir_id === (int) $previous['choir_id']

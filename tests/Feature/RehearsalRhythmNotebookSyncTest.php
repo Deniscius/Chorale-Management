@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\EventStatus;
 use App\Models\Choir;
 use App\Models\Member;
+use App\Models\NotificationDispatch;
 use App\Models\Rehearsal;
 use App\Models\RehearsalRhythm;
 use App\Models\User;
@@ -131,6 +132,33 @@ final class RehearsalRhythmNotebookSyncTest extends TestCase
         $this->assertSame($originalId, Rehearsal::query()
             ->whereDate('date', '2026-11-07')->where('status', 'planifiee')->firstOrFail()->id);
         $this->assertSame(1, Rehearsal::query()->whereDate('date', '2026-11-07')->count());
+    }
+
+    public function test_automated_sync_preserves_sessions_after_platform_notifications(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-04 09:00:00'));
+        $rhythm = $this->rhythm();
+        app(RehearsalPlanner::class)->generate(
+            CarbonImmutable::parse('2026-11-07'), CarbonImmutable::parse('2026-11-07')
+        );
+        $session = Rehearsal::query()->firstOrFail();
+        $user = User::factory()->create();
+        NotificationDispatch::query()->create([
+            'user_id' => $user->id,
+            'fingerprint' => 'test-rehearsal-notified-'.$session->id,
+            'kind' => 'rehearsal',
+            'subject_type' => $session->getMorphClass(),
+            'subject_id' => $session->id,
+            'scheduled_for' => $session->date,
+            'notified_at' => now(),
+        ]);
+
+        $previous = $rhythm->getRawOriginal();
+        $rhythm->update(['weekday' => 7, 'starts_at' => '11:00']);
+        $result = app(RehearsalRhythmSynchronizer::class)->synchronize($rhythm, $previous);
+        $this->assertSame(1, $result['protected']);
+        $this->assertSame(EventStatus::Planifiee, $session->fresh()->status);
+        $this->assertSame('15:00', $session->fresh()->starts_at);
     }
 
     public function test_manually_cancelled_rehearsals_are_never_reactivated_by_schedule_generation(): void

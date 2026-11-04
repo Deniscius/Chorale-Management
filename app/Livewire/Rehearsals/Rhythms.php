@@ -105,6 +105,19 @@ final class Rhythms extends Component
             : 'Rythme sans historique supprimé définitivement.');
     }
 
+    public function repairNotebook(int $id, RehearsalRhythmSynchronizer $synchronizer): void
+    {
+        $this->authorizeManage();
+        $rhythm = RehearsalRhythm::query()->findOrFail($id);
+        $result = $synchronizer->repairPreviouslyGenerated($rhythm);
+        $this->dispatch('toast', type: 'success', message:
+            'Carnets vérifiés : '.$result['updated'].' séance(s) corrigée(s), '.
+            $result['cancelled'].' ancienne(s) annulée(s), '.
+            $result['created'].' nouvelle(s) programmée(s).'.
+            ($result['protected'] ? ' '.$result['protected'].' séance(s) avec modifications ou historique à vérifier manuellement.' : '')
+        );
+    }
+
     public function generate(RehearsalPlanner $planner): void
     {
         $this->authorizeManage();

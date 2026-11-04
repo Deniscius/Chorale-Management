@@ -28,7 +28,11 @@ final class RehearsalRhythmSynchronizer
             DB::transaction(function () use ($rhythm, $previous, &$counts): void {
                 $current = RehearsalRhythm::query()->whereKey($rhythm->id)->lockForUpdate()->firstOrFail();
                 $sessions = Rehearsal::query()->where('rehearsal_rhythm_id', $current->id)
-                    ->whereDate('date', '>=', today()->toDateString())
+                    ->where(function ($query): void {
+                        $query->whereDate('date', '>', today()->toDateString())
+                            ->orWhere(fn ($today) => $today->whereDate('date', today()->toDateString())
+                                ->where('starts_at', '>=', now()->format('H:i:s')));
+                    })
                     ->withExists(['attendances', 'reminders', 'works'])
                     ->orderBy('date')->lockForUpdate()->get();
 

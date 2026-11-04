@@ -30,7 +30,6 @@ final class CommissionTeamWriter
                 'associate_id' => ['nullable', 'different:leader_id', Rule::exists('users', 'id')],
             ])->validate();
             if ($isAdmin) {
-                app(CommissionCatalog::class)->ensure();
                 $official = ChoirCommission::where('archive_commission', $commission->value)->firstOrFail();
                 app(CommissionResponsibilities::class)->assign($official->id, $leaderId, $associateId, $commission->module());
 

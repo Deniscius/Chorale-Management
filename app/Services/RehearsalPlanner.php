@@ -53,6 +53,12 @@ final class RehearsalPlanner
                     $exists = Rehearsal::query()->where('choir_id', $rhythm->choir_id)
                         ->whereDate('date', $date)
                         ->where('starts_at', substr($rhythm->starts_at, 0, 5).':00')
+                        // A session cancelled by our synchronizer may be restored.
+                        // Manually cancelled sessions still block recreation.
+                        ->where(fn ($query) => $query
+                            ->where('status', '!=', EventStatus::Annulee->value)
+                            ->orWhere('notes', '!=', RehearsalRhythmSynchronizer::RESCHEDULED_NOTE)
+                            ->orWhereNull('notes'))
                         ->exists();
                     if ($exists) {
                         return;

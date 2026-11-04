@@ -59,7 +59,7 @@ enum Commission: string
     {
         return match ($this) {
             self::VieCulturelle => UserRole::MODULE_ACTIVITES,
-            self::SuivieFormation => UserRole::MODULE_LITURGIQUE,
+            self::SuivieFormation => UserRole::MODULE_MEMBERS,
             self::Liturgique => UserRole::MODULE_LITURGIQUE,
             self::Instruments => UserRole::MODULE_INSTRUMENTS,
             self::Secretariat => UserRole::MODULE_COURRIERS,

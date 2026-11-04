@@ -124,7 +124,9 @@ envVarGroups:
       - {key: LOG_LEVEL, value: warning}
       - {key: MAIL_MAILER, value: smtp}
       - {key: MAIL_DELIVERY_ENABLED, value: 'false'}
-      - {key: MAIL_PORT, value: '587'}
+      # Use Brevo's alternative TLS-capable port so the same config works
+      # on paid and free Render services without relying on port 587.
+      - {key: MAIL_PORT, value: '2525'}
       - {key: MAIL_FROM_NAME, value: Chorale Management}
       - {key: TENANCY_ENABLED, value: 'true'}
       - {key: CHURCH_PROJECT_INTEGRATION_ENABLED, value: 'false'}

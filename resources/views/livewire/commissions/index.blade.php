@@ -29,7 +29,7 @@
                 @if($commission->module_key)<p class="mt-1 text-xs text-slate-500">{{ \App\Models\ChoirCommission::moduleLabels()[$commission->module_key] ?? '' }}</p>@endif
                 <div class="mt-auto flex flex-wrap gap-2 border-t border-slate-100 pt-4 mt-4">
                     <button type="button" wire:click="view({{ $commission->id }})" class="btn btn-secondary">Ouvrir la commission</button>
-                    @can('manage-commissions')<button type="button" wire:click="delegate({{ $commission->id }})" class="btn btn-secondary">Déléguer le responsable</button>@endcan
+                    @if(auth()->user()->isAdmin())<button type="button" wire:click="delegate({{ $commission->id }})" class="btn btn-secondary">Déléguer le responsable</button>@endif
                     @can('manage-commissions')<button type="button" wire:click="edit({{ $commission->id }})" class="btn btn-secondary">Modifier</button><x-confirm-action :call="'toggleArchive('.$commission->id.')'" :title="$commission->archived_at ? 'Réouvrir la commission' : 'Archiver la commission'" :message="$commission->archived_at ? 'Son statut dépendra de ses dates.' : 'Sa mission et ses membres seront conservés.'" :label="$commission->archived_at ? 'Réouvrir' : 'Archiver'" trigger-class="text-sm font-medium text-slate-600 underline" />@endcan
                 </div>
             </article>

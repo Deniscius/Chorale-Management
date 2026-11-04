@@ -1,0 +1,63 @@
+<div class="space-y-5">
+    <x-page-header title="Accueil et suivi des nouveaux choristes" icon="users"
+        subtitle="Accompagner les nouveaux membres jusqu’à leur intégration à la chorale." />
+    <p class="text-sm text-slate-600">Les membres sont présentés par date d'adhésion et selon l'année de travail sélectionnée. Ce suivi est interne à la commission et distinct de la direction musicale.</p>
+    <div class="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2">
+        <div><label for="onboarding-search" class="form-label">Rechercher un choriste</label>
+            <input id="onboarding-search" type="search" wire:model.live.debounce.350ms="search" class="form-input mt-1 w-full" placeholder="Prénom ou nom…">
+        </div>
+        <div><label for="onboarding-status" class="form-label">Étape d'intégration</label>
+            <select id="onboarding-status" wire:model.live="statusFilter" class="form-select mt-1 w-full">
+                <option value="">Toutes les étapes</option>
+                <option value="a_accueillir">À accueillir</option>
+                <option value="en_accompagnement">En accompagnement</option>
+                <option value="integre">Intégré</option>
+            </select>
+        </div>
+    </div>
+    <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+        <table class="min-w-full divide-y divide-slate-100 text-sm">
+            <thead class="bg-slate-50 text-left text-slate-600"><tr>
+                <th scope="col" class="p-3">Choriste</th><th scope="col" class="p-3">Adhésion</th>
+                <th scope="col" class="p-3">Suivi</th><th scope="col" class="p-3">Dernier contact</th><th scope="col" class="p-3">Action</th>
+            </tr></thead>
+            <tbody class="divide-y divide-slate-100">
+                @forelse($this->members as $member)
+                    <tr wire:key="onboarding-{{ $member->id }}">
+                        <td class="p-3 font-medium text-slate-800">{{ $member->full_name }}</td>
+                        <td class="p-3">{{ $member->joined_on?->format('d/m/Y') ?? 'Non renseignée' }}</td>
+                        <td class="p-3">{{ ['a_accueillir' => 'À accueillir', 'en_accompagnement' => 'En accompagnement', 'integre' => 'Intégré'][$member->onboardingFollowup?->status ?? 'a_accueillir'] }}</td>
+                        <td class="p-3">{{ $member->onboardingFollowup?->contacted_on?->format('d/m/Y') ?? '—' }}</td>
+                        <td class="p-3"><button type="button" class="font-semibold text-sky-700 hover:underline" wire:click="edit({{ $member->id }})">Mettre à jour</button></td>
+                    </tr>
+                @empty
+                    <tr><td colspan="5" class="p-6 text-center text-slate-500">Aucun choriste pour cette recherche ou cette année.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    {{ $this->members->links() }}
+    @if($editingId !== null)
+        <section class="rounded-xl border border-sky-200 bg-white p-5">
+            <form wire:submit="save" class="space-y-4">
+                <h2 class="font-semibold">Mettre à jour l'accompagnement</h2>
+                <div><label for="onboarding-step" class="form-label">Étape d'intégration</label>
+                    <select id="onboarding-step" wire:model="status" class="form-select mt-1">
+                        <option value="a_accueillir">À accueillir</option>
+                        <option value="en_accompagnement">En accompagnement</option>
+                        <option value="integre">Intégré</option>
+                    </select><x-input-error :messages="$errors->get('status')"/></div>
+                <div><label for="onboarding-contact" class="form-label">Date du dernier contact</label>
+                    <input id="onboarding-contact" type="date" wire:model="contactedOn" class="form-input mt-1">
+                    <x-input-error :messages="$errors->get('contactedOn')"/></div>
+                <div><label for="onboarding-note" class="form-label">Note d'accompagnement (facultative)</label>
+                    <textarea id="onboarding-note" wire:model="note" rows="3" maxlength="2000" class="form-textarea mt-1 w-full" placeholder="Éléments utiles à l’accueil, sans données médicales ni informations confidentielles."></textarea>
+                    <x-input-error :messages="$errors->get('note')"/></div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" class="btn btn-secondary" wire:click="cancel">Annuler</button>
+                    <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">Enregistrer le suivi</button>
+                </div>
+            </form>
+        </section>
+    @endif
+</div>

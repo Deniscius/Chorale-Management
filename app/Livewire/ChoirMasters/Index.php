@@ -50,7 +50,8 @@ final class Index extends Component
         // Assistants are explicit assignments, not every commission member.
         $commissions = ChoirCommission::query()
             ->where('module_key', UserRole::MODULE_LITURGIQUE)
-            ->where('archive_commission', '!=', \App\Enums\Commission::SuivieFormation->value)
+            ->where(fn ($query) => $query->whereNull('archive_commission')
+                ->orWhere('archive_commission', '!=', \App\Enums\Commission::SuivieFormation->value))
             ->whereNull('archived_at')
             ->with(['leader:id,name', 'choirMasters:id,name'])
             ->orderBy('name')

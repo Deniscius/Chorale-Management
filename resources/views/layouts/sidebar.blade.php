@@ -24,7 +24,7 @@
                 ['route' => 'documents.index', 'parameters'=>['commission'=>'commission_liturgique'], 'label'=>'Archives liturgiques', 'icon'=>'archive'],
                 ['route' => 'works.index', 'label' => 'Œuvres & partitions', 'icon' => 'book', 'module' => UserRole::MODULE_LITURGIQUE],
                 ['route' => 'rehearsals.index', 'label' => 'Répétitions', 'icon' => 'music', 'module' => UserRole::MODULE_LITURGIQUE],
-                ['route' => 'choir-masters.index', 'label' => 'Maîtres de chœur', 'icon' => 'users', 'module' => UserRole::MODULE_LITURGIQUE],
+                ['route' => 'choir-masters.index', 'label' => 'Maîtres de chœur', 'icon' => 'users', 'module_manage' => UserRole::MODULE_LITURGIQUE],
                 ['route' => 'performances.index', 'label' => 'Célébrations & concerts', 'icon' => 'sparkles', 'module' => UserRole::MODULE_LITURGIQUE],
                 ['route' => 'seasons.index', 'label' => 'Temps liturgiques', 'icon' => 'calendar', 'module' => UserRole::MODULE_LITURGIQUE],
                 ['route' => 'reminders.index', 'label' => 'Rappels', 'icon' => 'bell', 'module' => UserRole::MODULE_LITURGIQUE],
@@ -103,6 +103,10 @@
                 $visible = collect($section['items'])->filter(function ($item) {
                     if ($item['admin'] ?? false) {
                         return auth()->user()?->can('manage-users');
+                    }
+
+                    if (isset($item['module_manage'])) {
+                        return auth()->user()?->can('manage-module', $item['module_manage']);
                     }
 
                     if (isset($item['module'])) {

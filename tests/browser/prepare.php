@@ -7,6 +7,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Work;
 use App\Services\ChoraleIdentity;
+use App\Services\CommissionCatalog;
 use App\Services\PrivateFiles;
 use App\Services\TenantRegistration;
 use App\Tenancy\TenantContext;
@@ -62,6 +63,9 @@ $admin = app(TenantRegistration::class)->create([
 ]);
 Tenant::findOrFail($admin->tenant_id)->forceFill(['paid_perpetual' => true])->save();
 app(TenantContext::class)->run($admin->tenant_id, function () use ($password): void {
+    // This browser fixture explicitly opts into sample commissions.
+    // Real tenants always create their own commissions.
+    app(CommissionCatalog::class)->ensure();
     $logo = UploadedFile::fake()->createWithContent('logo.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZrC8AAAAASUVORK5CYII='));
     $logoPath = app(PrivateFiles::class)->store($logo, app(TenantContext::class)->path('chorale'));
     Setting::set(ChoraleIdentity::KEY_LOGO_PATH, $logoPath);

@@ -39,7 +39,7 @@ enum UserRole: string
     {
         return [
             self::Admin->value => 'Administrateur',
-            self::Directeur->value => 'Directeur de la chorale',
+            self::Directeur->value => 'Présidente ou responsable de la chorale',
             self::CommissionLiturgique->value => 'Commission liturgique',
             self::CommissionInstruments->value => 'Commission des instruments',
             self::CommissionVieCulturelle->value => 'Commission Vie culturelle',

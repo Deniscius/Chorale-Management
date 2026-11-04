@@ -59,7 +59,7 @@ final class ReminderDispatcher
             ->orderBy('id')->lazyById(200);
         foreach ($members as $member) {
             $channels = [];
-            if ($member->canReceiveEmail()) {
+            if (config('mail.delivery_enabled') && $member->canReceiveEmail()) {
                 $channels[] = ReminderChannel::Mail;
             }
             if ($member->canReceiveSms()) {
@@ -130,7 +130,7 @@ final class ReminderDispatcher
             }
             $entry->load(['member.user', 'rehearsal.works']);
             $allowed = config('chorale.reminders.enabled') && $entry->rehearsal?->status !== EventStatus::Annulee && $entry->member?->status === MemberStatus::Actif && match ($entry->channel) {
-                ReminderChannel::Mail => $entry->member?->canReceiveEmail(),
+                ReminderChannel::Mail => config('mail.delivery_enabled') && $entry->member?->canReceiveEmail(),
                 ReminderChannel::Sms => $entry->member?->canReceiveSms(),
                 ReminderChannel::Application => $entry->member?->user !== null,
             };

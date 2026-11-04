@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Notifications\Channels\WebPushChannel;
 use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
 
@@ -22,7 +23,15 @@ final class PlatformReminderNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database', WebPushChannel::class];
+        $channels = ['database', WebPushChannel::class];
+
+        // Le choix appartient au choriste : un compte ne reçoit jamais de
+        // courriel si sa fiche ne contient pas une adresse et l'accord e-mail.
+        if (config('mail.delivery_enabled') && $notifiable->member?->canReceiveEmail()) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
     }
 
     public function toDatabase(object $notifiable): array
@@ -45,6 +54,16 @@ final class PlatformReminderNotification extends Notification
             'tag' => $this->tag,
             'icon' => '/brand-icon.svg',
         ];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        return (new MailMessage)
+            ->subject($this->title.' — Chorale Management')
+            ->greeting('Bonjour '.($notifiable->member?->first_name ?: Str::before((string) $notifiable->name, ' ')).',')
+            ->line($this->personalizedMessage($notifiable))
+            ->action('Ouvrir mon carnet', url($this->safeUrl()))
+            ->line('Vous recevez ce rappel car les notifications e-mail sont activées dans votre fiche choriste.');
     }
 
     private function personalizedMessage(object $notifiable): string

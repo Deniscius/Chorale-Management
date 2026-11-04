@@ -15,6 +15,7 @@ use App\Models\NotificationDispatch;
 use App\Models\Performance;
 use App\Models\Rehearsal;
 use App\Models\User;
+use App\Notifications\Channels\WebPushChannel;
 use App\Notifications\PlatformReminderNotification;
 use App\Services\PersonalNotebook;
 use App\Services\PlatformReminderDispatcher;
@@ -51,6 +52,20 @@ final class PlatformRemindersAndPersonalNotebookTest extends TestCase
         Notification::assertSentToTimes($aliceUser, PlatformReminderNotification::class, 3);
         Notification::assertSentToTimes($brunoUser, PlatformReminderNotification::class, 2);
         Carbon::setTestNow();
+    }
+
+    public function test_platform_reminders_use_brevo_mail_only_when_the_chorister_opted_in(): void
+    {
+        $member = Member::factory()->active()->create(['email' => 'alice@example.test', 'notify_email' => true]);
+        $user = User::factory()->create(['name' => 'Alice Koffi', 'member_id' => $member->id]);
+        $notification = new PlatformReminderNotification('Activité à venir', 'La formation commence demain.', '/mon-carnet', 'activity', 'test-activity');
+
+        config(['mail.delivery_enabled' => true]);
+        $this->assertSame(['database', WebPushChannel::class, 'mail'], $notification->via($user));
+        $this->assertSame('Activité à venir — Chorale Management', $notification->toMail($user)->subject);
+
+        $member->update(['notify_email' => false]);
+        $this->assertSame(['database', WebPushChannel::class], $notification->via($user->fresh()));
     }
 
     public function test_personal_obligations_notify_only_the_concerned_chorister(): void

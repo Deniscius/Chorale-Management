@@ -86,7 +86,7 @@ class ChoirCommission extends Model
     {
         return match ($this->module_key) {
             'members' => ['members.index' => 'Choristes'],
-            'liturgique' => ['works.index' => 'Œuvres et partitions', 'rehearsals.index' => 'Répétitions', 'performances.index' => 'Célébrations', 'seasons.index' => 'Temps liturgiques'],
+            'liturgique' => ['choir-masters.index' => 'Maîtres de chœur', 'works.index' => 'Œuvres et partitions', 'rehearsals.index' => 'Répétitions', 'performances.index' => 'Célébrations', 'seasons.index' => 'Temps liturgiques'],
             'instruments' => ['instruments.index' => 'Inventaire', 'instruments.movements' => 'Mouvements', 'instruments.maintenances' => 'Maintenance', 'instruments.ensembles' => 'Ensembles'],
             'courriers' => ['correspondences.index' => 'Courriers'],
             'activites' => ['activities.index' => 'Activités'],

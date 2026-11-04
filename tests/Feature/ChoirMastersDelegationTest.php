@@ -51,7 +51,7 @@ final class ChoirMastersDelegationTest extends TestCase
             app(CommissionResponsibilities::class)->assign(
                 $commission->id, $chief->id, null, UserRole::MODULE_LITURGIQUE, [], []
             );
-            $this->assertCount(0, $commission->choirMasters);
+            $this->assertSame(0, $commission->choirMasters()->count());
             $this->assertNotContains(UserRole::MODULE_LITURGIQUE, app(CommissionAccess::class)->modules($assistant, true));
         });
     }

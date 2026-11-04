@@ -108,7 +108,7 @@ class Index extends Component
 
     public function delegate(int $id): void
     {
-        abort_unless(auth()->user()?->isAdmin(), 403);
+        $this->authorize('manage-commissions');
         ChoirCommission::findOrFail($id);
         $this->showForm = false;
         $this->viewingId = null;
@@ -154,7 +154,8 @@ class Index extends Component
         }
         if ($this->mine) {
             $memberId = auth()->user()->member_id;
-            $query->where(fn ($q) => $q->where('leader_id', auth()->id())->orWhereHas('members', fn ($q) => $q->where('members.id', $memberId ?? 0))->orWhere(fn ($q) => $q->where('module_key', 'instruments')->whereHas('instrumentAssociates', fn ($q) => $q->where('users.id', auth()->id()))));
+            $query->where(fn ($q) => $q->where('leader_id', auth()->id())->orWhereHas('members', fn ($q) => $q->where('members.id', $memberId ?? 0))->orWhere(fn ($q) => $q->where('module_key', 'instruments')->whereHas('instrumentAssociates', fn ($q) => $q->where('users.id', auth()->id())))
+                ->orWhere(fn ($q) => $q->where('module_key', 'liturgique')->whereHas('choirMasters', fn ($q) => $q->where('users.id', auth()->id()))));
         }
         $counts = collect(ChoirCommission::statuses())->map(fn ($label, $key) => ChoirCommission::inStatus($key)->count())->all();
         // The roster is loaded only while editing; cards use counts instead of N+1 queries.

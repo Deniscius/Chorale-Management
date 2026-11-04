@@ -18,7 +18,7 @@ final class CommissionResponsibilities
 {
     public function assign(int $id, ?int $leaderId, ?int $associateId, ?string $module, ?array $instrumentAssociateIds = null, ?array $choirMasterIds = null): void
     {
-        abort_unless(auth()->user()?->isAdmin(), 403);
+        abort_unless(auth()->user()?->can('manage-commissions'), 403);
         Validator::make(['leader_id' => $leaderId, 'associate_id' => $associateId, 'module_key' => $module], [
             'leader_id' => ['nullable', Rule::exists('users', 'id')],
             'associate_id' => ['nullable', 'different:leader_id', Rule::exists('users', 'id')],

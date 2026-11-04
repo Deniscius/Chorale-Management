@@ -81,6 +81,32 @@ final class RehearsalRhythmNotebookSyncTest extends TestCase
             ->whereDate('date', '2026-11-14')->where('rehearsal_rhythm_id', $rhythm->id)->firstOrFail()->starts_at);
     }
 
+    public function test_legacy_reconciliation_repairs_old_appointments_without_overwriting_manually_edited_sessions(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-04 09:00:00'));
+        $this->actingAs(User::factory()->role(UserRole::Admin)->create());
+        $member = Member::factory()->active()->create();
+        $rhythm = $this->rhythm();
+        app(RehearsalPlanner::class)->generate(
+            CarbonImmutable::parse('2026-11-04'), CarbonImmutable::parse('2026-11-14')
+        );
+        $custom = Rehearsal::query()->whereDate('date', '2026-11-14')->firstOrFail();
+        $custom->update(['venue' => 'Séance déplacée manuellement']);
+
+        // Simulate a historical rhythm edit made by the old system: no sync ran.
+        $rhythm->update(['weekday' => 7, 'starts_at' => '10:00', 'venue' => 'Salle B']);
+        Livewire::test(Rhythms::class)->call('repairNotebook', $rhythm->id)->assertHasNoErrors();
+
+        $this->assertSame(EventStatus::Annulee, Rehearsal::query()
+            ->whereDate('date', '2026-11-07')->firstOrFail()->status);
+        $this->assertSame('Séance déplacée manuellement', $custom->fresh()->venue);
+        $appointments = app(PersonalNotebook::class)->for($member)['timeline']
+            ->where('kind', 'rehearsal')->pluck('at')
+            ->map(fn ($date) => $date->format('Y-m-d H:i'))->all();
+        $this->assertContains('2026-11-08 10:00', $appointments);
+        $this->assertNotContains('2026-11-07 15:00', $appointments);
+    }
+
     public function test_livewire_rhythm_save_immediately_changes_notebook_schedule(): void
     {
         $this->travelTo(CarbonImmutable::parse('2026-11-04 09:00:00'));

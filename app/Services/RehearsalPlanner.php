@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\EventStatus;
 use App\Enums\RehearsalType;
 use App\Models\Rehearsal;
+use App\Models\NotificationDispatch;
 use App\Models\RehearsalRhythm;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -73,7 +74,11 @@ final class RehearsalPlanner
                         ->withExists(['attendances', 'reminders', 'works'])
                         ->lockForUpdate()->first();
                     if ($recoverable && ! $recoverable->attendances_exists
-                        && ! $recoverable->reminders_exists && ! $recoverable->works_exists) {
+                        && ! $recoverable->reminders_exists && ! $recoverable->works_exists
+                        && ! NotificationDispatch::query()->where('kind', 'rehearsal')
+                            ->where('subject_type', $recoverable->getMorphClass())
+                            ->where('subject_id', $recoverable->id)
+                            ->whereNotNull('notified_at')->exists()) {
                         $recoverable->update([
                             'status' => EventStatus::Planifiee->value,
                             'starts_at' => $rhythm->starts_at,

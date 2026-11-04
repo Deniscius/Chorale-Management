@@ -143,6 +143,8 @@ class AppServiceProvider extends ServiceProvider
         // Écriture dans un module fonctionnel.
         Gate::define('manage-module', fn (User $user, string $module) => $user->canManageModule($module));
 
+        Gate::define('manage-onboarding', fn (User $user) => in_array($user->role, [UserRole::Admin, UserRole::Directeur, UserRole::CommissionSuivieFormation], true));
+
         Gate::define('manage-commissions', fn (User $user) => in_array($user->role, [UserRole::Admin, UserRole::Directeur], true));
 
         // Gestion des comptes utilisateurs : administrateur uniquement.

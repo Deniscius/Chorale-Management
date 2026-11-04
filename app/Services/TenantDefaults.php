@@ -20,7 +20,6 @@ final class TenantDefaults
             foreach (['commission_liturgique', 'commission_secretariat'] as $commission) {
                 CommissionTeam::firstOrCreate(['commission' => $commission]);
             }
-            app(CommissionCatalog::class)->ensure();
             DB::table('operation_locks')->insertOrIgnore(['tenant_id' => $tenant, 'key' => 'accounts']);
         });
     }

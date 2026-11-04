@@ -47,7 +47,7 @@ final class Responsibilities extends Component
 
     private function authorizeAdmin(): void
     {
-        abort_unless(auth()->user()?->can('manage-commissions'), 403);
+        abort_unless(auth()->user()?->isAdmin(), 403);
     }
 
     #[Computed]

@@ -25,7 +25,7 @@
                 <p class="mt-4 text-sm text-slate-500">{{ $commission->starts_on->format('d/m/Y') }} → {{ $commission->ends_on?->format('d/m/Y') ?? 'Sans échéance' }}</p>
                 <p class="mt-1 text-sm font-medium">{{ $commission->members_count }} choriste(s)</p>
                 @if($commission->activities_count)<p class="mt-1 text-sm text-slate-600">{{ $commission->activities_count }} activité(s) organisée(s)</p>@endif
-                <p class="mt-2 text-sm text-slate-600">Responsable : <span class="font-medium">{{ $commission->leader?->name ?? 'À désigner' }}</span></p>
+                <p class="mt-2 text-sm text-slate-600">{{ $commission->module_key === 'liturgique' ? 'Maître de chœur responsable' : 'Responsable' }} : <span class="font-medium">{{ $commission->leader?->name ?? 'À désigner' }}</span></p>
                 @if($commission->module_key)<p class="mt-1 text-xs text-slate-500">{{ \App\Models\ChoirCommission::moduleLabels()[$commission->module_key] ?? '' }}</p>@endif
                 <div class="mt-auto flex flex-wrap gap-2 border-t border-slate-100 pt-4 mt-4">
                     <button type="button" wire:click="view({{ $commission->id }})" class="btn btn-secondary">Ouvrir la commission</button>
@@ -34,7 +34,7 @@
                 </div>
             </article>
         @empty
-            <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center md:col-span-2 xl:col-span-3"><h2 class="font-semibold">Aucune commission à afficher</h2><p class="mt-2 text-sm text-slate-500">Essayez un autre filtre. La directrice peut créer les équipes et définir leur mission.</p><button type="button" wire:click="filterStatus('')" class="mt-4 text-sm text-sky-700 underline">Afficher tous les statuts</button></div>
+            <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center md:col-span-2 xl:col-span-3"><h2 class="font-semibold">Aucune commission à afficher</h2><p class="mt-2 text-sm text-slate-500">Essayez un autre filtre. La personne responsable de la chorale peut créer les équipes et définir leur mission.</p><button type="button" wire:click="filterStatus('')" class="mt-4 text-sm text-sky-700 underline">Afficher tous les statuts</button></div>
         @endforelse
     </div>
     {{ $commissions->links() }}

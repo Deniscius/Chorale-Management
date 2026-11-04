@@ -17,6 +17,7 @@ use App\Models\FinancialType;
 use App\Models\LetterheadTemplate;
 use App\Models\MemberInvitation;
 use App\Models\Rehearsal;
+use App\Models\RehearsalRhythm;
 use App\Models\RehearsalAttendance;
 use App\Models\Reminder;
 use App\Models\Transaction;
@@ -45,6 +46,7 @@ final class AuditObserver
             VoiceResource::class => ['voice', 'title', 'audio_original_name', 'audio_size'],
             AttendanceRule::class => ['financial_tracking_enabled', 'rehearsal_absence_amount', 'activity_absence_amount', 'late_amount', 'late_threshold_minutes', 'effective_from'],
             AttendanceIncident::class => ['member_id', 'source_type', 'incident_type', 'minutes_late', 'amount', 'status', 'reviewed_by', 'reviewed_at', 'review_note'],
+            RehearsalRhythm::class => ['choir_id', 'weekday', 'starts_at', 'ends_at', 'venue', 'effective_from', 'effective_until', 'is_active'],
             Rehearsal::class, Activity::class => ['attendance_finalized_at', 'attendance_finalized_by'],
             RehearsalAttendance::class, ActivityParticipant::class => ['member_id', 'status', 'minutes_late', 'excuse_reason', 'checked_at', 'recorded_by'],
             default => [],

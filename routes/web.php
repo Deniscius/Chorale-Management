@@ -125,6 +125,10 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/mon-pupitre/{resource}/audio', VoiceResourceAudioController::class)
         ->middleware('module:'.UserRole::MODULE_LITURGIQUE)->name('voice-space.audio');
 
+    Route::get('/liturgie/maitres-de-choeur', \App\Livewire\ChoirMasters\Index::class)
+        ->middleware('module:'.UserRole::MODULE_LITURGIQUE)
+        ->name('choir-masters.index');
+
     Route::get('/repetitions/rythmes', RehearsalRhythms::class)
         ->middleware('module:'.UserRole::MODULE_LITURGIQUE)
         ->name('rehearsals.rhythms');

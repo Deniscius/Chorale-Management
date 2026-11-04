@@ -23,6 +23,9 @@ final class Responsibilities extends Component
 
     public array $instrument_associate_ids = [];
 
+    /** @var array<int,int> */
+    public array $choir_master_ids = [];
+
     public string $search = '';
 
     public function mount(int $commissionId): void
@@ -34,6 +37,7 @@ final class Responsibilities extends Component
         $this->associate_id = $entry->associate_id ? (string) $entry->associate_id : null;
         $this->module_key = $entry->module_key;
         $this->instrument_associate_ids = $entry->instrumentAssociates()->pluck('users.id')->all();
+        $this->choir_master_ids = $entry->choirMasters()->pluck('users.id')->all();
     }
 
     public function hydrate(): void
@@ -57,7 +61,7 @@ final class Responsibilities extends Component
     {
         $query = User::query()->when(trim($this->search) !== '', fn ($q) => $q->whereLike('name', '%'.mb_substr(trim($this->search), 0, 100).'%'));
         $users = $query->orderBy('name')->limit(50)->get(['id', 'name']);
-        foreach (array_filter([$this->leader_id, $this->associate_id, ...$this->instrument_associate_ids]) as $id) {
+        foreach (array_filter([$this->leader_id, $this->associate_id, ...$this->instrument_associate_ids, ...$this->choir_master_ids]) as $id) {
             if (! $users->contains('id', (int) $id) && ($user = User::find($id, ['id', 'name']))) {
                 $users->prepend($user);
             }
@@ -69,8 +73,8 @@ final class Responsibilities extends Component
     public function save(): void
     {
         $this->authorizeAdmin();
-        $this->validate(['leader_id' => 'nullable|integer', 'associate_id' => 'nullable|integer', 'module_key' => 'nullable|string', 'instrument_associate_ids' => 'array|max:20', 'instrument_associate_ids.*' => 'required|integer|distinct']);
-        app(CommissionResponsibilities::class)->assign($this->commissionId, $this->leader_id ? (int) $this->leader_id : null, $this->associate_id ? (int) $this->associate_id : null, $this->module_key ?: null, $this->instrument_associate_ids);
+        $this->validate(['leader_id' => 'nullable|integer', 'associate_id' => 'nullable|integer', 'module_key' => 'nullable|string', 'instrument_associate_ids' => 'array|max:20', 'instrument_associate_ids.*' => 'required|integer|distinct', 'choir_master_ids' => 'array|max:20', 'choir_master_ids.*' => 'required|integer|distinct']);
+        app(CommissionResponsibilities::class)->assign($this->commissionId, $this->leader_id ? (int) $this->leader_id : null, $this->associate_id ? (int) $this->associate_id : null, $this->module_key ?: null, $this->instrument_associate_ids, $this->choir_master_ids);
         $this->dispatch('toast', type: 'success', message: 'Responsabilités et accès mis à jour.');
         $this->dispatch('close-responsibilities');
     }

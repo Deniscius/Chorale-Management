@@ -57,7 +57,7 @@
             <h2 class="font-semibold">Rythmes configurés</h2>
             <button type="button" wire:click="generate" wire:confirm="Générer les séances des 45 prochains jours ? Les répétitions existantes seront conservées." class="btn btn-primary">Programmer les 45 prochains jours</button>
         </div>
-        <p class="text-xs text-slate-600">La génération est répétable sans doublon. Les séances annulées, reportées ou personnalisées ne seront pas écrasées. Les rappels sont traités séparément par la planification existante.</p>
+        <p class="text-xs text-slate-600">Un rythme déjà utilisé est désactivé sans supprimer les répétitions et leurs présences. Un rythme jamais utilisé peut être supprimé. La génération est répétable sans doublon. Les séances annulées, reportées ou personnalisées ne seront pas écrasées. Les rappels sont traités séparément par la planification existante.</p>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
                 <thead><tr class="border-b"><th class="p-2">Chorale</th><th class="p-2">Jour</th><th class="p-2">Horaire</th><th class="p-2">Période</th><th class="p-2">État</th><th class="p-2"></th></tr></thead>
@@ -69,7 +69,14 @@
                             <td class="p-2">{{ substr($rhythm->starts_at, 0, 5) }} – {{ $rhythm->ends_at ? substr($rhythm->ends_at,0,5) : '—' }}</td>
                             <td class="p-2">{{ $rhythm->effective_from->format('d/m/Y') }} – {{ $rhythm->effective_until?->format('d/m/Y') ?? 'Sans fin' }}</td>
                             <td class="p-2">{{ $rhythm->is_active ? 'Actif' : 'Inactif' }}</td>
-                            <td class="p-2"><button wire:click="edit({{ $rhythm->id }})" class="text-indigo-700 font-semibold">Modifier</button></td>
+                            <td class="p-2">
+                                <div class="flex flex-wrap items-center gap-3">
+                                    <button type="button" wire:click="edit({{ $rhythm->id }})" class="text-indigo-700 font-semibold">Modifier</button>
+                                    <button type="button" wire:click="remove({{ $rhythm->id }})"
+                                        wire:confirm="{{ $rhythm->rehearsals_count ? 'Ce rythme a déjà généré des répétitions. Il sera désactivé, mais les séances, présences et notifications seront conservées. Continuer ?' : 'Ce rythme n’a jamais servi. Le supprimer définitivement ?' }}"
+                                        class="font-semibold text-red-700">{{ $rhythm->rehearsals_count ? 'Arrêter le rythme' : 'Supprimer' }}</button>
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr><td colspan="6" class="p-4 text-slate-500">Aucun rythme configuré.</td></tr>

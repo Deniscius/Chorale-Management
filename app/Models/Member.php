@@ -67,6 +67,11 @@ class Member extends Model
         return $this->hasOne(User::class);
     }
 
+    public function onboardingFollowup(): HasOne
+    {
+        return $this->hasOne(MemberOnboardingFollowup::class);
+    }
+
     public function invitation(): HasOne
     {
         return $this->hasOne(MemberInvitation::class);

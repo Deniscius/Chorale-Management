@@ -42,7 +42,10 @@ final class RehearsalPlanner
                 DB::transaction(function () use ($rhythm, $day, &$created): void {
                     // Serialize same-tenant generation on this schedule, including
                     // concurrent scheduler invocations.
-                    RehearsalRhythm::query()->whereKey($rhythm->id)->lockForUpdate()->firstOrFail();
+                    $lockedRhythm = RehearsalRhythm::query()->whereKey($rhythm->id)->lockForUpdate()->firstOrFail();
+                    if (! $lockedRhythm->is_active) {
+                        return;
+                    }
                     $date = $day->toDateString();
                     // Manual or special rehearsals at a different time may coexist.
                     $exists = Rehearsal::query()->where('choir_id', $rhythm->choir_id)

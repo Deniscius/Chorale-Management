@@ -42,8 +42,20 @@ services:
       - {key: SESSION_SAME_SITE, value: lax}
       - {key: QUEUE_CONNECTION, value: sync}
       - {key: LOG_CHANNEL, value: stderr}
+      # Brevo is configured without enabling delivery by default.
+      # Render Free blocks SMTP 25/465/587; Brevo supports STARTTLS on 2525.
+      # Enable MAIL_DELIVERY_ENABLED only after sender verification and a test.
       - {key: MAIL_MAILER, value: log}
       - {key: MAIL_DELIVERY_ENABLED, value: 'false'}
+      - {key: MAIL_HOST, value: smtp-relay.brevo.com}
+      - {key: MAIL_PORT, value: '2525'}
+      - {key: MAIL_FROM_NAME, value: Chorale Management}
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM_ADDRESS
+        sync: false
       - {key: TENANCY_ENABLED, value: 'true'}
       - {key: CHURCH_PROJECT_INTEGRATION_ENABLED, value: 'false'}
       - {key: TENANT_REGISTRATION_ENABLED, value: 'true'}

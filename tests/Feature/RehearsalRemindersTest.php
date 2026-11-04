@@ -62,6 +62,45 @@ class RehearsalRemindersTest extends TestCase
         ]);
     }
 
+    public function test_mail_delivery_kill_switch_prevents_email_reservations(): void
+    {
+        Mail::fake();
+        config()->set('mail.delivery_enabled', false);
+
+        $this->rehearsalInTwoDays();
+        $this->activeMember(['notify_email' => true, 'notify_sms' => false]);
+
+        $this->artisan('chorale:send-reminders')->assertSuccessful();
+
+        Mail::assertNothingSent();
+        $this->assertDatabaseCount('reminders', 0);
+    }
+
+    public function test_mail_delivery_kill_switch_blocks_previously_queued_email(): void
+    {
+        Mail::fake();
+        $rehearsal = $this->rehearsalInTwoDays();
+        $member = $this->activeMember();
+        $reminder = Reminder::create([
+            'rehearsal_id' => $rehearsal->id,
+            'member_id' => $member->id,
+            'channel' => ReminderChannel::Mail,
+            'recipient' => $member->email,
+            'subject' => 'Rappel test',
+            'body' => 'Rappel test',
+            'status' => ReminderStatus::EnAttente,
+            'lease_token' => 'disabled-mail-test',
+            'reserved_at' => now(),
+        ]);
+        config()->set('mail.delivery_enabled', false);
+
+        $outcome = app(ReminderDispatcher::class)->deliver($reminder->id, 'disabled-mail-test');
+
+        $this->assertSame('skipped', $outcome);
+        $this->assertSame(ReminderStatus::Ignore, $reminder->fresh()->status);
+        Mail::assertNothingSent();
+    }
+
     public function test_un_choriste_inactif_ne_recoit_aucun_rappel(): void
     {
         Mail::fake();

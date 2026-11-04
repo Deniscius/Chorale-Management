@@ -34,7 +34,7 @@
                 </div>
             </article>
         @empty
-            <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center md:col-span-2 xl:col-span-3"><h2 class="font-semibold">Aucune commission à afficher</h2><p class="mt-2 text-sm text-slate-500">Essayez un autre filtre. La directrice peut créer les équipes et définir leur mission.</p><button type="button" wire:click="filterStatus('')" class="mt-4 text-sm text-sky-700 underline">Afficher tous les statuts</button></div>
+            <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center md:col-span-2 xl:col-span-3"><h2 class="font-semibold">Aucune commission à afficher</h2><p class="mt-2 text-sm text-slate-500">Essayez un autre filtre. La personne responsable de la chorale peut créer les équipes et définir leur mission.</p><button type="button" wire:click="filterStatus('')" class="mt-4 text-sm text-sky-700 underline">Afficher tous les statuts</button></div>
         @endforelse
     </div>
     {{ $commissions->links() }}

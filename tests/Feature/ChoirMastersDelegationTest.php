@@ -32,14 +32,9 @@ final class ChoirMastersDelegationTest extends TestCase
             $this->actingAs($admin);
             $chief = User::factory()->role(UserRole::Choriste)->create();
             $assistant = User::factory()->role(UserRole::Choriste)->create();
-            $commission = ChoirCommission::create([
-                'name' => 'Commission liturgique',
-                'name_key' => 'commission liturgique',
-                'kind' => 'permanent',
-                'mission' => 'Direction musicale des répétitions et des célébrations',
-                'starts_on' => today()->subWeek()->toDateString(),
-                'module_key' => UserRole::MODULE_LITURGIQUE,
-            ]);
+            $commission = ChoirCommission::query()
+                ->where('archive_commission', \App\Enums\Commission::Liturgique->value)
+                ->firstOrFail();
 
             app(CommissionResponsibilities::class)->assign(
                 $commission->id, $chief->id, null, UserRole::MODULE_LITURGIQUE, [], [$assistant->id]
@@ -70,14 +65,9 @@ final class ChoirMastersDelegationTest extends TestCase
         app(TenantContext::class)->run($admin->tenant_id, function () use ($admin): void {
             $this->actingAs($admin);
             $assistant = User::factory()->role(UserRole::Choriste)->create();
-            $commission = ChoirCommission::create([
-                'name' => 'Commission liturgique',
-                'name_key' => 'commission liturgique',
-                'kind' => 'permanent',
-                'mission' => 'Animer le chant et la liturgie',
-                'starts_on' => today()->subWeek()->toDateString(),
-                'module_key' => UserRole::MODULE_LITURGIQUE,
-            ]);
+            $commission = ChoirCommission::query()
+                ->where('archive_commission', \App\Enums\Commission::Liturgique->value)
+                ->firstOrFail();
 
             $this->expectException(ValidationException::class);
             app(CommissionResponsibilities::class)->assign(

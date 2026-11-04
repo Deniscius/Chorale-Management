@@ -86,7 +86,7 @@ enum UserRole: string
                 self::MODULE_MEMBERS, self::MODULE_ACTIVITES, self::MODULE_COURRIERS,
             ],
             self::CommissionSuivieFormation => [
-                self::MODULE_MEMBERS, self::MODULE_LITURGIQUE, self::MODULE_ACTIVITES,
+                self::MODULE_MEMBERS, self::MODULE_ACTIVITES,
             ],
             self::Tresorier => [
                 self::MODULE_MEMBERS, self::MODULE_COURRIERS,
@@ -130,7 +130,7 @@ enum UserRole: string
             self::CommissionLiturgique => [self::MODULE_LITURGIQUE],
             self::CommissionInstruments => [self::MODULE_INSTRUMENTS],
             self::CommissionVieCulturelle => [self::MODULE_ACTIVITES],
-            self::CommissionSuivieFormation => [self::MODULE_LITURGIQUE],
+            self::CommissionSuivieFormation => [],
             self::Tresorier => [self::MODULE_COMPTABILITE],
             self::Secretaire => [self::MODULE_COURRIERS, self::MODULE_MEMBERS],
             self::Choriste => [],

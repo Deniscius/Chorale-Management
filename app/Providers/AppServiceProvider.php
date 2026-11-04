@@ -128,7 +128,7 @@ class AppServiceProvider extends ServiceProvider
         // L'administrateur contourne toutes les vérifications de rôle.
         Gate::before(function (User $user, string $ability) {
             if ($ability === 'manage-commissions') {
-                return $user->role === UserRole::Directeur;
+                return in_array($user->role, [UserRole::Admin, UserRole::Directeur], true);
             }
             if ($user->role === UserRole::Admin) {
                 return true;
@@ -143,7 +143,9 @@ class AppServiceProvider extends ServiceProvider
         // Écriture dans un module fonctionnel.
         Gate::define('manage-module', fn (User $user, string $module) => $user->canManageModule($module));
 
-        Gate::define('manage-commissions', fn (User $user) => $user->role === UserRole::Directeur);
+        Gate::define('manage-onboarding', fn (User $user) => in_array($user->role, [UserRole::Admin, UserRole::Directeur, UserRole::CommissionSuivieFormation], true));
+
+        Gate::define('manage-commissions', fn (User $user) => in_array($user->role, [UserRole::Admin, UserRole::Directeur], true));
 
         // Gestion des comptes utilisateurs : administrateur uniquement.
         Gate::define('manage-users', fn (User $user) => $user->role === UserRole::Admin);

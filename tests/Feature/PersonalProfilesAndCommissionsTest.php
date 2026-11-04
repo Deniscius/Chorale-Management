@@ -90,7 +90,7 @@ class PersonalProfilesAndCommissionsTest extends TestCase
         $this->assertSame('1990-01-01', $member->fresh()->birth_date->format('Y-m-d'));
     }
 
-    public function test_only_director_can_create_edit_or_archive_commissions_even_admin_is_denied(): void
+    public function test_only_tenant_leadership_can_create_edit_or_archive_commissions(): void
     {
         $director = User::factory()->role(UserRole::Directeur)->create();
         $member = Member::factory()->create();
@@ -102,7 +102,7 @@ class PersonalProfilesAndCommissionsTest extends TestCase
         $entry = ChoirCommission::firstOrFail();
         $this->assertSame([$member->id], $entry->members->modelKeys());
         $this->assertSame('active', $entry->status);
-        foreach ([UserRole::Admin, UserRole::Choriste, UserRole::Secretaire] as $role) {
+        foreach ([UserRole::Choriste, UserRole::Secretaire] as $role) {
             $other = User::factory()->role($role)->create();
             $this->actingAs($other)->get('/commissions')->assertOk()->assertDontSee('Créer une commission');
             Livewire::actingAs($other)->test(Index::class)->call('create')->assertForbidden();
@@ -110,6 +110,8 @@ class PersonalProfilesAndCommissionsTest extends TestCase
             Livewire::actingAs($other)->test(Index::class)->call('toggleArchive', $entry->id)->assertForbidden();
             Livewire::actingAs($other)->test(Index::class)->call('save')->assertForbidden();
         }
+        $admin = User::factory()->role(UserRole::Admin)->create();
+        Livewire::actingAs($admin)->test(Index::class)->call('create')->assertSet('showForm', true);
         Livewire::actingAs($director)->test(Index::class)->call('edit', $entry->id)->assertSee($member->first_name)->set('mission', 'Mission précisée')->call('save')->assertHasNoErrors()->call('toggleArchive', $entry->id);
         $this->assertSame('archived', $entry->fresh()->status);
     }

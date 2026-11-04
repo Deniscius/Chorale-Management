@@ -2,11 +2,9 @@
 
 namespace App\Livewire\Members;
 
-use App\Enums\ContributionStatus;
-use App\Models\Contribution;
 use App\Models\ContributionExemption;
 use App\Models\Member;
-use App\Services\ContributionSchedule;
+use App\Services\ContributionExemptionManager;
 use App\Services\FinancialCatalog;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -57,16 +55,11 @@ final class ContributionExemptions extends Component
             'clears_prior_arrears' => ['boolean'],
             'reason' => ['nullable', 'string', 'max:500'],
         ]);
-        $exemption = ContributionExemption::create([...$data, 'member_id' => $this->member->id, 'approved_by' => auth()->id()]);
-        if ($exemption->clears_prior_arrears) {
-            Contribution::query()->where('member_id', $this->member->id)->where('type_code', $exemption->type_code)
-                ->whereDate('due_on', '<', $exemption->starts_on)->where('paid_amount', '<=', 0)
-                ->update(['exemption_id' => $exemption->id, 'due_amount' => 0, 'status' => ContributionStatus::Exoneree->value,
-                    'notes' => 'Arriéré annulé par exonération : '.($exemption->reason ?: 'décision de la chorale').'.']);
-        }
-        app(ContributionSchedule::class)->sync();
+        [, $updated] = app(ContributionExemptionManager::class)->create([...$data, 'member_id' => $this->member->id, 'approved_by' => auth()->id()]);
         $this->cancel();
-        $this->dispatch('toast', type: 'success', message: $exemption->clears_prior_arrears ? 'Exonération enregistrée et arriérés impayés antérieurs remis à zéro.' : 'Exonération enregistrée. Les échéances futures sont recalculées.');
+        $this->dispatch('toast', type: 'success', message: $updated > 0
+            ? "Exonération enregistrée : {$updated} échéance(s) actualisée(s)."
+            : 'Exonération enregistrée. Les prochaines échéances seront recalculées.');
     }
 
     #[Computed]

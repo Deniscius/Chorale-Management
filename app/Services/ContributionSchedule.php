@@ -98,7 +98,11 @@ final class ContributionSchedule
                                 );
                                 if ($entry->wasRecentlyCreated) {
                                     $created++;
-                                } elseif ($exemption && (float) $entry->paid_amount === 0 && $entry->exemption_id !== $exemption->id) {
+                                } elseif ($exemption && (float) $entry->paid_amount === 0 && (
+                                    $entry->exemption_id !== $exemption->id
+                                    || (float) $entry->due_amount !== 0.0
+                                    || $entry->status !== ContributionStatus::Exoneree
+                                )) {
                                     $entry->update(['exemption_id' => $exemption->id, 'due_amount' => 0, 'status' => ContributionStatus::Exoneree,
                                         'notes' => 'Exonération : '.($exemption->reason ?: 'décision de la chorale').'.']);
                                 } elseif ((float) $entry->paid_amount <= 0 && $period['due_on']->lt($asOf) && $entry->status === ContributionStatus::Due) {

@@ -99,6 +99,10 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/mon-carnet', PersonalNotebookController::class)->name('personal-notebook.show');
 
+    Route::get('/choristes/accueil-et-suivi', \App\Livewire\Onboarding\Index::class)
+        ->middleware('can:manage-onboarding')
+        ->name('members.onboarding');
+
     Route::get('/commissions', App\Livewire\Commissions\Index::class)->middleware('module:'.UserRole::MODULE_MEMBERS)->name('commissions.index');
 
     // La chorale

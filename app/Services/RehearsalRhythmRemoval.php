@@ -23,9 +23,7 @@ final class RehearsalRhythmRemoval
             $rhythm = RehearsalRhythm::query()->lockForUpdate()->findOrFail($id);
 
             if ($rhythm->rehearsals()->exists()) {
-                $rhythm->update(['is_active' => false, 'effective_until' => $rhythm->effective_until && $rhythm->effective_until->lt(today())
-                    ? $rhythm->effective_until
-                    : today()->subDay()]);
+                $rhythm->update(['is_active' => false]);
 
                 return 'archived';
             }

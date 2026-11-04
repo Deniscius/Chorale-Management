@@ -13,6 +13,8 @@ final class RehearsalRhythmSynchronizer
 {
     public const GENERATED_NOTE = 'Répétition ordinaire programmée depuis le rythme de la chorale.';
 
+    public const RESCHEDULED_NOTE = 'Répétition automatiquement annulée après modification du rythme.';
+
     /** Recover old automatically generated sessions created before synchronization existed. */
     public function repairPreviouslyGenerated(RehearsalRhythm $rhythm): array
     {
@@ -69,7 +71,7 @@ final class RehearsalRhythmSynchronizer
                         && (! $current->effective_until || $date->lte(CarbonImmutable::instance($current->effective_until)->startOfDay()));
 
                     if (! $stillScheduled) {
-                        $session->update(['status' => EventStatus::Annulee->value]);
+                        $session->update(['status' => EventStatus::Annulee->value, 'notes' => self::RESCHEDULED_NOTE]);
                         $counts['cancelled']++;
 
                         continue;
@@ -91,7 +93,7 @@ final class RehearsalRhythmSynchronizer
 
         if ($rhythm->is_active) {
             $counts['created'] = app(RehearsalPlanner::class)->generate(
-                CarbonImmutable::today(), CarbonImmutable::today()->addDays(45), $rhythm->choir_id
+                CarbonImmutable::today(), CarbonImmutable::today()->addDays(45), $rhythm->choir_id, $rhythm->id
             );
         }
 

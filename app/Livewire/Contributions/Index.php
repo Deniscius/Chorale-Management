@@ -133,7 +133,7 @@ class Index extends Component
             'Rappel de cotisation — '.$contribution->typeLabel(),
             'Bonjour '.$member->first_name.",\n\nVotre cotisation de ".$contribution->monthLabel().' '.$contribution->year.' présente un reste de '.number_format($contribution->balance(), 0, ',', ' ').' FCFA. Merci de vous rapprocher de la trésorerie.',
             app(ChoraleIdentity::class)->name(),
-            route('personal-notebook.show', absolute: false),
+            route('personal-notebook.show'),
             'Consulter mon carnet',
         ));
         $this->dispatch('toast', type: 'success', message: 'Rappel envoyé par e-mail à '.$member->full_name.'.');

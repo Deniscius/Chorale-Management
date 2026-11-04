@@ -3,8 +3,8 @@
 
 {!! nl2br(e($messageBody)) !!}
 
-@if ($actionUrl && $actionLabel)
-<x-mail::button :url="$actionUrl">
+@if ($actionLink && $actionLabel)
+<x-mail::button :url="$actionLink">
 {{ $actionLabel }}
 </x-mail::button>
 @endif

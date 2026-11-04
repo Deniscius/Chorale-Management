@@ -108,6 +108,60 @@ final class RehearsalRhythmNotebookSyncTest extends TestCase
         $this->assertNotContains('2026-11-07 15:00', $appointments);
     }
 
+    public function test_returning_to_old_weekday_recovers_only_auto_cancelled_appointments(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-04 09:00:00'));
+        $rhythm = $this->rhythm();
+        $planner = app(RehearsalPlanner::class);
+        $sync = app(RehearsalRhythmSynchronizer::class);
+        $planner->generate(CarbonImmutable::parse('2026-11-04'), CarbonImmutable::parse('2026-11-14'));
+        $saturday = Rehearsal::query()->whereDate('date', '2026-11-07')->firstOrFail();
+        $originalId = $saturday->id;
+
+        $before = $rhythm->getRawOriginal();
+        $rhythm->update(['weekday' => 7, 'starts_at' => '10:00']);
+        $sync->synchronize($rhythm, $before);
+        $this->assertSame(EventStatus::Annulee, $saturday->fresh()->status);
+
+        $before = $rhythm->getRawOriginal();
+        $rhythm->update(['weekday' => 6, 'starts_at' => '15:00']);
+        $sync->synchronize($rhythm, $before);
+        $this->assertSame(EventStatus::Planifiee, $saturday->fresh()->status);
+        $this->assertSame(RehearsalRhythmSynchronizer::GENERATED_NOTE, $saturday->fresh()->notes);
+        $this->assertSame($originalId, Rehearsal::query()
+            ->whereDate('date', '2026-11-07')->where('status', 'planifiee')->firstOrFail()->id);
+        $this->assertSame(1, Rehearsal::query()->whereDate('date', '2026-11-07')->count());
+    }
+
+    public function test_manually_cancelled_rehearsals_are_never_reactivated_by_schedule_generation(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-04 09:00:00'));
+        $rhythm = $this->rhythm();
+        $planner = app(RehearsalPlanner::class);
+        $planner->generate(CarbonImmutable::parse('2026-11-07'), CarbonImmutable::parse('2026-11-07'));
+        $session = Rehearsal::query()->firstOrFail();
+        $session->update(['status' => EventStatus::Annulee->value]);
+        $this->assertSame(0, $planner->generate(CarbonImmutable::parse('2026-11-07'), CarbonImmutable::parse('2026-11-07')));
+        $this->assertSame(1, Rehearsal::query()->count());
+        $this->assertSame(EventStatus::Annulee, $session->fresh()->status);
+    }
+
+    public function test_synchronizing_one_rhythm_does_not_generate_all_other_choir_rhythms(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-04 09:00:00'));
+        $rhythm = $this->rhythm();
+        $other = RehearsalRhythm::create([
+            'choir_id' => $rhythm->choir_id,
+            'weekday' => 3,
+            'starts_at' => '17:00',
+            'effective_from' => '2026-11-01',
+            'is_active' => true,
+        ]);
+        $counts = app(RehearsalRhythmSynchronizer::class)->synchronize($rhythm, null);
+        $this->assertGreaterThan(0, $counts['created']);
+        $this->assertSame(0, Rehearsal::query()->where('rehearsal_rhythm_id', $other->id)->count());
+    }
+
     public function test_livewire_rhythm_save_immediately_changes_notebook_schedule(): void
     {
         $this->travelTo(CarbonImmutable::parse('2026-11-04 09:00:00'));

@@ -22,12 +22,19 @@ class SendRehearsalReminders extends Command
     protected $signature = 'chorale:send-reminders
         {--dry-run : Afficher les rappels sans rien envoyer}
         {--tenant= : Espace client à traiter (tous les espaces actifs par défaut)}
-        {--rehearsal= : Ne traiter que la répétition indiquée (identifiant)}';
+        {--rehearsal= : Ne traiter que la répétition indiquée (identifiant)}
+        {--platform-only : Traiter seulement les rappels transversaux}
+        {--rehearsals-only : Traiter seulement les rappels de répétition}';
 
     protected $description = 'Envoie les rappels de la chorale et les échéances personnelles';
 
     public function handle(ReminderDispatcher $dispatcher, PlatformReminderDispatcher $platform): int
     {
+        if ($this->option('platform-only') && $this->option('rehearsals-only')) {
+            $this->error('Choisissez soit les rappels transversaux, soit les répétitions.');
+
+            return self::INVALID;
+        }
         if (! TenantContext::isolated()) {
             return $this->handleOne($dispatcher, $platform);
         }
@@ -58,13 +65,20 @@ class SendRehearsalReminders extends Command
         $dryRun = (bool) $this->option('dry-run');
 
         try {
-            if ($rehearsalId = $this->option('rehearsal')) {
+            $platformOnly = (bool) $this->option('platform-only');
+            $rehearsalsOnly = (bool) $this->option('rehearsals-only');
+            if ($platformOnly) {
+                $result = ['rehearsals' => 0, 'sent' => 0, 'queued' => 0, 'skipped' => 0, 'failed' => 0];
+                $platformResult = $platform->dispatchAll($dryRun);
+            } elseif ($rehearsalId = $this->option('rehearsal')) {
                 $rehearsal = Rehearsal::findOrFail($rehearsalId);
                 $result = $dispatcher->dispatchForRehearsal($rehearsal, $dryRun);
                 $result['rehearsals'] = 1;
             } else {
                 $result = $dispatcher->dispatchAll($dryRun);
-                $platformResult = $platform->dispatchAll($dryRun);
+                if (! $rehearsalsOnly) {
+                    $platformResult = $platform->dispatchAll($dryRun);
+                }
             }
         } catch (Throwable $exception) {
             $this->components->error($exception->getMessage());

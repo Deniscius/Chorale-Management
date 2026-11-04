@@ -27,9 +27,17 @@ Schedule::command(SyncContributionSchedules::class)
 // Génère le planning à horizon glissant avant le passage des rappels.
 Schedule::command(SyncRehearsalRhythms::class)->dailyAt('00:20')->withoutOverlapping()->onOneServer();
 
-// Rappels de répétition : chaque matin, à l'heure configurée.
-Schedule::command(SendRehearsalReminders::class)
+// Rappel standard des répétitions : chaque matin, à l'heure configurée.
+Schedule::command(SendRehearsalReminders::class, ['--rehearsals-only'])
     ->dailyAt(config('chorale.reminders.send_at', '08:00'))
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->when(fn () => (bool) config('chorale.reminders.enabled'));
+
+// Rappels J-7/J-2/J, échéances et rappels imminents. Le moteur filtre lui-même
+// les créneaux 08 h, 12 h, 17 h et chaque quart d'heure avant un événement.
+Schedule::command(SendRehearsalReminders::class, ['--platform-only'])
+    ->everyFiveMinutes()
     ->withoutOverlapping()
     ->onOneServer()
     ->when(fn () => (bool) config('chorale.reminders.enabled'));

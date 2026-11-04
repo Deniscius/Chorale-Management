@@ -40,6 +40,8 @@ services:
         sync: false
       - key: MAIL_PASSWORD
         sync: false
+      - key: BREVO_API_KEY
+        sync: false
       - key: MAIL_FROM_ADDRESS
         sync: false
       - key: CHARIOW_PAYMENT_URL
@@ -75,6 +77,12 @@ services:
         fromService: {type: web, name: chorale-web, envVarKey: MAIL_USERNAME}
       - key: MAIL_PASSWORD
         fromService: {type: web, name: chorale-web, envVarKey: MAIL_PASSWORD}
+      - key: BREVO_API_KEY
+        fromService: {type: web, name: chorale-web, envVarKey: BREVO_API_KEY}
+      - key: MAIL_MAILER
+        fromService: {type: web, name: chorale-web, envVarKey: MAIL_MAILER}
+      - key: MAIL_DELIVERY_ENABLED
+        fromService: {type: web, name: chorale-web, envVarKey: MAIL_DELIVERY_ENABLED}
       - key: MAIL_FROM_ADDRESS
         fromService: {type: web, name: chorale-web, envVarKey: MAIL_FROM_ADDRESS}
   - type: cron
@@ -99,6 +107,12 @@ services:
         fromService: {type: web, name: chorale-web, envVarKey: CHARIOW_API_KEY}
       - key: CHARIOW_PRODUCT_ID
         fromService: {type: web, name: chorale-web, envVarKey: CHARIOW_PRODUCT_ID}
+      - key: BREVO_API_KEY
+        fromService: {type: web, name: chorale-web, envVarKey: BREVO_API_KEY}
+      - key: MAIL_MAILER
+        fromService: {type: web, name: chorale-web, envVarKey: MAIL_MAILER}
+      - key: MAIL_DELIVERY_ENABLED
+        fromService: {type: web, name: chorale-web, envVarKey: MAIL_DELIVERY_ENABLED}
 envVarGroups:
   - name: chorale-production
     envVars:
@@ -122,7 +136,7 @@ envVarGroups:
       - {key: DB_QUEUE_RETRY_AFTER, value: '240'}
       - {key: LOG_CHANNEL, value: stderr}
       - {key: LOG_LEVEL, value: warning}
-      - {key: MAIL_MAILER, value: smtp}
+      - {key: MAIL_MAILER, value: brevo}
       - {key: MAIL_DELIVERY_ENABLED, value: 'false'}
       # Use Brevo's alternative TLS-capable port so the same config works
       # on paid and free Render services without relying on port 587.

@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Enums\UserRole;
 use App\Http\Middleware\AuthenticateChoraleSession;
 use App\Http\Middleware\EnsureModuleAccess;
+use App\Mail\Transport\BrevoApiTransport;
 use App\Models\Activity;
 use App\Models\ActivityParticipant;
 use App\Models\AttendanceIncident;
@@ -20,8 +21,8 @@ use App\Models\LetterheadTemplate;
 use App\Models\Member;
 use App\Models\MemberInvitation;
 use App\Models\Rehearsal;
-use App\Models\RehearsalRhythm;
 use App\Models\RehearsalAttendance;
+use App\Models\RehearsalRhythm;
 use App\Models\Reminder;
 use App\Models\Transaction;
 use App\Models\User;
@@ -36,6 +37,7 @@ use App\Services\ChoraleAssistant;
 use App\Services\ChoraleIdentity;
 use App\Services\CommissionAccess;
 use App\Services\FinancialCatalog;
+use App\Services\ManagementYearContext;
 use App\Services\PrivateFiles;
 use App\Services\SettingsStore;
 use App\Services\Sms\D7SmsSender;
@@ -49,6 +51,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
@@ -94,7 +97,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Identité de la chorale : une instance par requête (valeurs mémorisées).
         $this->app->scoped(ChoraleIdentity::class);
-        $this->app->scoped(\App\Services\ManagementYearContext::class);
+        $this->app->scoped(ManagementYearContext::class);
     }
 
     /**
@@ -102,6 +105,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Mail::extend('brevo', fn (array $config) => new BrevoApiTransport($config['key'] ?? null));
         Auth::provider('tenant-eloquent', fn ($app, $config) => new TenantUserProvider($app['hash'], $config['model']));
         foreach (['mail', 'sms', 'application'] as $channel) {
             RateLimiter::for('reminder-'.$channel,

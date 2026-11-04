@@ -18,8 +18,9 @@ la délivrabilité et les tests n'ont pas abouti.
    DNS requis (SPF, DKIM et, idéalement, DMARC), puis attendre leur validation.
 2. Déclarer une adresse expéditrice vérifiée, par exemple
    `notifications@votre-domaine.tld` (adresse indicative seulement).
-3. Dans **SMTP et API → SMTP**, relever **l'identifiant SMTP** et générer une
-   **clé SMTP**. Ne pas utiliser la clé API ni le mot de passe Brevo.
+3. Dans **SMTP et API → API Keys**, générer une **clé API v3** dédiée à
+   Chorale Management. Le transport HTTPS est utilisé, car il reste fiable sur
+   les hébergements qui bloquent les ports SMTP.
 4. Vérifier que le compte autorise les e-mails transactionnels.
 
 Documentation : https://help.brevo.com/hc/fr/articles/7924908994450
@@ -32,19 +33,15 @@ ou les commits :
 
 | Variable | Valeur |
 | --- | --- |
-| `MAIL_HOST` | `smtp-relay.brevo.com` |
-| `MAIL_PORT` | `2525` |
-| `MAIL_USERNAME` | identifiant SMTP récupéré dans Brevo |
-| `MAIL_PASSWORD` | clé SMTP créée dans Brevo (secret) |
+| `BREVO_API_KEY` | clé API v3 Brevo (secret) |
 | `MAIL_FROM_ADDRESS` | adresse expéditrice vérifiée |
 | `MAIL_FROM_NAME` | `Chorale Management` |
 | `MAIL_SCHEME` | laisser non défini (STARTTLS automatique) |
-| `MAIL_MAILER` | d'abord `log`, puis `smtp` lors de l'activation |
+| `MAIL_MAILER` | d'abord `log`, puis `brevo` lors de l'activation |
 | `MAIL_DELIVERY_ENABLED` | d'abord `false`, puis `true` après test |
 
-Render Free bloque les ports sortants 25, 465 et 587. Brevo propose le port
-2525. Le chiffrement STARTTLS doit être vérifié au test de connexion ; ne pas
-désactiver la vérification du certificat TLS.
+Le transport Brevo passe par HTTPS sur le port 443. Il ne dépend donc pas des
+ports SMTP sortants. Ne pas désactiver la vérification TLS.
 
 Render Free : https://render.com/docs/free
 

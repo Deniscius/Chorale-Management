@@ -2,7 +2,7 @@
     <header class="flex flex-wrap items-center justify-between gap-3">
         <div>
             <h1 class="text-2xl font-semibold text-slate-900">Rythmes de répétition</h1>
-            <p class="text-sm text-slate-600">Définissez un ou plusieurs rendez-vous hebdomadaires pour chaque chorale.</p>
+            <p class="text-sm text-slate-600">Définissez les jours, heures et lieux. Les prochains rendez-vous se synchronisent avec « Mon carnet » à chaque enregistrement.</p>
         </div>
         <a href="{{ route('rehearsals.index') }}" wire:navigate class="btn btn-secondary">Retour aux répétitions</a>
     </header>
@@ -57,7 +57,7 @@
             <h2 class="font-semibold">Rythmes configurés</h2>
             <button type="button" wire:click="generate" wire:confirm="Générer les séances des 45 prochains jours ? Les répétitions existantes seront conservées." class="btn btn-primary">Programmer les 45 prochains jours</button>
         </div>
-        <p class="text-xs text-slate-600">Un rythme déjà utilisé est désactivé sans supprimer les répétitions et leurs présences. Un rythme jamais utilisé peut être supprimé. La génération est répétable sans doublon. Les séances annulées, reportées ou personnalisées ne seront pas écrasées. Les rappels sont traités séparément par la planification existante.</p>
+        <p class="text-xs text-slate-600">En modifiant ou en arrêtant un rythme, les prochaines séances automatiquement générées et encore intactes sont actualisées ou annulées dans « Mon carnet ». Les séances personnalisées, celles ayant des présences, des œuvres ou des rappels conservent leurs données et nécessitent une vérification manuelle. Aucune répétition passée n’est supprimée. Pour corriger les séances déjà programmées avant cette mise à jour, utilisez « Réparer les carnets » sur le rythme concerné ; une confirmation est demandée. La programmation reste répétable sans doublon.</p>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
                 <thead><tr class="border-b"><th class="p-2">Chorale</th><th class="p-2">Jour</th><th class="p-2">Horaire</th><th class="p-2">Période</th><th class="p-2">État</th><th class="p-2"></th></tr></thead>
@@ -72,6 +72,9 @@
                             <td class="p-2">
                                 <div class="flex flex-wrap items-center gap-3">
                                     <button type="button" wire:click="edit({{ $rhythm->id }})" class="text-indigo-700 font-semibold">Modifier</button>
+                                    <button type="button" wire:click="repairNotebook({{ $rhythm->id }})"
+                                        wire:confirm="Vérifier et aligner les séances futures de ce rythme dans les carnets ? Seules les séances automatiquement créées et jamais modifiées, sans présence, œuvre ou rappel, seront corrigées ou annulées. Toutes les autres seront conservées."
+                                        class="font-semibold text-sky-700">Réparer les carnets</button>
                                     <button type="button" wire:click="remove({{ $rhythm->id }})"
                                         wire:confirm="{{ $rhythm->rehearsals_count ? 'Ce rythme a déjà généré des répétitions. Il sera désactivé, mais les séances, présences et notifications seront conservées. Continuer ?' : 'Ce rythme n’a jamais servi. Le supprimer définitivement ?' }}"
                                         class="font-semibold text-red-700">{{ $rhythm->rehearsals_count ? 'Arrêter le rythme' : 'Supprimer' }}</button>

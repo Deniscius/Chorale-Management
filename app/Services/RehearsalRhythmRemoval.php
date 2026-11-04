@@ -23,7 +23,9 @@ final class RehearsalRhythmRemoval
             $rhythm = RehearsalRhythm::query()->lockForUpdate()->findOrFail($id);
 
             if ($rhythm->rehearsals()->exists()) {
+                $previous = $rhythm->getRawOriginal();
                 $rhythm->update(['is_active' => false]);
+                app(RehearsalRhythmSynchronizer::class)->synchronize($rhythm, $previous);
 
                 return 'archived';
             }

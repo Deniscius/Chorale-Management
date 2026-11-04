@@ -8,8 +8,10 @@ use App\Models\Choir;
 use App\Models\RehearsalRhythm;
 use App\Services\RehearsalPlanner;
 use App\Services\RehearsalRhythmRemoval;
+use App\Services\RehearsalRhythmSynchronizer;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 
@@ -51,7 +53,7 @@ final class Rhythms extends Component
         $this->is_active = $rhythm->is_active;
     }
 
-    public function save(): void
+    public function save(RehearsalRhythmSynchronizer $synchronizer): void
     {
         $this->authorizeManage();
         $data = $this->validate([
@@ -67,8 +69,15 @@ final class Rhythms extends Component
         $data['ends_at'] = $data['ends_at'] ?: null;
         $data['effective_until'] = $data['effective_until'] ?: null;
         try {
-            $rhythm = $this->editingId ? RehearsalRhythm::findOrFail($this->editingId) : new RehearsalRhythm;
-            $rhythm->fill($data)->save();
+            $sync = DB::transaction(function () use ($data, $synchronizer): array {
+                $rhythm = $this->editingId
+                    ? RehearsalRhythm::query()->lockForUpdate()->findOrFail($this->editingId)
+                    : new RehearsalRhythm;
+                $previous = $rhythm->exists ? $rhythm->getRawOriginal() : null;
+                $rhythm->fill($data)->save();
+
+                return $synchronizer->synchronize($rhythm, $previous);
+            }, 3);
         } catch (UniqueConstraintViolationException) {
             $this->addError('weekday', 'Ce rythme est déjà enregistré pour cette chorale.');
             return;
@@ -81,7 +90,7 @@ final class Rhythms extends Component
         $this->ends_at = '18:00';
         $this->effective_from = today()->toDateString();
         $this->is_active = true;
-        $this->dispatch('toast', type: 'success', message: 'Rythme enregistré. Lancez la programmation pour créer les séances.');
+        $this->dispatch('toast', type: 'success', message: 'Rythme enregistré et carnet synchronisé : '.$sync['created'].' séance(s) créée(s), '.$sync['updated'].' actualisée(s), '.$sync['cancelled'].' ancienne(s) annulée(s).'.($sync['protected'] ? ' '.$sync['protected'].' séance(s) personnalisée(s) ou avec historique conservée(s) : vérifiez-les dans les répétitions.' : ''));
     }
 
     public function remove(int $id, RehearsalRhythmRemoval $remover): void
@@ -94,6 +103,19 @@ final class Rhythms extends Component
         $this->dispatch('toast', type: 'success', message: $outcome === 'archived'
             ? 'Rythme désactivé et conservé pour les répétitions déjà programmées.'
             : 'Rythme sans historique supprimé définitivement.');
+    }
+
+    public function repairNotebook(int $id, RehearsalRhythmSynchronizer $synchronizer): void
+    {
+        $this->authorizeManage();
+        $rhythm = RehearsalRhythm::query()->findOrFail($id);
+        $result = $synchronizer->repairPreviouslyGenerated($rhythm);
+        $this->dispatch('toast', type: 'success', message:
+            'Carnets vérifiés : '.$result['updated'].' séance(s) corrigée(s), '.
+            $result['cancelled'].' ancienne(s) annulée(s), '.
+            $result['created'].' nouvelle(s) programmée(s).'.
+            ($result['protected'] ? ' '.$result['protected'].' séance(s) avec modifications ou historique à vérifier manuellement.' : '')
+        );
     }
 
     public function generate(RehearsalPlanner $planner): void

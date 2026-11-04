@@ -47,7 +47,8 @@ final class AuditObserver
             AttendanceRule::class => ['financial_tracking_enabled', 'rehearsal_absence_amount', 'activity_absence_amount', 'late_amount', 'late_threshold_minutes', 'effective_from'],
             AttendanceIncident::class => ['member_id', 'source_type', 'incident_type', 'minutes_late', 'amount', 'status', 'reviewed_by', 'reviewed_at', 'review_note'],
             RehearsalRhythm::class => ['choir_id', 'weekday', 'starts_at', 'ends_at', 'venue', 'effective_from', 'effective_until', 'is_active'],
-            Rehearsal::class, Activity::class => ['attendance_finalized_at', 'attendance_finalized_by'],
+            Rehearsal::class => ['choir_id', 'rehearsal_rhythm_id', 'date', 'starts_at', 'ends_at', 'venue', 'status', 'is_special', 'type', 'attendance_finalized_at', 'attendance_finalized_by'],
+            Activity::class => ['attendance_finalized_at', 'attendance_finalized_by'],
             RehearsalAttendance::class, ActivityParticipant::class => ['member_id', 'status', 'minutes_late', 'excuse_reason', 'checked_at', 'recorded_by'],
             default => [],
         };

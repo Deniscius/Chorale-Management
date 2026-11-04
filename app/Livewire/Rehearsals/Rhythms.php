@@ -7,6 +7,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Choir;
 use App\Models\RehearsalRhythm;
 use App\Services\RehearsalPlanner;
+use App\Services\RehearsalRhythmRemoval;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Validation\Rule;
@@ -83,6 +84,18 @@ final class Rhythms extends Component
         $this->dispatch('toast', type: 'success', message: 'Rythme enregistré. Lancez la programmation pour créer les séances.');
     }
 
+    public function remove(int $id, RehearsalRhythmRemoval $remover): void
+    {
+        $this->authorizeManage();
+        $outcome = $remover->remove($id);
+        if ($this->editingId === $id) {
+            $this->editingId = null;
+        }
+        $this->dispatch('toast', type: 'success', message: $outcome === 'archived'
+            ? 'Rythme désactivé et conservé pour les répétitions déjà programmées.'
+            : 'Rythme sans historique supprimé définitivement.');
+    }
+
     public function generate(RehearsalPlanner $planner): void
     {
         $this->authorizeManage();
@@ -94,7 +107,7 @@ final class Rhythms extends Component
     {
         return view('livewire.rehearsals.rhythms', [
             'choirs' => Choir::query()->orderBy('name')->get(['id', 'name']),
-            'rhythms' => RehearsalRhythm::query()->with('choir')->orderBy('weekday')->orderBy('starts_at')->get(),
+            'rhythms' => RehearsalRhythm::query()->with('choir')->withCount('rehearsals')->orderBy('weekday')->orderBy('starts_at')->get(),
         ]);
     }
 }

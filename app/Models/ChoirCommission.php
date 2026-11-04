@@ -82,6 +82,12 @@ class ChoirCommission extends Model
         return ['members' => 'Choristes et organisation', 'liturgique' => 'Liturgie, répertoire et célébrations', 'instruments' => 'Instruments et inventaire', 'courriers' => 'Courriers et secrétariat', 'activites' => 'Activités et vie de la chorale', 'comptabilite' => 'Trésorerie et comptabilité'];
     }
 
+    public function isChoirMasterCommission(): bool
+    {
+        return $this->module_key === 'liturgique'
+            && $this->archive_commission !== \App\Enums\Commission::SuivieFormation->value;
+    }
+
     public function featureLinks(): array
     {
         return match ($this->module_key) {

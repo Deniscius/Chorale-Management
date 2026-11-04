@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Enums\Commission;
+use App\Livewire\Commissions\Index as CommissionsIndex;
+use Livewire\Livewire;
 use App\Enums\UserRole;
 use App\Models\ChoirCommission;
 use App\Models\User;
@@ -40,6 +42,7 @@ final class TenantCommissionsAndChoirMasterAssociatesTest extends TestCase
         app(TenantContext::class)->run($a->tenant_id, function () use ($a): void {
             $this->actingAs($a);
             $this->assertSame(0, ChoirCommission::query()->count());
+            Livewire::actingAs($a)->test(CommissionsIndex::class)->call('create')->assertSet('showForm', true);
             ChoirCommission::create([
                 'name' => 'Chant et liturgie', 'name_key' => 'chant et liturgie',
                 'kind' => 'permanent', 'mission' => 'Organiser les chants de la chorale.',

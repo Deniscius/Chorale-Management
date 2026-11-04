@@ -7,6 +7,7 @@ use App\Models\ChoirCommission;
 use App\Models\User;
 use App\Services\CommissionAccess;
 use App\Services\CommissionResponsibilities;
+use App\Services\CommissionCatalog;
 use App\Services\TenantRegistration;
 use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -30,6 +31,7 @@ final class ChoirMastersDelegationTest extends TestCase
 
         app(TenantContext::class)->run($admin->tenant_id, function () use ($admin): void {
             $this->actingAs($admin);
+            app(CommissionCatalog::class)->ensure();
             $chief = User::factory()->role(UserRole::Choriste)->create();
             $assistant = User::factory()->role(UserRole::Choriste)->create();
             $commission = ChoirCommission::query()
@@ -64,6 +66,7 @@ final class ChoirMastersDelegationTest extends TestCase
 
         app(TenantContext::class)->run($admin->tenant_id, function () use ($admin): void {
             $this->actingAs($admin);
+            app(CommissionCatalog::class)->ensure();
             $assistant = User::factory()->role(UserRole::Choriste)->create();
             $commission = ChoirCommission::query()
                 ->where('archive_commission', \App\Enums\Commission::Liturgique->value)

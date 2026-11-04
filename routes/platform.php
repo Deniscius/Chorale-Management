@@ -15,6 +15,7 @@ Route::prefix('plateforme')->name('platform.')->group(function () {
         Route::get('/chorales', [DashboardController::class, 'tenants'])->name('tenants');
         Route::get('/chorales/{tenant}', [DashboardController::class, 'show'])->whereNumber('tenant')->name('tenants.show');
         Route::post('/chorales/{tenant}', [DashboardController::class, 'update'])->whereNumber('tenant')->middleware('throttle:10,1,platform-access:')->name('tenants.update');
+        Route::post('/chorales/{tenant}/message', [DashboardController::class, 'announce'])->whereNumber('tenant')->middleware('throttle:3,10,platform-message:')->name('tenants.announce');
         Route::get('/supervision', [DashboardController::class, 'health'])->name('health');
         Route::get('/journal', [DashboardController::class, 'audit'])->name('audit');
         Route::post('/deconnexion', [SessionController::class, 'destroy'])->name('logout');

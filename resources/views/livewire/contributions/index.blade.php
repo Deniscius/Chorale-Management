@@ -127,6 +127,9 @@
                         @if ($this->canManage())
                             <div class="flex items-center justify-end gap-1">
                                 @unless ($contribution->isPaid() || $contribution->status === \App\Enums\ContributionStatus::Exoneree)
+                                    <x-confirm-action :call="'sendReminder('.$contribution->id.')'" title="Envoyer un rappel"
+                                        :message="'Un e-mail sera envoyé à '.($contribution->member?->full_name ?? 'ce choriste').' uniquement si ses notifications e-mail sont activées.'" label="Envoyer le rappel"
+                                        icon="mail" icon-only trigger-class="rounded-lg p-2 text-slate-500 transition hover:bg-sky-50 hover:text-sky-600" />
                                     <x-confirm-action :call="'markAsPaid('.$contribution->id.')'" title="Enregistrer le règlement"
                                         message="Le montant restant sera enregistré comme encaissé aujourd’hui." label="Marquer comme payée"
                                         icon="sparkles" icon-only trigger-class="rounded-lg p-2 text-slate-500 transition hover:bg-emerald-50 hover:text-emerald-600" />

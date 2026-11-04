@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
+use App\Mail\TenantAnnouncement;
 use App\Models\Tenant;
 use App\Services\Platform\Audit;
 use Illuminate\Database\Query\Builder;
@@ -10,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -100,6 +103,41 @@ final class DashboardController extends Controller
         });
 
         return redirect()->route('platform.tenants.show', $tenant)->with('status', 'La modification a été enregistrée dans le journal.');
+    }
+
+    /** Send a deliberate, auditable notice to every account of one tenant. */
+    public function announce(Request $request, Tenant $tenant)
+    {
+        $data = $request->validate([
+            'subject' => ['required', 'string', 'max:180'],
+            'message' => ['required', 'string', 'max:5000'],
+            'current_password' => ['required', 'string'],
+        ]);
+        if (! Hash::check($data['current_password'], Auth::guard('platform')->user()->password)) {
+            throw ValidationException::withMessages(['current_password' => 'Le mot de passe est incorrect.']);
+        }
+
+        $emails = DB::table('users')->where('tenant_id', $tenant->id)->whereNotNull('email')
+            ->where('email', '<>', '')->orderBy('id')->pluck('email')->unique()->values();
+        if ($emails->isEmpty()) {
+            return back()->with('warning', 'Aucun compte avec une adresse e-mail n’est disponible dans cet espace.');
+        }
+
+        $sent = 0;
+        try {
+            foreach ($emails as $email) {
+                Mail::to($email)->send(new TenantAnnouncement($data['subject'], $data['message'], route('tenant.entry', $tenant->slug), 'Ouvrir la chorale'));
+                $sent++;
+            }
+        } catch (\Throwable $exception) {
+            Log::warning('Tenant announcement delivery failed.', ['tenant_id' => $tenant->id, 'sent' => $sent, 'exception' => $exception::class]);
+
+            return back()->with('error', "L’envoi s’est arrêté après {$sent} message(s). Vérifiez Brevo avant toute relance.");
+        }
+
+        Audit::record('tenant_announcement_sent', $tenant->id, $data['subject'], ['recipients' => $sent]);
+
+        return back()->with('status', "Message envoyé à {$sent} utilisateur(s) de {$tenant->name}.");
     }
 
     public function health()

@@ -5,6 +5,7 @@ namespace App\Livewire\Contributions;
 use App\Enums\ContributionStatus;
 use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
+use App\Mail\TenantAnnouncement;
 use App\Models\Contribution;
 use App\Models\Member;
 use App\Services\ContributionSchedule;
@@ -12,6 +13,7 @@ use App\Services\ManagementYearContext;
 use App\Services\ReceiptLedger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
@@ -118,6 +120,23 @@ class Index extends Component
         $this->dispatch('toast', type: 'success', message: 'Cotisation marquée comme payée.');
     }
 
+    public function sendReminder(int $contributionId): void
+    {
+        $this->authorizeManage();
+        $contribution = Contribution::query()->with('member')->findOrFail($contributionId);
+        $member = $contribution->member;
+        abort_unless($member?->canReceiveEmail(), 422, 'Ce choriste n’a pas activé les notifications e-mail ou ne possède pas d’adresse e-mail.');
+        abort_if($contribution->balance() <= 0 || $contribution->status === ContributionStatus::Exoneree, 422, 'Cette cotisation ne nécessite pas de relance.');
+
+        Mail::to($member->email)->send(new TenantAnnouncement(
+            'Rappel de cotisation — '.$contribution->typeLabel(),
+            'Bonjour '.$member->first_name.",\n\nVotre cotisation de ".$contribution->monthLabel().' '.$contribution->year.' présente un reste de '.number_format($contribution->balance(), 0, ',', ' ').' FCFA. Merci de vous rapprocher de la trésorerie.',
+            route('personal-notebook.show', absolute: false),
+            'Consulter mon carnet',
+        ));
+        $this->dispatch('toast', type: 'success', message: 'Rappel envoyé par e-mail à '.$member->full_name.'.');
+    }
+
     public function openSync(): void
     {
         $this->authorizeManage();
@@ -202,9 +221,9 @@ class Index extends Component
             ->accrued()
             ->when(app(ManagementYearContext::class)->selected(), fn ($q, $selected) => $q->whereDate('period_starts_on', '>=', $selected->starts_on)->whereDate('period_starts_on', '<=', $selected->ends_on))
             ->selectRaw(
-            'COUNT(*) AS total, COALESCE(SUM(due_amount), 0) AS du, COALESCE(SUM(paid_amount), 0) AS encaisse, COALESCE(SUM(CASE WHEN status IN (?, ?) THEN 1 ELSE 0 END), 0) AS impayees',
-            [ContributionStatus::Due->value, ContributionStatus::Retard->value]
-        )->toBase()->first();
+                'COUNT(*) AS total, COALESCE(SUM(due_amount), 0) AS du, COALESCE(SUM(paid_amount), 0) AS encaisse, COALESCE(SUM(CASE WHEN status IN (?, ?) THEN 1 ELSE 0 END), 0) AS impayees',
+                [ContributionStatus::Due->value, ContributionStatus::Retard->value]
+            )->toBase()->first();
         $du = (float) $row->du;
         $encaisse = (float) $row->encaisse;
 

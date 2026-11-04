@@ -89,12 +89,12 @@ class RehearsalRemindersTest extends TestCase
             'subject' => 'Rappel test',
             'body' => 'Rappel test',
             'status' => ReminderStatus::EnAttente,
-            'lease_token' => 'disabled-mail-test',
+            'lease_token' => '8d4d7fd1-95b2-4f43-9d2c-98c0d06c12fe',
             'reserved_at' => now(),
         ]);
         config()->set('mail.delivery_enabled', false);
 
-        $outcome = app(ReminderDispatcher::class)->deliver($reminder->id, 'disabled-mail-test');
+        $outcome = app(ReminderDispatcher::class)->deliver($reminder->id, '8d4d7fd1-95b2-4f43-9d2c-98c0d06c12fe');
 
         $this->assertSame('skipped', $outcome);
         $this->assertSame(ReminderStatus::Ignore, $reminder->fresh()->status);

@@ -15,6 +15,7 @@ final class FlashNotifications
                 'profile-updated' => 'Vos informations personnelles ont été enregistrées.',
                 'password-updated' => 'Votre mot de passe a été modifié.',
                 'manual-reset-required' => 'Contactez un administrateur de votre chorale pour recevoir un lien personnel de réinitialisation.',
+                'password-reset-email-unavailable' => 'Le lien n’a pas pu être envoyé pour le moment. Réessayez dans quelques minutes ou contactez un administrateur.',
                 'verification-link-sent' => 'Un nouveau lien de vérification a été envoyé à votre adresse e-mail.',
                 default => $status,
             });

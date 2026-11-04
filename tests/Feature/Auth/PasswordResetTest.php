@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
 
 class PasswordResetTest extends TestCase
@@ -28,6 +29,17 @@ class PasswordResetTest extends TestCase
         $this->post('/forgot-password', ['email' => $user->email]);
 
         Notification::assertSentTo($user, ResetPassword::class);
+    }
+
+    public function test_smtp_failure_does_not_expose_a_500_page(): void
+    {
+        Password::shouldReceive('sendResetLink')
+            ->once()
+            ->andThrow(new \RuntimeException('SMTP unavailable'));
+
+        $this->post('/forgot-password', ['email' => 'choriste@example.test'])
+            ->assertRedirect('/')
+            ->assertSessionHas('status', 'password-reset-email-unavailable');
     }
 
     public function test_reset_password_screen_can_be_rendered(): void

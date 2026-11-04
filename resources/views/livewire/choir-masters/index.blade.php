@@ -39,6 +39,7 @@
             <form wire:submit="saveAssociates" class="space-y-4">
                 <h2 class="font-semibold text-slate-900">Choisir les maîtres associés</h2>
                 <p class="text-sm text-slate-600">Cochez les personnes chargées d'assister le maître de chœur. Les choix précédents peuvent être retirés. Aucun rôle général n'est modifié.</p>
+                <div><label for="choir-master-search" class="form-label">Rechercher un compte</label><input id="choir-master-search" type="search" wire:model.live.debounce.300ms="accountSearch" class="form-input mt-1 w-full" placeholder="Nom du choriste…"><p class="mt-1 text-xs text-slate-500">60 résultats au maximum. Les personnes déjà sélectionnées restent affichées.</p></div>
                 <fieldset class="max-h-72 space-y-1 overflow-y-auto rounded-lg border border-slate-200 p-3">
                     <legend class="sr-only">Comptes des maîtres associés</legend>
                     @foreach($availableAccounts as $account)

@@ -19,10 +19,13 @@ final class Index extends Component
 
     public ?int $editingCommissionId = null;
 
+    public string $accountSearch = '';
+
     public function editAssociates(int $commissionId): void
     {
         $commission = app(ChoirMasterAssociates::class)->authorizeHead($commissionId);
         $this->editingCommissionId = $commission->id;
+        $this->accountSearch = '';
         $this->associateIds = $commission->choirMasters()->pluck('users.id')->map(fn ($id) => (string) $id)->all();
     }
 
@@ -33,6 +36,7 @@ final class Index extends Component
         app(ChoirMasterAssociates::class)->sync($this->editingCommissionId, $this->associateIds);
         $this->editingCommissionId = null;
         $this->associateIds = [];
+        $this->accountSearch = '';
         $this->dispatch('toast', type: 'success', message: 'Associés du maître de chœur mis à jour.');
     }
 
@@ -57,11 +61,18 @@ final class Index extends Component
             ->orderBy('name')
             ->get();
 
+        $accounts = collect();
+        if ($this->editingCommissionId !== null) {
+            $accounts = \App\Models\User::query()
+                ->when(trim($this->accountSearch) !== '', fn ($q) => $q->whereLike('name', '%'.mb_substr(trim($this->accountSearch), 0, 100).'%'))
+                ->orderBy('name')->limit(60)->get(['id', 'name']);
+            $selected = \App\Models\User::query()->whereIn('id', array_map('intval', $this->associateIds))->get(['id', 'name']);
+            $accounts = $accounts->merge($selected)->unique('id');
+        }
+
         return view('livewire.choir-masters.index', [
             'commissions' => $commissions,
-            'availableAccounts' => $this->editingCommissionId !== null
-                ? \App\Models\User::query()->orderBy('name')->get(['id', 'name'])
-                : collect(),
+            'availableAccounts' => $accounts,
         ]);
     }
 }

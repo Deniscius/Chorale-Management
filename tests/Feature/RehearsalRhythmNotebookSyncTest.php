@@ -91,6 +91,7 @@ final class RehearsalRhythmNotebookSyncTest extends TestCase
             CarbonImmutable::parse('2026-11-04'), CarbonImmutable::parse('2026-11-14')
         );
         $custom = Rehearsal::query()->whereDate('date', '2026-11-14')->firstOrFail();
+        $this->travel(1)->minutes();
         $custom->update(['venue' => 'Séance déplacée manuellement']);
 
         // Simulate a historical rhythm edit made by the old system: no sync ran.

@@ -83,6 +83,28 @@ final class Rhythms extends Component
                     ? RehearsalRhythm::query()->lockForUpdate()->findOrFail($this->editingId)
                     : new RehearsalRhythm;
                 $previous = $rhythm->exists ? $rhythm->getRawOriginal() : null;
+
+                // A future effective date creates a new version of the schedule.
+                // The previous version remains valid through the day before, so
+                // there is no unexplained gap in the choir calendar.
+                if ($previous !== null
+                    && CarbonImmutable::parse($data['effective_from'])->gt(CarbonImmutable::parse($previous['effective_from']))
+                    && $this->scheduleChanged($data, $previous)) {
+                    $until = CarbonImmutable::parse($data['effective_from'])->subDay()->toDateString();
+                    $rhythm->update(['effective_until' => $until]);
+                    $old = $synchronizer->synchronize($rhythm, $previous, true);
+
+                    $replacement = new RehearsalRhythm;
+                    $replacement->fill($data)->save();
+                    $new = $synchronizer->synchronize($replacement, null, true);
+
+                    return collect([$old, $new])->reduce(fn (array $total, array $counts) => [
+                        'created' => $total['created'] + $counts['created'],
+                        'updated' => $total['updated'] + $counts['updated'],
+                        'cancelled' => $total['cancelled'] + $counts['cancelled'],
+                        'protected' => $total['protected'] + $counts['protected'],
+                    ], ['created' => 0, 'updated' => 0, 'cancelled' => 0, 'protected' => 0]);
+                }
                 $rhythm->fill($data)->save();
 
                 // Include appointments produced before rhythm linking existed.
@@ -141,5 +163,17 @@ final class Rhythms extends Component
             'choirs' => Choir::query()->orderBy('name')->get(['id', 'name']),
             'rhythms' => RehearsalRhythm::query()->with('choir')->withCount('rehearsals')->orderBy('weekday')->orderBy('starts_at')->get(),
         ]);
+    }
+
+    /** @param array<string, mixed> $data @param array<string, mixed> $previous */
+    private function scheduleChanged(array $data, array $previous): bool
+    {
+        foreach (['choir_id', 'weekday', 'starts_at', 'ends_at', 'venue', 'is_active'] as $key) {
+            if ((string) ($data[$key] ?? '') !== (string) ($previous[$key] ?? '')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

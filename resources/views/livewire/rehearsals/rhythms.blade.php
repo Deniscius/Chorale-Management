@@ -57,7 +57,7 @@
             <h2 class="font-semibold">Rythmes configurés</h2>
             <button type="button" wire:click="generate" wire:confirm="Générer les séances des 45 prochains jours ? Les répétitions existantes seront conservées." class="btn btn-primary">Programmer les 45 prochains jours</button>
         </div>
-        <p class="text-xs text-slate-600">En modifiant ou en arrêtant un rythme, les prochaines séances automatiquement générées et encore intactes sont actualisées ou annulées dans « Mon carnet ». Les séances personnalisées, celles ayant des présences, des œuvres ou des rappels conservent leurs données et nécessitent une vérification manuelle. Aucune répétition passée n’est supprimée. Pour corriger les séances déjà programmées avant cette mise à jour, utilisez « Réparer les carnets » sur le rythme concerné ; une confirmation est demandée. La programmation reste répétable sans doublon.</p>
+        <p class="text-xs text-slate-600">Le rythme prend effet à la date « Applicable à partir du », uniquement pour le jour choisi. Si vous modifiez un rythme avec une date future, l’ancien reste valable jusqu’à la veille et le nouveau prend le relais sans trou dans le planning. Les séances personnalisées, celles ayant des présences, des œuvres ou des rappels conservent leurs données. Aucune répétition passée n’est supprimée.</p>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
                 <thead><tr class="border-b"><th class="p-2">Chorale</th><th class="p-2">Jour</th><th class="p-2">Horaire</th><th class="p-2">Période</th><th class="p-2">État</th><th class="p-2"></th></tr></thead>

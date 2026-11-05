@@ -233,6 +233,22 @@ final class RehearsalRhythmNotebookSyncTest extends TestCase
         $this->assertSame('10:00', Rehearsal::query()->whereDate('date', '2026-11-08')->where('status', 'planifiee')->firstOrFail()->starts_at);
     }
 
+    public function test_future_effective_date_versions_a_rhythm_without_a_calendar_gap(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-04 09:00:00'));
+        $this->actingAs(User::factory()->role(UserRole::Admin)->create());
+        $rhythm = $this->rhythm();
+        app(RehearsalPlanner::class)->generate(CarbonImmutable::parse('2026-11-04'), CarbonImmutable::parse('2026-11-22'));
+
+        Livewire::test(Rhythms::class)->call('edit', $rhythm->id)
+            ->set('effective_from', '2026-11-15')->set('weekday', '7')->set('starts_at', '10:00')->set('ends_at', '12:00')
+            ->call('save')->assertHasNoErrors();
+
+        $this->assertSame('15:00', Rehearsal::query()->whereDate('date', '2026-11-14')->where('status', 'planifiee')->firstOrFail()->starts_at);
+        $this->assertSame('10:00', Rehearsal::query()->whereDate('date', '2026-11-15')->where('status', 'planifiee')->firstOrFail()->starts_at);
+        $this->assertSame('2026-11-14', $rhythm->fresh()->effective_until->toDateString());
+    }
+
     public function test_retired_rhythm_no_longer_appears_in_notebook_but_past_records_are_kept(): void
     {
         $this->travelTo(CarbonImmutable::parse('2026-11-04 09:00:00'));

@@ -138,13 +138,11 @@
                                 @if ($rehearsal->is_special && $rehearsal->date->gte(today()) && $rehearsal->status === \App\Enums\EventStatus::Planifiee)
                                     <button type="button" wire:click="notifySpecial({{ $rehearsal->id }})" wire:confirm="Envoyer les notifications de cette répétition spéciale aux choristes ? Les rappels déjà envoyés ne seront pas dupliqués." class="btn btn-soft btn-xs">Notifier</button>
                                 @endif
-                                @if ($this->aiEnabled)
-                                    <button type="button" wire:click="openReport({{ $rehearsal->id }})"
-                                        class="btn btn-soft btn-xs" title="Compte rendu assisté">
-                                        <x-icon name="robot" class="h-3.5 w-3.5" />
-                                        Compte rendu
-                                    </button>
-                                @endif
+                                <button type="button" wire:click="openReport({{ $rehearsal->id }})"
+                                    class="btn btn-soft btn-xs" title="Cahier de texte">
+                                    <x-icon name="archive" class="h-3.5 w-3.5" />
+                                    Cahier
+                                </button>
 
                                 <x-row-actions edit="edit" :id="$rehearsal->id" remove="delete"
                                     :confirm="'Supprimer la répétition du '.$rehearsal->date->format('d/m/Y').' ?'" />
@@ -168,14 +166,16 @@
     @endif
 
     @if ($reportId && $this->reportRehearsal)
-        <x-modal-panel title="Compte rendu assisté" size="lg"
-            subtitle="Proposition rédigée à partir de la séance : relisez et corrigez avant d’enregistrer.">
+        <x-modal-panel title="Cahier de texte de la répétition" size="lg"
+            subtitle="Conservez ce qui a été travaillé, les consignes et la suite à donner.">
             <div class="space-y-4">
-                <p class="text-sm text-slate-600">Les notes libres sont exclues de l’envoi à l’IA. Vérifiez le contexte avant de générer une proposition.</p>
+                @if($this->aiEnabled)
+                <p class="text-sm text-slate-600">Vous pouvez rédiger directement ou demander une proposition. Les notes libres ne sont pas envoyées à l’IA.</p>
                 <details class="rounded-lg border p-3 text-sm">
                     <summary>Voir les informations transmises à l’IA</summary>
                     <pre class="mt-3 whitespace-pre-wrap">{{ $this->reportContext }}</pre>
                 </details>
+                @endif
                 <div class="rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">
                     <p class="font-medium text-slate-800">
                         {{ $this->reportRehearsal->date->translatedFormat('l j F Y') }}
@@ -191,22 +191,22 @@
                 </div>
 
                 <div>
-                    <x-input-label for="reportDraft" value="Compte rendu" />
+                    <x-input-label for="reportDraft" value="Ce qui a été fait pendant la répétition" />
                     <textarea id="reportDraft" wire:model="reportDraft" rows="12"
                         class="form-textarea mt-1"
-                        placeholder="Cliquez sur « Générer une proposition » pour obtenir un brouillon, ou rédigez directement."></textarea>
+                        placeholder="Œuvres travaillées, passages repris, consignes du maître de chœur, difficultés et travail à préparer…"></textarea>
                     <x-input-error :messages="$errors->get('reportDraft')" class="mt-1" />
                 </div>
 
                 <div class="flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
-                    <button type="button" wire:click="generateReport" wire:loading.attr="disabled"
+                    @if($this->aiEnabled)<button type="button" wire:click="generateReport" wire:loading.attr="disabled"
                         class="btn btn-soft">
                         <span wire:loading.remove wire:target="generateReport">
                             <x-icon name="sparkles" class="h-4 w-4" />
                             Générer une proposition
                         </span>
                         <span wire:loading wire:target="generateReport">Rédaction en cours…</span>
-                    </button>
+                    </button>@endif
 
                     <div class="flex items-center gap-3">
                         <button type="button" wire:click="$dispatch('close-form')" class="btn btn-secondary">

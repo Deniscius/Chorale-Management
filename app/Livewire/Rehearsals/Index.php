@@ -10,6 +10,7 @@ use App\Models\Rehearsal;
 use App\Services\ChoraleAssistant;
 use App\Services\ManagementYearContext;
 use App\Services\ReminderDispatcher;
+use App\Support\SearchTerms;
 use App\Tenancy\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -125,7 +126,7 @@ class Index extends Component
             ->with('works')
             ->withCount('attendances')
             ->when($this->overview === 'presences', fn ($q) => $q->whereHas('attendances', fn ($q) => $q->where('status', 'present')))
-            ->when(trim($this->search) !== '', fn (Builder $query) => \App\Support\SearchTerms::apply($query, $this->search, ['venue','notes']))
+            ->when(trim($this->search) !== '', fn (Builder $query) => SearchTerms::apply($query, $this->search, ['venue', 'notes']))
             ->when($this->type !== '', fn (Builder $query) => $query->where('type', $this->type))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->period === 'avenir', fn (Builder $query) => $query->whereDate('date', '>=', today()))
@@ -158,9 +159,9 @@ class Index extends Component
         $row = Rehearsal::query()
             ->when(app(ManagementYearContext::class)->selected(), fn ($q, $year) => $q->whereDate('date', '>=', $year->starts_on)->whereDate('date', '<=', $year->ends_on))
             ->selectRaw(
-            'COUNT(*) AS total, COALESCE(SUM(CASE WHEN date >= ? THEN 1 ELSE 0 END), 0) AS avenir, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS terminees',
-            [today()->toDateString(), EventStatus::Terminee->value]
-        )->toBase()->first();
+                'COUNT(*) AS total, COALESCE(SUM(CASE WHEN date >= ? THEN 1 ELSE 0 END), 0) AS avenir, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS terminees',
+                [today()->toDateString(), EventStatus::Terminee->value]
+            )->toBase()->first();
 
         return ['total' => (int) $row->total, 'avenir' => (int) $row->avenir, 'terminees' => (int) $row->terminees, 'presence' => (int) app(TenantContext::class)->table('rehearsal_attendances')->where('status', 'present')->count()];
     }
@@ -195,8 +196,6 @@ class Index extends Component
     public function openReport(int $rehearsalId): void
     {
         $this->authorizeManage();
-
-        abort_unless($this->aiEnabled, 403, 'Assistant IA indisponible.');
 
         $rehearsal = Rehearsal::findOrFail($rehearsalId);
 
@@ -244,8 +243,6 @@ class Index extends Component
     {
         $this->authorizeManage();
 
-        abort_unless($this->aiEnabled, 403, 'Assistant IA indisponible.');
-
         $this->validate([
             'reportDraft' => ['nullable', 'string', 'max:20000'],
         ], attributes: ['reportDraft' => 'compte rendu']);
@@ -258,6 +255,7 @@ class Index extends Component
 
         $rehearsal->forceFill([
             'ai_report' => $this->reportDraft !== '' ? $this->reportDraft : null,
+            // This field is also the durable rehearsal notebook when AI is off.
             'ai_report_generated_at' => $this->reportDraft !== '' ? now() : null,
         ])->save();
 

@@ -2,6 +2,37 @@
     <x-page-header title="Accueil et suivi des nouveaux choristes" icon="users"
         subtitle="Accompagner les nouveaux membres jusqu’à leur intégration à la chorale." />
     <p class="text-sm text-slate-600">Les membres sont présentés par date d'adhésion et selon l'année de travail sélectionnée. Ce suivi est interne à la commission et distinct de la direction musicale.</p>
+    @if ($this->joinRequests->isNotEmpty())
+        <section class="overflow-x-auto rounded-xl border border-amber-200 bg-amber-50">
+            <div class="border-b border-amber-200 px-4 py-3">
+                <h2 class="font-semibold text-amber-950">Demandes reçues depuis le lien de la chorale</h2>
+                <p class="mt-1 text-sm text-amber-900">Vérifiez chaque personne avant de créer son accès. Le lien d’activation est envoyé par e-mail.</p>
+            </div>
+            <table class="min-w-full divide-y divide-amber-100 text-sm">
+                <thead class="text-left text-amber-950"><tr><th class="p-3">Personne</th><th class="p-3">Contact</th><th class="p-3">Pupitre</th><th class="p-3">Reçue le</th><th class="p-3">Décision</th></tr></thead>
+                <tbody class="divide-y divide-amber-100">
+                    @foreach ($this->joinRequests as $request)
+                        <tr wire:key="join-request-{{ $request->id }}">
+                            <td class="p-3 font-medium">{{ $request->first_name }} {{ $request->last_name }}</td>
+                            <td class="p-3">{{ $request->email }}@if($request->phone)<br><span class="text-slate-600">{{ $request->phone }}</span>@endif</td>
+                            <td class="p-3">{{ $request->voice ? \App\Enums\Voice::from($request->voice)->label() : 'À confirmer' }}</td>
+                            <td class="p-3">{{ $request->created_at->format('d/m/Y H:i') }}</td>
+                            <td class="p-3">
+                                @can('manage-users')
+                                    <div class="flex gap-2">
+                                        <x-confirm-action :call="'approveJoinRequest('.$request->id.')'" title="Accepter cette demande" message="La fiche sera créée et un lien d’activation personnel sera envoyé à cette adresse e-mail." label="Accepter" trigger-class="btn btn-primary text-xs" />
+                                        <x-confirm-action :call="'declineJoinRequest('.$request->id.')'" title="Classer cette demande" message="La demande sera classée sans suite. Aucun compte ne sera créé." label="Refuser" trigger-class="btn btn-ghost text-xs text-red-700" button-class="btn bg-red-600 text-white hover:bg-red-700" />
+                                    </div>
+                                @else
+                                    <span class="text-slate-600">En attente d’un administrateur</span>
+                                @endcan
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </section>
+    @endif
     <div class="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2">
         <div><label for="onboarding-search" class="form-label">Rechercher un choriste</label>
             <input id="onboarding-search" type="search" wire:model.live.debounce.350ms="search" class="form-input mt-1 w-full" placeholder="Prénom ou nom…">

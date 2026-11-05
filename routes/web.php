@@ -1,9 +1,6 @@
 <?php
 
 use App\Enums\UserRole;
-use App\Http\Controllers\ManagementYearSelectionController;
-use App\Livewire\Settings\ManagementYears;
-use App\Livewire\Contributions\CounterResets;
 use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BillingController;
@@ -16,6 +13,7 @@ use App\Http\Controllers\InstrumentLabelsController;
 use App\Http\Controllers\LetterheadFileController;
 use App\Http\Controllers\LetterheadSampleController;
 use App\Http\Controllers\LetterheadUploadController;
+use App\Http\Controllers\ManagementYearSelectionController;
 use App\Http\Controllers\MemberDossierController;
 use App\Http\Controllers\MemberPhotoController;
 use App\Http\Controllers\MemberReportController;
@@ -25,17 +23,19 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\RunReminderSchedulerController;
 use App\Http\Controllers\TenantAddressController;
+use App\Http\Controllers\TenantJoinRequestController;
 use App\Http\Controllers\TenantRegistrationController;
 use App\Http\Controllers\VoiceResourceAudioController;
 use App\Http\Controllers\VoiceSpaceController;
 use App\Http\Middleware\TenantAddress;
-use App\Livewire\Accounting\MemberOverview as AccountingMemberOverview;
 use App\Livewire\Accounting\Dashboard as AccountingDashboard;
+use App\Livewire\Accounting\MemberOverview as AccountingMemberOverview;
 use App\Livewire\Activities\Index as ActivitiesIndex;
 use App\Livewire\Attendance\FinancialReport as AttendanceFinancialReport;
 use App\Livewire\Attendance\Sheet as AttendanceSheet;
 use App\Livewire\Audit\Index;
 use App\Livewire\Budgets\Index as BudgetsIndex;
+use App\Livewire\Contributions\CounterResets;
 use App\Livewire\Contributions\Index as ContributionsIndex;
 use App\Livewire\Correspondences\Index as CorrespondencesIndex;
 use App\Livewire\Documents\Index as DocumentsIndex;
@@ -53,6 +53,7 @@ use App\Livewire\Reminders\History as RemindersHistory;
 use App\Livewire\Seasons\Index as SeasonsIndex;
 use App\Livewire\Settings\Chorale as SettingsChorale;
 use App\Livewire\Settings\FinancialTypes;
+use App\Livewire\Settings\ManagementYears;
 use App\Livewire\Transactions\Index as TransactionsIndex;
 use App\Livewire\Users\CommissionAssignments;
 use App\Livewire\Users\Index as UsersIndex;
@@ -71,6 +72,8 @@ Route::prefix('c/{slug}')->where(['slug' => '[a-z0-9]+(?:-[a-z0-9]+)*'])
         Route::get('/', [TenantAddressController::class, 'show'])->name('tenant.entry');
         Route::get('/logo', [TenantAddressController::class, 'logo'])->middleware('auth')->name('tenant.logo');
         Route::post('/connexion', [AuthenticatedSessionController::class, 'store'])->middleware(['guest', 'throttle:60,1,chorale-login:'])->name('tenant.login');
+        Route::get('/inscription', [TenantJoinRequestController::class, 'create'])->middleware('guest')->name('tenant.join.create');
+        Route::post('/inscription', [TenantJoinRequestController::class, 'store'])->middleware(['guest', 'throttle:4,60,tenant-join:'])->name('tenant.join.store');
     });
 
 Route::middleware('guest')->group(function () {
@@ -99,7 +102,7 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/mon-carnet', PersonalNotebookController::class)->name('personal-notebook.show');
 
-    Route::get('/choristes/accueil-et-suivi', \App\Livewire\Onboarding\Index::class)
+    Route::get('/choristes/accueil-et-suivi', App\Livewire\Onboarding\Index::class)
         ->middleware('can:manage-onboarding')
         ->name('members.onboarding');
 
@@ -129,7 +132,7 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/mon-pupitre/{resource}/audio', VoiceResourceAudioController::class)
         ->middleware('module:'.UserRole::MODULE_LITURGIQUE)->name('voice-space.audio');
 
-    Route::get('/liturgie/maitres-de-choeur', \App\Livewire\ChoirMasters\Index::class)
+    Route::get('/liturgie/maitres-de-choeur', App\Livewire\ChoirMasters\Index::class)
         ->middleware('module:'.UserRole::MODULE_LITURGIQUE)
         ->name('choir-masters.index');
 

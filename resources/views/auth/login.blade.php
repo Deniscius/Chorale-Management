@@ -61,6 +61,14 @@
         </div>
     </form>
 
+    @if (isset($loginAction))
+        <div class="mt-6 rounded-xl border border-sky-100 bg-sky-50 p-4 text-sm text-sky-950">
+            <p class="font-semibold">Vous souhaitez rejoindre cette chorale ?</p>
+            <p class="mt-1">Envoyez votre demande : le responsable la vérifie puis vous adresse votre lien personnel d’activation.</p>
+            <a href="{{ route('tenant.join.create', ['slug' => request()->route('slug')]) }}" class="btn btn-secondary mt-3">Demander à rejoindre</a>
+        </div>
+    @endif
+
     @if(config('tenancy.enabled') && config('tenancy.registration'))
         <p class="mt-6 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-900">Votre chorale découvre l’application ? <a href="{{ route('spaces.create') }}" class="font-semibold underline">Créer un espace et tester 3 jours</a></p>
     @endif

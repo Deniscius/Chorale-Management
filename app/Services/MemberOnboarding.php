@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\MemberStatus;
 use App\Enums\UserRole;
 use App\Models\Member;
 use App\Models\MemberInvitation;
@@ -79,6 +80,9 @@ final class MemberOnboarding
             ]);
             $member->update(['email' => $validated['email']]);
             $locked->forceFill(['accepted_at' => now()])->save();
+            if ($member->status === MemberStatus::Invite) {
+                $member->forceFill(['status' => MemberStatus::Actif, 'joined_on' => $member->joined_on ?? today()])->save();
+            }
 
             return $user;
         }));

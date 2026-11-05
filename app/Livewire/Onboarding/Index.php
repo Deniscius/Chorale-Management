@@ -2,12 +2,19 @@
 
 namespace App\Livewire\Onboarding;
 
+use App\Mail\TenantAnnouncement;
 use App\Models\AuditEvent;
+use App\Models\Choir;
 use App\Models\Member;
+use App\Models\MemberJoinRequest;
 use App\Models\MemberOnboardingFollowup;
+use App\Services\ChoraleIdentity;
 use App\Services\ManagementYearContext;
+use App\Services\MemberOnboarding;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -71,6 +78,15 @@ final class Index extends Component
             ->paginate(15);
     }
 
+    #[Computed]
+    public function joinRequests()
+    {
+        return MemberJoinRequest::query()
+            ->where('status', MemberJoinRequest::STATUS_PENDING)
+            ->latest()
+            ->get();
+    }
+
     public function edit(int $memberId): void
     {
         $this->authorizeFollowup();
@@ -87,6 +103,66 @@ final class Index extends Component
     {
         $this->editingId = null;
         $this->reset('status', 'contactedOn', 'note');
+    }
+
+    public function approveJoinRequest(int $requestId): void
+    {
+        abort_unless(auth()->user()?->can('manage-users'), 403);
+
+        $activationUrl = DB::transaction(function () use ($requestId): string {
+            $request = MemberJoinRequest::query()->lockForUpdate()->findOrFail($requestId);
+            abort_unless($request->status === MemberJoinRequest::STATUS_PENDING, 409, 'Cette demande a déjà été traitée.');
+            abort_if(Member::query()->where('email', $request->email)->exists(), 409, 'Cette adresse est déjà associée à un choriste.');
+
+            $member = Member::create([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'voice' => $request->voice,
+                'status' => 'invite',
+                'choir_id' => Choir::query()->value('id'),
+            ]);
+            $request->update([
+                'status' => MemberJoinRequest::STATUS_APPROVED,
+                'member_id' => $member->id,
+                'reviewed_by' => auth()->id(),
+                'reviewed_at' => now(),
+            ]);
+
+            return app(MemberOnboarding::class)->issue($member);
+        }, 3);
+
+        $request = MemberJoinRequest::query()->findOrFail($requestId);
+        $sent = false;
+        if (config('mail.delivery_enabled')) {
+            try {
+                Mail::to($request->email)->send(new TenantAnnouncement(
+                    'Votre accès est prêt',
+                    'Votre demande a été acceptée. Utilisez votre lien personnel pour choisir votre identifiant et votre mot de passe. Il expire dans 48 heures.',
+                    app(ChoraleIdentity::class)->name(),
+                    $activationUrl,
+                    'Activer mon compte',
+                ));
+                $sent = true;
+            } catch (\Throwable $exception) {
+                Log::warning('Member activation delivery failed after join request approval.', ['request_id' => $requestId, 'exception' => $exception::class]);
+            }
+        }
+
+        unset($this->joinRequests);
+        $this->dispatch('toast', type: $sent ? 'success' : 'warning', message: $sent
+            ? 'Demande acceptée : le lien personnel d’activation a été envoyé par e-mail.'
+            : 'Demande acceptée. Le lien d’activation est disponible dans la fiche du choriste.');
+    }
+
+    public function declineJoinRequest(int $requestId): void
+    {
+        abort_unless(auth()->user()?->can('manage-users'), 403);
+        $request = MemberJoinRequest::query()->where('status', MemberJoinRequest::STATUS_PENDING)->findOrFail($requestId);
+        $request->update(['status' => MemberJoinRequest::STATUS_DECLINED, 'reviewed_by' => auth()->id(), 'reviewed_at' => now()]);
+        unset($this->joinRequests);
+        $this->dispatch('toast', type: 'success', message: 'Demande classée sans suite.');
     }
 
     public function save(): void

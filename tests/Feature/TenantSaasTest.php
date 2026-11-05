@@ -198,7 +198,7 @@ class TenantSaasTest extends TestCase
     public function test_login_and_password_authentication_work_without_a_tenant_cookie(): void
     {
         [$tenant, $user] = $this->space();
-        $this->post('/login', ['login' => $user->username, 'password' => 'SecretChorale2026', 'remember' => true])->assertRedirect('/dashboard');
+        $this->post('/login', ['login' => $user->username, 'password' => 'SecretChorale2026', 'remember' => true])->assertRedirect(route('tenant.entry', ['slug' => $tenant->slug]));
         $this->get('/membres')->assertOk();
         $this->assertAuthenticatedAs($user);
     }

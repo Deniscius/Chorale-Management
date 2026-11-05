@@ -75,7 +75,7 @@ try {
     await page
         .getByRole('button', { name: 'Se connecter', exact: true })
         .click();
-    await page.waitForURL('**/dashboard');
+    await page.waitForURL('**/c/**');
     await page.goto(origin + '/instruments');
     await page
         .getByRole('button', { name: 'Ajouter du matériel', exact: true })

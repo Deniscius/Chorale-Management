@@ -128,7 +128,7 @@ try {
     await page
         .getByRole('button', { name: 'Se connecter', exact: true })
         .click();
-    await page.waitForURL('**/dashboard');
+    await page.waitForURL('**/c/**');
     await page
         .getByRole('heading', { name: 'Que souhaitez-vous faire ?' })
         .waitFor();
@@ -203,7 +203,7 @@ try {
             await page
                 .getByRole('button', { name: 'Se connecter', exact: true })
                 .click();
-            await page.waitForURL('**/dashboard');
+            await page.waitForURL('**/c/**');
         } else {
             await page
                 .getByRole('link', { name: 'Revenir à l’accueil' })

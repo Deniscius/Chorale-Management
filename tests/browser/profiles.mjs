@@ -36,7 +36,7 @@ async function session(username) {
     await page
         .getByRole('button', { name: 'Se connecter', exact: true })
         .click();
-    await page.waitForURL('**/dashboard');
+    await page.waitForURL('**/c/**');
     return { page, context };
 }
 async function audit(name, page) {

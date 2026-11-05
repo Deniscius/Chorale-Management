@@ -150,7 +150,7 @@ class FinalAuditTest extends TestCase
     public function test_password_change_revokes_an_existing_business_session(): void
     {
         [$tenant, $admin] = $this->space();
-        $this->post('/login', ['login' => $admin->username, 'password' => 'ChoraleSecret2026'])->assertRedirect(route('dashboard'));
+        $this->post('/login', ['login' => $admin->username, 'password' => 'ChoraleSecret2026'])->assertRedirect(route('tenant.entry', ['slug' => $tenant->slug]));
         $this->get('/dashboard')->assertOk();
         $this->within($tenant, fn () => $admin->fresh()->forceFill(['password' => 'ChangedSecret2026'])->save());
         Auth::guard('web')->forgetUser();
@@ -160,8 +160,8 @@ class FinalAuditTest extends TestCase
 
     public function test_profile_password_change_keeps_its_current_session_valid(): void
     {
-        [, $admin] = $this->space();
-        $this->post('/login', ['login' => $admin->username, 'password' => 'ChoraleSecret2026'])->assertRedirect(route('dashboard'));
+        [$tenant, $admin] = $this->space();
+        $this->post('/login', ['login' => $admin->username, 'password' => 'ChoraleSecret2026'])->assertRedirect(route('tenant.entry', ['slug' => $tenant->slug]));
         $this->get('/dashboard')->assertOk();
         $this->put('/password', ['current_password' => 'ChoraleSecret2026', 'password' => 'ChangedSecret2026', 'password_confirmation' => 'ChangedSecret2026'])->assertSessionHasNoErrors()->assertSessionHas('status', 'password-updated');
         Auth::guard('web')->forgetUser();
@@ -174,7 +174,7 @@ class FinalAuditTest extends TestCase
         Admin::create(['name' => 'Owner', 'email' => 'owner@example.test', 'password' => 'OwnerPassword2026', 'totp_secret' => $secret]);
         $this->post('/plateforme/connexion', ['email' => 'owner@example.test', 'password' => 'OwnerPassword2026', 'code' => app(Totp::class)->code($secret, intdiv(now()->timestamp, 30))])->assertRedirect('/plateforme');
         [$tenant, $admin] = $this->space();
-        $this->post('/login', ['login' => $admin->username, 'password' => 'ChoraleSecret2026'])->assertRedirect(route('dashboard'));
+        $this->post('/login', ['login' => $admin->username, 'password' => 'ChoraleSecret2026'])->assertRedirect(route('tenant.entry', ['slug' => $tenant->slug]));
         $this->get('/dashboard')->assertOk();
         $this->within($tenant, fn () => $admin->fresh()->forceFill(['password' => 'ChangedSecret2026'])->save());
         Auth::guard('web')->forgetUser();
@@ -338,7 +338,7 @@ class FinalAuditTest extends TestCase
     public function test_password_revocation_is_enforced_on_an_already_open_livewire_component(): void
     {
         [$tenant, $admin] = $this->space();
-        $this->post('/login', ['login' => $admin->username, 'password' => 'ChoraleSecret2026'])->assertRedirect(route('dashboard'));
+        $this->post('/login', ['login' => $admin->username, 'password' => 'ChoraleSecret2026'])->assertRedirect(route('tenant.entry', ['slug' => $tenant->slug]));
         $page = $this->get('/membres')->assertOk()->getContent();
         preg_match('/wire:snapshot="([^"]+)"/', $page, $snapshot);
         preg_match('/data-update-uri="([^"]+)"/', $page, $uri);

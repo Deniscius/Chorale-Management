@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\MemberStatus;
 use App\Models\Tenant;
 use App\Tenancy\TenantContext;
 use Closure;
@@ -35,6 +36,13 @@ final class EstablishTenant
             if ($request->user()) {
                 $tenant = Tenant::findOrFail($context->requireId());
                 $request->attributes->set('tenant', $tenant);
+                if ($request->user()->member && $request->user()->member->status !== MemberStatus::Actif) {
+                    auth()->logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+
+                    return redirect()->route('login')->withErrors(['login' => 'Cet accès est actuellement suspendu. Contactez un responsable de la chorale.']);
+                }
                 if (! $tenant->hasAccess() && ! $request->routeIs('billing.*', 'logout', 'verification.*')) {
                     if ($request->hasHeader('X-Livewire') || $request->expectsJson()) {
                         return response()->json(['message' => 'Votre accès a expiré.', 'redirect' => route('billing.show')], 402, ['Cache-Control' => 'no-store, private']);

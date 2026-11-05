@@ -17,12 +17,16 @@ return new class extends Migration
             $table->string('phone', 30)->nullable();
             $table->string('voice', 30)->nullable();
             $table->string('status', 20)->default('pending');
+            $table->string('email_verification_hash', 64)->unique();
+            $table->timestamp('email_verification_expires_at');
+            $table->timestamp('email_verified_at')->nullable();
             $table->unsignedBigInteger('member_id')->nullable();
             $table->unsignedBigInteger('reviewed_by')->nullable();
             $table->timestamp('reviewed_at')->nullable();
             $table->timestamps();
 
             $table->index(['tenant_id', 'status', 'created_at']);
+            $table->index(['tenant_id', 'email_verified_at']);
             $table->index(['tenant_id', 'email']);
             $table->index('member_id');
             $table->index('reviewed_by');

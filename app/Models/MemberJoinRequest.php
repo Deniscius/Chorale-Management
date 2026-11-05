@@ -17,13 +17,13 @@ final class MemberJoinRequest extends Model
     public const STATUS_DECLINED = 'declined';
 
     protected $fillable = [
-        'first_name', 'last_name', 'email', 'phone', 'voice', 'status',
+        'first_name', 'last_name', 'email', 'phone', 'voice', 'status', 'email_verification_hash', 'email_verification_expires_at', 'email_verified_at',
         'member_id', 'reviewed_by', 'reviewed_at',
     ];
 
     protected function casts(): array
     {
-        return ['reviewed_at' => 'immutable_datetime'];
+        return ['reviewed_at' => 'immutable_datetime', 'email_verification_expires_at' => 'immutable_datetime', 'email_verified_at' => 'immutable_datetime'];
     }
 
     public function member(): BelongsTo

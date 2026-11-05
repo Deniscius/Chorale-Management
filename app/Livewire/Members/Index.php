@@ -117,6 +117,23 @@ class Index extends Component
         Member::withTrashed()->findOrFail($memberId)->restore();
     }
 
+    /** Suspendre l'accès sans effacer la fiche ni l'historique comptable. */
+    public function ban(int $memberId): void
+    {
+        $this->authorizeManage();
+        $member = Member::findOrFail($memberId);
+        abort_if((int) auth()->user()?->member_id === $member->id, 422, 'Vous ne pouvez pas vous bannir vous-même.');
+        $member->update(['status' => MemberStatus::Inactif, 'left_on' => today()]);
+        $this->dispatch('toast', type: 'success', message: 'Le choriste est banni. Sa fiche et son historique sont conservés.');
+    }
+
+    public function unban(int $memberId): void
+    {
+        $this->authorizeManage();
+        Member::findOrFail($memberId)->update(['status' => MemberStatus::Actif, 'left_on' => null]);
+        $this->dispatch('toast', type: 'success', message: 'Le choriste peut à nouveau accéder à son espace.');
+    }
+
     #[Computed]
     public function members()
     {

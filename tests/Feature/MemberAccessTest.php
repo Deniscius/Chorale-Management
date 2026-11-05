@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserRole;
 use App\Livewire\Members\Access;
 use App\Livewire\Members\Form;
+use App\Livewire\Members\Index;
 use App\Models\Choir;
 use App\Models\Member;
 use App\Models\MemberInvitation;
@@ -79,6 +80,17 @@ class MemberAccessTest extends TestCase
         Livewire::actingAs($user)->test(Access::class, ['member' => $member])->assertForbidden();
         Livewire::test(Form::class)->set('first_name', 'Jean')->set('last_name', 'Test')->call('save')->assertHasNoErrors()->assertDispatched('close-form');
         $this->assertDatabaseCount('member_invitations', 0);
+    }
+
+    public function test_responsible_can_ban_and_restore_a_member_without_deleting_history(): void
+    {
+        $director = User::factory()->role(UserRole::Directeur)->create();
+        $member = Member::factory()->create(['status' => 'actif']);
+
+        Livewire::actingAs($director)->test(Index::class)->call('ban', $member->id)->assertHasNoErrors();
+        $this->assertSame('inactif', $member->fresh()->status->value);
+        Livewire::actingAs($director)->test(Index::class)->call('unban', $member->id)->assertHasNoErrors();
+        $this->assertSame('actif', $member->fresh()->status->value);
     }
 
     public function test_existing_account_role_changes_preserve_all_personal_credentials(): void

@@ -46,6 +46,7 @@ class ArchitectureTest extends TestCase
         'tenant.login',
         'tenant.join.create',
         'tenant.join.store',
+        'tenant.join.verify',
         'member-activation.show',
         'member-activation.store',
         // Authentification machine OIDC GitHub, vérifiée par son test dédié.

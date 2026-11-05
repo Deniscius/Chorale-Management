@@ -14,7 +14,7 @@
                     @foreach ($this->joinRequests as $request)
                         <tr wire:key="join-request-{{ $request->id }}">
                             <td class="p-3 font-medium">{{ $request->first_name }} {{ $request->last_name }}</td>
-                            <td class="p-3">{{ $request->email }}@if($request->phone)<br><span class="text-slate-600">{{ $request->phone }}</span>@endif</td>
+                            <td class="p-3">{{ $request->email }}<br><span class="text-xs {{ $request->email_verified_at ? 'text-emerald-700' : 'text-amber-700' }}">{{ $request->email_verified_at ? 'Adresse confirmée' : 'Confirmation attendue' }}</span>@if($request->phone)<br><span class="text-slate-600">{{ $request->phone }}</span>@endif</td>
                             <td class="p-3">{{ $request->voice ? \App\Enums\Voice::from($request->voice)->label() : 'À confirmer' }}</td>
                             <td class="p-3">{{ $request->created_at->format('d/m/Y H:i') }}</td>
                             <td class="p-3">

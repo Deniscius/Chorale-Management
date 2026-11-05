@@ -112,6 +112,7 @@ final class Index extends Component
         $activationUrl = DB::transaction(function () use ($requestId): string {
             $request = MemberJoinRequest::query()->lockForUpdate()->findOrFail($requestId);
             abort_unless($request->status === MemberJoinRequest::STATUS_PENDING, 409, 'Cette demande a déjà été traitée.');
+            abort_unless($request->email_verified_at, 422, 'L’adresse e-mail doit être confirmée par le choriste avant validation.');
             abort_if(Member::query()->where('email', $request->email)->exists(), 409, 'Cette adresse est déjà associée à un choriste.');
 
             $member = Member::create([

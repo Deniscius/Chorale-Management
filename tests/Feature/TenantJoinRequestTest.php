@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -62,6 +63,7 @@ final class TenantJoinRequestTest extends TestCase
         $tenant = $this->tenant();
         app(TenantContext::class)->run($tenant->id, fn () => MemberJoinRequest::create([
             'first_name' => 'Afi', 'last_name' => 'Kossi', 'email' => 'afi@example.test',
+            'email_verification_hash' => hash('sha256', Str::random(64)), 'email_verification_expires_at' => now()->addDay(),
         ]));
 
         $this->from(route('tenant.join.create', $tenant->slug))
@@ -80,6 +82,7 @@ final class TenantJoinRequestTest extends TestCase
         $admin = User::factory()->role(UserRole::Admin)->create();
         $request = app(TenantContext::class)->run($tenant->id, fn () => MemberJoinRequest::create([
             'first_name' => 'Afi', 'last_name' => 'Kossi', 'email' => 'afi@example.test', 'voice' => 'soprano',
+            'email_verification_hash' => hash('sha256', Str::random(64)), 'email_verification_expires_at' => now()->addDay(), 'email_verified_at' => now(),
         ]));
 
         Livewire::actingAs($admin)->test(Index::class)

@@ -74,6 +74,7 @@ Route::prefix('c/{slug}')->where(['slug' => '[a-z0-9]+(?:-[a-z0-9]+)*'])
         Route::post('/connexion', [AuthenticatedSessionController::class, 'store'])->middleware(['guest', 'throttle:60,1,chorale-login:'])->name('tenant.login');
         Route::get('/inscription', [TenantJoinRequestController::class, 'create'])->middleware('guest')->name('tenant.join.create');
         Route::post('/inscription', [TenantJoinRequestController::class, 'store'])->middleware(['guest', 'throttle:4,60,tenant-join:'])->name('tenant.join.store');
+        Route::get('/inscription/verifier/{token}', [TenantJoinRequestController::class, 'verify'])->middleware(['guest', 'throttle:20,1,tenant-join-verify:'])->name('tenant.join.verify');
     });
 
 Route::middleware('guest')->group(function () {

@@ -15,6 +15,7 @@ final class JoinRequestReceived extends Mailable
     public function __construct(
         public readonly string $firstName,
         public readonly string $tenantName,
+        public readonly string $verificationUrl,
     ) {}
 
     public function envelope(): Envelope

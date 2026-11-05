@@ -164,6 +164,11 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
                                             </svg>
                                         </button>
+                                        @if ($member->status->value === 'inactif')
+                                            <x-confirm-action :call="'unban('.$member->id.')'" title="Réautoriser ce choriste" :message="'Réautoriser '.$member->full_name.' à accéder à la chorale ?'" label="Réautoriser" trigger-class="rounded-lg p-2 text-emerald-700 transition hover:bg-emerald-50" />
+                                        @else
+                                            <x-confirm-action :call="'ban('.$member->id.')'" title="Bannir ce choriste" :message="'Le compte de '.$member->full_name.' ne pourra plus accéder à la chorale. Sa fiche et son historique restent conservés.'" label="Bannir" trigger-class="rounded-lg p-2 text-amber-700 transition hover:bg-amber-50" button-class="btn bg-amber-600 text-white hover:bg-amber-700" />
+                                        @endif
                                         <x-confirm-action :call="'delete('.$member->id.')'" title="Supprimer le choriste"
                                             :message="'Retirer '.$member->full_name.' de la liste des choristes ?'" label="Supprimer" icon="trash" icon-only
                                             trigger-class="rounded-lg p-2 text-slate-500 transition hover:bg-red-50 hover:text-red-600" button-class="btn bg-red-600 text-white hover:bg-red-700" />

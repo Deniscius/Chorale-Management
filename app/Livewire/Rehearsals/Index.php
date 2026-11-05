@@ -131,7 +131,10 @@ class Index extends Component
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->period === 'avenir', fn (Builder $query) => $query->whereDate('date', '>=', today()))
             ->when($this->period === 'passee', fn (Builder $query) => $query->whereDate('date', '<', today()))
-            ->orderByDesc('date')
+            // Un planning se lit de la prochaine séance vers les suivantes.
+            // L'historique conserve en revanche la séance la plus récente en tête.
+            ->when($this->period === 'avenir', fn (Builder $query) => $query->orderBy('date')->orderBy('starts_at')->orderBy('id'),
+                fn (Builder $query) => $query->orderByDesc('date')->orderByDesc('starts_at')->orderByDesc('id'))
             ->paginate(15);
     }
 

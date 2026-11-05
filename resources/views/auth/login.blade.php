@@ -3,6 +3,9 @@
 
     <h2 class="text-lg font-semibold text-slate-900">Connexion à votre espace</h2>
     <p class="mt-1 text-sm text-slate-500">Saisissez votre identifiant et votre mot de passe pour accéder à la gestion de la chorale.</p>
+    @unless(isset($loginAction))
+        <p class="mt-3 rounded-xl bg-sky-50 p-3 text-sm text-sky-950">Après connexion, vous rejoindrez automatiquement l’espace de votre chorale.</p>
+    @endunless
 
     <form method="POST" action="{{ $loginAction ?? route('login') }}" class="mt-6 space-y-5">
         @csrf

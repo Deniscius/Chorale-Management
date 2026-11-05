@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Services\SessionAuditRecorder;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Tenant;
+use App\Services\SessionAuditRecorder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,6 +40,19 @@ class AuthenticatedSessionController extends Controller
             $request->session()->forget('url.intended');
 
             return redirect()->route('tenant.entry', ['slug' => $tenant->slug]);
+        }
+
+        // Une connexion depuis l'adresse générale doit rejoindre l'espace de
+        // l'utilisateur. L'URL devient ainsi explicite et l'utilisateur ne
+        // peut jamais se retrouver dans une autre chorale par erreur.
+        if (config('tenancy.enabled') && $user?->tenant_id) {
+            $tenant = Tenant::find($user->tenant_id);
+
+            if ($tenant) {
+                $request->session()->forget('url.intended');
+
+                return redirect()->route('tenant.entry', ['slug' => $tenant->slug]);
+            }
         }
 
         return redirect()->intended(route('dashboard', absolute: false));

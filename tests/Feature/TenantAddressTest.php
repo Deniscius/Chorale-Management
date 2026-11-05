@@ -60,6 +60,16 @@ class TenantAddressTest extends TestCase
         $this->get('/parametres/chorale')->assertOk()->assertSee(route('tenant.entry', ['slug' => $alpha->slug]), false);
     }
 
+    public function test_general_login_redirects_to_the_authenticated_users_tenant_address(): void
+    {
+        [$tenant, $user] = $this->space('connexion-generale');
+
+        $this->post('/login', [
+            'login' => $user->username,
+            'password' => 'OwnerChoraleSecret2026',
+        ])->assertRedirect(route('tenant.entry', ['slug' => $tenant->slug], absolute: false));
+    }
+
     public function test_trial_expiration_on_personal_address_still_restricts_to_billing(): void
     {
         [$tenant, $user] = $this->space('expired');

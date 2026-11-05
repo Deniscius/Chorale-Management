@@ -1,7 +1,7 @@
 <x-mail::message>
 # {{ $subjectLine }}
 
-{!! nl2br(e($messageBody)) !!}
+<div style="white-space: pre-line">{{ $messageBody }}</div>
 
 @if ($actionLink && $actionLabel)
 <x-mail::button :url="$actionLink">

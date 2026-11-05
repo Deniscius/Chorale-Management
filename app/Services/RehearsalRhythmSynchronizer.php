@@ -4,8 +4,8 @@ namespace App\Services;
 
 use App\Enums\EventStatus;
 use App\Enums\RehearsalType;
-use App\Models\Rehearsal;
 use App\Models\NotificationDispatch;
+use App\Models\Rehearsal;
 use App\Models\RehearsalRhythm;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +27,7 @@ final class RehearsalRhythmSynchronizer
      * An edited/cancelled session, or one with attendance, works or reminders,
      * remains an explicit exception and must be handled individually.
      *
-     * @param array<string, mixed>|null $previous previous rhythm attributes
+     * @param  array<string, mixed>|null  $previous  previous rhythm attributes
      * @return array{updated:int,cancelled:int,protected:int,created:int}
      */
     public function synchronize(RehearsalRhythm $rhythm, ?array $previous, bool $repairLegacy = false): array
@@ -36,7 +36,17 @@ final class RehearsalRhythmSynchronizer
         if ($previous !== null) {
             DB::transaction(function () use ($rhythm, $previous, $repairLegacy, &$counts): void {
                 $current = RehearsalRhythm::query()->whereKey($rhythm->id)->lockForUpdate()->firstOrFail();
-                $sessions = Rehearsal::query()->where('rehearsal_rhythm_id', $current->id)
+                $sessions = Rehearsal::query()->where(function ($query) use ($current, $repairLegacy): void {
+                    $query->where('rehearsal_rhythm_id', $current->id);
+                    // Older generated sessions predate the rhythm foreign key.
+                    // Reconcile only their untouched automatic form; all manual
+                    // work, attendance and sent reminders stays protected below.
+                    if ($repairLegacy) {
+                        $query->orWhere(fn ($legacy) => $legacy->whereNull('rehearsal_rhythm_id')
+                            ->where('choir_id', $current->choir_id)
+                            ->where('notes', self::GENERATED_NOTE));
+                    }
+                })
                     ->where(function ($query): void {
                         $query->whereDate('date', '>', today()->toDateString())
                             ->orWhere(fn ($today) => $today->whereDate('date', today()->toDateString())
@@ -91,6 +101,7 @@ final class RehearsalRhythmSynchronizer
 
                     $session->fill([
                         'choir_id' => $current->choir_id,
+                        'rehearsal_rhythm_id' => $current->id,
                         'starts_at' => $current->starts_at,
                         'ends_at' => $current->ends_at,
                         'venue' => $current->venue,

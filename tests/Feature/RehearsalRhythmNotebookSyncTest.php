@@ -3,21 +3,21 @@
 namespace Tests\Feature;
 
 use App\Enums\EventStatus;
+use App\Enums\UserRole;
+use App\Livewire\Rehearsals\Rhythms;
 use App\Models\Choir;
 use App\Models\Member;
 use App\Models\NotificationDispatch;
 use App\Models\Rehearsal;
 use App\Models\RehearsalRhythm;
 use App\Models\User;
-use App\Enums\UserRole;
-use App\Livewire\Rehearsals\Rhythms;
-use Livewire\Livewire;
 use App\Services\PersonalNotebook;
 use App\Services\RehearsalPlanner;
 use App\Services\RehearsalRhythmRemoval;
 use App\Services\RehearsalRhythmSynchronizer;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 final class RehearsalRhythmNotebookSyncTest extends TestCase
@@ -212,6 +212,25 @@ final class RehearsalRhythmNotebookSyncTest extends TestCase
             ->map(fn ($date) => $date->format('Y-m-d H:i'))->all();
         $this->assertContains('2026-11-08 11:00', $dates);
         $this->assertNotContains('2026-11-07 15:00', $dates);
+    }
+
+    public function test_livewire_save_repairs_untouched_future_sessions_created_before_rhythm_linking(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-04 09:00:00'));
+        $this->actingAs(User::factory()->role(UserRole::Admin)->create());
+        $rhythm = $this->rhythm();
+        Rehearsal::create([
+            'choir_id' => $rhythm->choir_id, 'date' => '2026-11-07', 'starts_at' => '15:00', 'ends_at' => '18:00',
+            'venue' => 'Salle A', 'type' => 'repetition', 'status' => 'planifiee', 'is_special' => false,
+            'notes' => RehearsalRhythmSynchronizer::GENERATED_NOTE,
+        ]);
+
+        Livewire::test(Rhythms::class)->call('edit', $rhythm->id)
+            ->set('weekday', '7')->set('starts_at', '10:00')->set('ends_at', '12:00')->set('venue', 'Salle B')
+            ->call('save')->assertHasNoErrors();
+
+        $this->assertSame(EventStatus::Annulee, Rehearsal::query()->whereDate('date', '2026-11-07')->firstOrFail()->status);
+        $this->assertSame('10:00', Rehearsal::query()->whereDate('date', '2026-11-08')->where('status', 'planifiee')->firstOrFail()->starts_at);
     }
 
     public function test_retired_rhythm_no_longer_appears_in_notebook_but_past_records_are_kept(): void

@@ -9,6 +9,7 @@ use App\Models\RehearsalRhythm;
 use App\Services\RehearsalPlanner;
 use App\Services\RehearsalRhythmRemoval;
 use App\Services\RehearsalRhythmSynchronizer;
+use App\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -22,13 +23,21 @@ final class Rhythms extends Component
     public const MODULE_KEY = UserRole::MODULE_LITURGIQUE;
 
     public string $choir_id = '';
+
     public string $weekday = '6';
+
     public string $starts_at = '15:00';
+
     public string $ends_at = '18:00';
+
     public string $venue = '';
+
     public string $effective_from = '';
+
     public string $effective_until = '';
+
     public bool $is_active = true;
+
     public ?int $editingId = null;
 
     public function mount(): void
@@ -57,7 +66,7 @@ final class Rhythms extends Component
     {
         $this->authorizeManage();
         $data = $this->validate([
-            'choir_id' => ['required', 'integer', Rule::exists('choirs', 'id')->where('tenant_id', app(\App\Tenancy\TenantContext::class)->requireId())],
+            'choir_id' => ['required', 'integer', Rule::exists('choirs', 'id')->where('tenant_id', app(TenantContext::class)->requireId())],
             'weekday' => ['required', 'integer', 'between:1,7'],
             'starts_at' => ['required', 'date_format:H:i'],
             'ends_at' => ['nullable', 'date_format:H:i', 'after:starts_at'],
@@ -76,10 +85,12 @@ final class Rhythms extends Component
                 $previous = $rhythm->exists ? $rhythm->getRawOriginal() : null;
                 $rhythm->fill($data)->save();
 
-                return $synchronizer->synchronize($rhythm, $previous);
+                // Include appointments produced before rhythm linking existed.
+                return $synchronizer->synchronize($rhythm, $previous, true);
             }, 3);
         } catch (UniqueConstraintViolationException) {
             $this->addError('weekday', 'Ce rythme est déjà enregistré pour cette chorale.');
+
             return;
         }
 
@@ -110,8 +121,7 @@ final class Rhythms extends Component
         $this->authorizeManage();
         $rhythm = RehearsalRhythm::query()->findOrFail($id);
         $result = $synchronizer->repairPreviouslyGenerated($rhythm);
-        $this->dispatch('toast', type: 'success', message:
-            'Carnets vérifiés : '.$result['updated'].' séance(s) corrigée(s), '.
+        $this->dispatch('toast', type: 'success', message: 'Carnets vérifiés : '.$result['updated'].' séance(s) corrigée(s), '.
             $result['cancelled'].' ancienne(s) annulée(s), '.
             $result['created'].' nouvelle(s) programmée(s).'.
             ($result['protected'] ? ' '.$result['protected'].' séance(s) avec modifications ou historique à vérifier manuellement.' : '')

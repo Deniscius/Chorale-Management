@@ -18,6 +18,10 @@ final class ContributionExemptions extends Component
 
     public string $type_code = 'mensuelle';
 
+    public string $scope = 'recurring';
+
+    public ?string $activity_id = null;
+
     public string $starts_on = '';
 
     public ?string $ends_on = null;
@@ -41,7 +45,8 @@ final class ContributionExemptions extends Component
     public function cancel(): void
     {
         $this->resetValidation();
-        $this->reset('ends_on', 'reason', 'clears_prior_arrears');
+        $this->reset('ends_on', 'reason', 'clears_prior_arrears', 'activity_id');
+        $this->scope = 'recurring';
         $this->starts_on = today()->toDateString();
         $this->showModal = false;
     }
@@ -49,12 +54,23 @@ final class ContributionExemptions extends Component
     public function save(): void
     {
         $data = $this->validate([
-            'type_code' => ['required', Rule::in(array_keys($this->typeOptions))],
-            'starts_on' => ['required', 'date'],
+            'scope' => ['required', Rule::in(['recurring', 'activity'])],
+            'type_code' => ['required_if:scope,recurring', 'nullable', Rule::in(array_keys($this->typeOptions))],
+            'activity_id' => ['required_if:scope,activity', 'nullable', Rule::exists('activities', 'id')],
+            'starts_on' => ['required_if:scope,recurring', 'nullable', 'date'],
             'ends_on' => ['nullable', 'date', 'after_or_equal:starts_on'],
             'clears_prior_arrears' => ['boolean'],
             'reason' => ['nullable', 'string', 'max:500'],
         ]);
+        if ($data['scope'] === 'activity') {
+            $activity = $this->activityContributions->firstWhere('activity_id', (int) $data['activity_id']);
+            abort_unless($activity, 403);
+            $data['type_code'] = $activity->type_code;
+            $data['starts_on'] = $activity->due_on;
+            $data['ends_on'] = $activity->due_on;
+            $data['clears_prior_arrears'] = false;
+        }
+        unset($data['scope']);
         [, $updated] = app(ContributionExemptionManager::class)->create([...$data, 'member_id' => $this->member->id, 'approved_by' => auth()->id()]);
         $this->cancel();
         $this->dispatch('toast', type: 'success', message: $updated > 0
@@ -72,6 +88,12 @@ final class ContributionExemptions extends Component
     public function typeOptions(): array
     {
         return app(FinancialCatalog::class)->options('contribution');
+    }
+
+    #[Computed]
+    public function activityContributions()
+    {
+        return \App\Models\Contribution::query()->with('activity:id,title,starts_at')->where('member_id', $this->member->id)->whereNotNull('activity_id')->where('paid_amount', '<=', 0)->get();
     }
 
     public function render()

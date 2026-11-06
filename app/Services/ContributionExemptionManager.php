@@ -32,6 +32,12 @@ final class ContributionExemptionManager
      */
     public function applyToExistingContributions(ContributionExemption $exemption): int
     {
+        if ($exemption->activity_id) {
+            return Contribution::query()->where('member_id', $exemption->member_id)->where('activity_id', $exemption->activity_id)
+                ->where('paid_amount', '<=', 0)->where('status', '!=', ContributionStatus::Exoneree->value)
+                ->update(['exemption_id' => $exemption->id, 'due_amount' => 0, 'status' => ContributionStatus::Exoneree->value,
+                    'notes' => 'Exonération de participation à l’activité : '.($exemption->reason ?: 'décision de la chorale').'.']);
+        }
         $startsOn = CarbonImmutable::instance($exemption->starts_on)->startOfDay();
         $endsOn = $exemption->ends_on
             ? CarbonImmutable::instance($exemption->ends_on)->endOfDay()

@@ -7,6 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
+use App\Services\ChoraleIdentity;
 
 final class PlatformReminderNotification extends Notification
 {
@@ -59,11 +60,12 @@ final class PlatformReminderNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject($this->title.' — Chorale Management')
+            ->subject($this->title.' — '.app(ChoraleIdentity::class)->name())
             ->greeting('Bonjour '.($notifiable->member?->first_name ?: Str::before((string) $notifiable->name, ' ')).',')
             ->line($this->personalizedMessage($notifiable))
             ->action('Ouvrir mon carnet', url($this->safeUrl()))
-            ->line('Vous recevez ce rappel car les notifications e-mail sont activées dans votre fiche choriste.');
+            ->line('Message envoyé par '.app(ChoraleIdentity::class)->name().'.')
+            ->line('Vous recevez cette information car les notifications e-mail sont activées dans votre fiche choriste.');
     }
 
     private function personalizedMessage(object $notifiable): string

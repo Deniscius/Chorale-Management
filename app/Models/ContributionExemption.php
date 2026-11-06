@@ -10,7 +10,7 @@ final class ContributionExemption extends Model
 {
     use BelongsToTenant;
 
-    protected $fillable = ['member_id', 'type_code', 'starts_on', 'ends_on', 'clears_prior_arrears', 'reason', 'approved_by'];
+    protected $fillable = ['member_id', 'activity_id', 'type_code', 'starts_on', 'ends_on', 'clears_prior_arrears', 'reason', 'approved_by'];
 
     protected function casts(): array
     {
@@ -20,6 +20,11 @@ final class ContributionExemption extends Model
     public function member(): BelongsTo
     {
         return $this->belongsTo(Member::class);
+    }
+
+    public function activity(): BelongsTo
+    {
+        return $this->belongsTo(Activity::class);
     }
 
     public function approver(): BelongsTo

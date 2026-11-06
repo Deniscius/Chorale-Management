@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\ContributionStatus;
+use App\Enums\UserRole;
 use App\Models\Contribution;
 use App\Models\FinancialType;
 use App\Models\Member;
@@ -17,6 +18,25 @@ use Tests\TestCase;
 class ContributionExemptionManagerTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_activity_participation_exemption_needs_no_period_and_keeps_payments(): void
+    {
+        $admin = $this->admin();
+        app(TenantContext::class)->run($admin->tenant_id, function () use ($admin): void {
+            $member = Member::factory()->create();
+            $activity = \App\Models\Activity::factory()->create();
+            $type = new FinancialType;
+            $type->forceFill(['code' => 'participation-activite-'.$activity->id, 'label' => 'Participation', 'label_key' => 'participation', 'kind' => 'contribution'])->save();
+            $unpaid = Contribution::factory()->create(['member_id' => $member->id, 'activity_id' => $activity->id, 'type_code' => $type->code, 'due_amount' => 3000, 'paid_amount' => 0, 'status' => 'due']);
+            $otherActivity = \App\Models\Activity::factory()->create();
+            $paid = Contribution::factory()->create(['member_id' => $member->id, 'activity_id' => $otherActivity->id, 'type_code' => $type->code, 'due_amount' => 3000, 'paid_amount' => 3000, 'status' => 'payee']);
+            [$exemption, $count] = app(ContributionExemptionManager::class)->create(['member_id' => $member->id, 'activity_id' => $activity->id, 'type_code' => $type->code, 'starts_on' => today(), 'ends_on' => today(), 'reason' => 'Décision', 'approved_by' => $admin->id]);
+            $this->assertSame(1, $count);
+            $this->assertSame($exemption->id, $unpaid->fresh()->exemption_id);
+            $this->assertSame(0.0, (float) $unpaid->fresh()->due_amount);
+            $this->assertSame(3000.0, (float) $paid->fresh()->paid_amount);
+        });
+    }
 
     protected function setUp(): void
     {

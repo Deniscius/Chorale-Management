@@ -37,7 +37,7 @@ class PersonalProfilesAndCommissionsTest extends TestCase
         $this->assertSame(UserRole::Choriste, $user->fresh()->role);
         $this->assertSame($member->id, $user->fresh()->member_id);
         $this->assertSame('anne@example.test', $member->fresh()->email);
-        $this->assertFalse($member->fresh()->notify_email);
+        $this->assertTrue($member->fresh()->notify_email);
         $this->actingAs($user)->get('/profile')->assertOk()->assertSee('Mes informations personnelles');
     }
 

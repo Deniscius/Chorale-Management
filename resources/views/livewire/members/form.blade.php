@@ -41,9 +41,9 @@
             </legend>
             <div class="mt-1 flex flex-wrap items-center gap-x-6 gap-y-2">
                 <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                    <input type="checkbox" aria-describedby="members-form-notify_email-error" aria-invalid="{{ $errors->has('notify_email') ? 'true' : 'false' }}" wire:model="notify_email" @disabled((bool) $member)
+                    <input type="checkbox" checked disabled
                         class="form-checkbox rounded border-slate-300 text-slate-900 focus:ring-slate-500">
-                    Recevoir un e-mail
+                    E-mail obligatoire
                 </label>
 
                 <label class="inline-flex items-center gap-2 text-sm text-slate-700">

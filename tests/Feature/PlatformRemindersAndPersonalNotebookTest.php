@@ -54,7 +54,7 @@ final class PlatformRemindersAndPersonalNotebookTest extends TestCase
         Carbon::setTestNow();
     }
 
-    public function test_platform_reminders_use_brevo_mail_only_when_the_chorister_opted_in(): void
+    public function test_platform_reminders_use_brevo_mail_for_every_chorister_with_an_email(): void
     {
         $member = Member::factory()->active()->create(['email' => 'alice@example.test', 'notify_email' => true]);
         $user = User::factory()->create(['name' => 'Alice Koffi', 'member_id' => $member->id]);
@@ -62,10 +62,10 @@ final class PlatformRemindersAndPersonalNotebookTest extends TestCase
 
         config(['mail.delivery_enabled' => true]);
         $this->assertSame(['database', WebPushChannel::class, 'mail'], $notification->via($user));
-        $this->assertSame('Activité à venir — Chorale Management', $notification->toMail($user)->subject);
+        $this->assertSame('Activité à venir — Gestion Chorale', $notification->toMail($user)->subject);
 
         $member->update(['notify_email' => false]);
-        $this->assertSame(['database', WebPushChannel::class], $notification->via($user->fresh()));
+        $this->assertSame(['database', WebPushChannel::class, 'mail'], $notification->via($user->fresh()));
     }
 
     public function test_personal_obligations_notify_only_the_concerned_chorister(): void

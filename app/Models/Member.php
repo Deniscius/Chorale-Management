@@ -122,7 +122,7 @@ class Member extends Model
      */
     public function canReceiveEmail(): bool
     {
-        return $this->notify_email && filled($this->email);
+        return filled($this->email);
     }
 
     /**

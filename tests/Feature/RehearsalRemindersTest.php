@@ -148,19 +148,19 @@ class RehearsalRemindersTest extends TestCase
         $this->assertDatabaseCount('reminders', 1);
     }
 
-    public function test_les_preferences_de_notification_sont_respectees(): void
+    public function test_email_is_sent_even_when_an_old_email_preference_is_disabled(): void
     {
         Mail::fake();
 
         $this->rehearsalInTwoDays();
 
-        // Refuse l'e-mail : aucun rappel ne doit être journalisé.
+        // Historical opt-out values no longer block required e-mail notifications.
         $this->activeMember(['email' => 'sans-mail@exemple.ci', 'notify_email' => false]);
 
         $this->artisan('chorale:send-reminders')->assertSuccessful();
 
-        Mail::assertNothingSent();
-        $this->assertDatabaseCount('reminders', 0);
+        Mail::assertSentCount(1);
+        $this->assertDatabaseCount('reminders', 1);
     }
 
     public function test_un_email_absent_annule_le_canal_email(): void
@@ -190,7 +190,7 @@ class RehearsalRemindersTest extends TestCase
 
         $this->artisan('chorale:send-reminders')->assertSuccessful();
 
-        $this->assertDatabaseCount('reminders', 0);
+        $this->assertDatabaseCount('reminders', 1);
     }
 
     public function test_le_sms_part_quand_le_canal_est_active(): void

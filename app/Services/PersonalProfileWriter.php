@@ -25,9 +25,10 @@ final class PersonalProfileWriter
             $personal = Arr::only($data, PersonalInformationObserver::MEMBER_FIELDS);
             if (! $member && isset($data['first_name'], $data['last_name'])) {
                 // Never infer a name, date, voice, choir assignment or notification consent.
-                $member = Member::create($personal + ['notify_email' => false, 'notify_sms' => false]);
+                $member = Member::create($personal + ['notify_email' => true, 'notify_sms' => false]);
                 $user->attachNewPersonalMember($member);
             } elseif ($member) {
+                $personal['notify_email'] = true;
                 $member->fill($personal)->save();
             }
             if ($member) {

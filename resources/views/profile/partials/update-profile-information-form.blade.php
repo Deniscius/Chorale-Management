@@ -34,12 +34,12 @@
         <fieldset class="rounded-xl border border-slate-200 p-4">
             <legend class="px-2 font-semibold text-slate-900">3. Mes rappels de répétition</legend>
             <div class="flex flex-wrap gap-4">
-                @foreach(['notify_email' => 'Par e-mail', 'notify_sms' => 'Par SMS'] as $field => $label)
-                    <input type="hidden" name="{{ $field }}" value="0">
-                    <label class="help-control inline-flex items-center gap-2 text-sm"><input type="checkbox" name="{{ $field }}" value="1" @checked(old($field, $user->member?->$field ?? false)) class="h-5 w-5 rounded border-slate-300">{{ $label }}</label>
-                @endforeach
+                <input type="hidden" name="notify_email" value="1">
+                <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" checked disabled class="h-5 w-5 rounded border-slate-300"> Par e-mail (obligatoire)</label>
+                <input type="hidden" name="notify_sms" value="0">
+                <label class="help-control inline-flex items-center gap-2 text-sm"><input type="checkbox" name="notify_sms" value="1" @checked(old('notify_sms', $user->member?->notify_sms ?? false)) class="h-5 w-5 rounded border-slate-300">Par SMS</label>
             </div>
-            <p class="mt-2 text-sm text-slate-700">Ces choix concernent les rappels. Ils ne donnent aucun rôle supplémentaire et restent soumis aux services activés par votre chorale.</p>
+            <p class="mt-2 text-sm text-slate-700">Les notifications sont envoyées par e-mail à toute adresse renseignée. Le SMS reste facultatif.</p>
         </fieldset>
         <div class="flex flex-wrap items-center gap-4">
             <x-primary-button class="max-w-full whitespace-normal">Enregistrer mes informations</x-primary-button>

@@ -55,7 +55,7 @@ final class ReminderDispatcher
         $result = ['sent' => 0, 'queued' => 0, 'skipped' => 0, 'failed' => 0];
         $members = Member::with('user')->where('status', MemberStatus::Actif->value)
             ->when($rehearsal->choir_id, fn ($q) => $q->where('choir_id', $rehearsal->choir_id))
-            ->where(fn ($q) => $q->where('notify_email', true)->orWhere('notify_sms', true)->orWhereHas('user'))
+            ->where(fn ($q) => $q->whereNotNull('email')->orWhere('notify_sms', true)->orWhereHas('user'))
             ->orderBy('id')->lazyById(200);
         foreach ($members as $member) {
             $channels = [];

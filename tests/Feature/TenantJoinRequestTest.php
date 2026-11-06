@@ -95,4 +95,17 @@ final class TenantJoinRequestTest extends TestCase
         Mail::assertSent(TenantAnnouncement::class, fn ($mail) => $mail->hasTo('afi@example.test'));
         $this->assertDatabaseCount('member_invitations', 1);
     }
+
+    public function test_admin_can_approve_without_an_extra_pre_activation_email_step(): void
+    {
+        $tenant = $this->tenant();
+        $admin = User::factory()->role(UserRole::Admin)->create();
+        $request = app(TenantContext::class)->run($tenant->id, fn () => MemberJoinRequest::create([
+            'first_name' => 'Kossi', 'last_name' => 'Afi', 'email' => 'kossi@example.test',
+            'email_verification_hash' => hash('sha256', Str::random(64)), 'email_verification_expires_at' => now()->addDay(),
+        ]));
+
+        Livewire::actingAs($admin)->test(Index::class)->call('approveJoinRequest', $request->id)->assertHasNoErrors();
+        $this->assertDatabaseHas('member_join_requests', ['id' => $request->id, 'status' => 'approved']);
+    }
 }

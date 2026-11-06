@@ -90,7 +90,7 @@ final class TenantJoinRequestController extends Controller
         });
 
         return redirect()->route('tenant.entry', ['slug' => $tenant->slug])
-            ->with('status', 'Votre demande a été envoyée. Confirmez votre adresse e-mail avant la vérification par un responsable.');
+            ->with('status', 'Votre demande a été envoyée. Un responsable va la vérifier puis vous recevrez votre lien personnel d’activation.');
     }
 
     public function verify(Request $request, string $token): RedirectResponse

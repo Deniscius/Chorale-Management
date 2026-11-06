@@ -111,10 +111,6 @@ final class Index extends Component
         abort_unless(auth()->user()?->can('manage-users'), 403);
 
         $pending = MemberJoinRequest::query()->findOrFail($requestId);
-        if (! $pending->email_verified_at) {
-            $this->dispatch('toast', type: 'error', message: 'Impossible d’accepter cette demande : le choriste doit d’abord confirmer son adresse e-mail depuis le lien reçu.');
-            return;
-        }
         if (Member::query()->where('email', $pending->email)->exists()) {
             $this->dispatch('toast', type: 'error', message: 'Impossible d’accepter cette demande : cette adresse e-mail est déjà associée à un choriste.');
             return;

@@ -78,6 +78,9 @@ final class MemberOnboarding
                 'name' => $member->full_name, 'username' => $validated['username'], 'email' => $validated['email'],
                 'password' => $validated['password'], 'role' => $locked->role, 'member_id' => $member->id,
             ]);
+            // The one-time activation link is delivered to this exact address;
+            // using it is the verification step, avoiding a confusing second link.
+            $user->forceFill(['email_verified_at' => now()])->saveQuietly();
             $member->update(['email' => $validated['email']]);
             $locked->forceFill(['accepted_at' => now()])->save();
             if ($member->status === MemberStatus::Invite) {

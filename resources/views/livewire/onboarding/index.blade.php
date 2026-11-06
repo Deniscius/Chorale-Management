@@ -6,7 +6,7 @@
         <section class="overflow-x-auto rounded-xl border border-amber-200 bg-amber-50">
             <div class="border-b border-amber-200 px-4 py-3">
                 <h2 class="font-semibold text-amber-950">Demandes reçues depuis le lien de la chorale</h2>
-                <p class="mt-1 text-sm text-amber-900">Vérifiez chaque personne avant de créer son accès. Le lien d’activation est envoyé par e-mail.</p>
+                <p class="mt-1 text-sm text-amber-900">Vérifiez chaque personne avant de créer son accès. Le lien d’activation personnel est envoyé par e-mail après acceptation.</p>
             </div>
             <table class="min-w-full divide-y divide-amber-100 text-sm">
                 <thead class="text-left text-amber-950"><tr><th class="p-3">Personne</th><th class="p-3">Contact</th><th class="p-3">Pupitre</th><th class="p-3">Reçue le</th><th class="p-3">Décision</th></tr></thead>
@@ -14,7 +14,7 @@
                     @foreach ($this->joinRequests as $request)
                         <tr wire:key="join-request-{{ $request->id }}">
                             <td class="p-3 font-medium">{{ $request->first_name }} {{ $request->last_name }}</td>
-                            <td class="p-3">{{ $request->email }}<br><span class="text-xs {{ $request->email_verified_at ? 'text-emerald-700' : 'text-amber-700' }}">{{ $request->email_verified_at ? 'Adresse confirmée' : 'Confirmation attendue' }}</span>@if($request->phone)<br><span class="text-slate-600">{{ $request->phone }}</span>@endif</td>
+                            <td class="p-3">{{ $request->email }}<br><span class="text-xs text-slate-600">Lien d’activation envoyé après acceptation</span>@if($request->phone)<br><span class="text-slate-600">{{ $request->phone }}</span>@endif</td>
                             <td class="p-3">{{ $request->voice ? \App\Enums\Voice::from($request->voice)->label() : 'À confirmer' }}</td>
                             <td class="p-3">{{ $request->created_at->format('d/m/Y H:i') }}</td>
                             <td class="p-3">

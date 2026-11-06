@@ -3,13 +3,9 @@
 
 Bonjour {{ $firstName }},
 
-Votre demande pour rejoindre **{{ $tenantName }}** a bien été enregistrée. Confirmez d’abord cette adresse e-mail :
+Votre demande pour rejoindre **{{ $tenantName }}** a bien été enregistrée. Un responsable va l’examiner.
 
-<x-mail::button :url="$verificationUrl">
-Confirmer mon adresse e-mail
-</x-mail::button>
-
-Ce lien expire dans 24 heures. Après confirmation, un responsable vérifiera votre demande puis vous recevrez votre lien personnel d’activation.
+Lorsque la demande sera acceptée, vous recevrez ici un lien personnel pour choisir votre identifiant et votre mot de passe. L’ouverture de ce lien confirmera que cette adresse e-mail vous appartient.
 
 Bien fraternellement,  
 {{ $tenantName }} · via {{ config('app.name') }}

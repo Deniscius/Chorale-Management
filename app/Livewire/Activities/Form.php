@@ -13,6 +13,8 @@ use App\Rules\ReadableText;
 use App\Services\ActivityParticipationFee;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
@@ -171,19 +173,34 @@ class Form extends Component
         ];
 
         $editing = $this->activity !== null;
-        $this->activity = DB::transaction(function () use ($data): Activity {
-            $activity = $this->activity;
-            if ($activity) {
-                $activity->update($data);
-            } else {
-                $activity = Activity::create($data + ['created_by' => auth()->id()]);
-            }
-            if ($activity->participation_fee_enabled) {
-                app(ActivityParticipationFee::class)->syncExisting($activity);
-            }
+        try {
+            $this->activity = DB::transaction(function () use ($data): Activity {
+                $activity = $this->activity;
+                if ($activity) {
+                    $activity->update($data);
+                } else {
+                    $activity = Activity::create($data + ['created_by' => auth()->id()]);
+                }
+                if ($activity->participation_fee_enabled) {
+                    app(ActivityParticipationFee::class)->syncExisting($activity);
+                }
 
-            return $activity;
-        }, 3);
+                return $activity;
+            }, 3);
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (\Throwable $exception) {
+            Log::error('Activity participation fee transaction failed.', [
+                'tenant_id' => app(\App\Tenancy\TenantContext::class)->id(),
+                'activity_id' => $this->activity?->id,
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
+            report($exception);
+            $this->addError('participation_fee_amount', 'La cotisation n’a pas pu être créée. L’activité n’a pas été modifiée.');
+
+            return;
+        }
         $message = $editing ? 'Activité mise à jour.' : 'Activité enregistrée.';
 
         $this->dispatch('toast', type: 'success', message: $message);

@@ -15,6 +15,7 @@ final class CommissionReportController
     public function __invoke(Request $request, ChoirCommission $commission, Letterhead $letterhead, ChoraleIdentity $identity)
     {
         $user = $request->user();
+        abort_unless((int) $commission->tenant_id === (int) $user->tenant_id, 404);
         $isGlobal = in_array($user->role, [UserRole::Admin, UserRole::Directeur], true);
         abort_unless($isGlobal || (int) $commission->leader_id === (int) $user->id || (int) $commission->associate_id === (int) $user->id, 403);
         abort_unless($commission->status === 'active', 404);

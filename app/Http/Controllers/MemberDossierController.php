@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Member;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 final class MemberDossierController extends Controller
 {
-    public function __invoke(Member $member): View
+    public function __invoke(Request $request, Member $member): View
     {
+        abort_unless((int) $member->tenant_id === (int) $request->user()->tenant_id, 404);
         Gate::authorize('view-member-dossier', $member);
 
         $canViewAttendance = Gate::allows('view-member-attendance', $member);

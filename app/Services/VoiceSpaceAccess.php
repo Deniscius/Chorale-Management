@@ -33,9 +33,15 @@ final class VoiceSpaceAccess
         abort_unless($this->isManager($user) || $this->ownVoice($user) === $voice, 403);
     }
 
+    public function authorizeRead(User $user, VoiceResource $resource): void
+    {
+        abort_unless((int) $resource->tenant_id === (int) $user->tenant_id, 404);
+        $this->authorizeVoice($user, $resource->voice);
+    }
+
     public function authorizeEdit(User $user, VoiceResource $resource): void
     {
-        $this->authorizeVoice($user, $resource->voice);
+        $this->authorizeRead($user, $resource);
         abort_unless($this->isManager($user) || (int) $resource->uploaded_by === (int) $user->id, 403);
     }
 

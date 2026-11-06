@@ -176,17 +176,17 @@ class AppServiceProvider extends ServiceProvider
         ], true));
         Gate::define('configure-attendance-finance', fn (User $user) => $user->role === UserRole::Directeur);
 
-        Gate::define('view-member-dossier', fn (User $user, Member $member) => $user->member_id === $member->id || in_array($user->role, [
+        Gate::define('view-member-dossier', fn (User $user, Member $member) => (int) $user->tenant_id === (int) $member->tenant_id && ($user->member_id === $member->id || in_array($user->role, [
             UserRole::Directeur, UserRole::Secretaire, UserRole::Tresorier,
-        ], true));
+        ], true)));
 
-        Gate::define('view-member-attendance', fn (User $user, Member $member) => $user->member_id === $member->id || in_array($user->role, [
+        Gate::define('view-member-attendance', fn (User $user, Member $member) => (int) $user->tenant_id === (int) $member->tenant_id && ($user->member_id === $member->id || in_array($user->role, [
             UserRole::Directeur, UserRole::Secretaire, UserRole::Tresorier,
             UserRole::CommissionLiturgique, UserRole::CommissionSuivieFormation,
-        ], true));
+        ], true)));
 
-        Gate::define('view-member-finance', fn (User $user, Member $member) => $user->member_id === $member->id || in_array($user->role, [
+        Gate::define('view-member-finance', fn (User $user, Member $member) => (int) $user->tenant_id === (int) $member->tenant_id && ($user->member_id === $member->id || in_array($user->role, [
             UserRole::Directeur, UserRole::Tresorier,
-        ], true));
+        ], true)));
     }
 }

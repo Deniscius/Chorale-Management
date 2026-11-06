@@ -31,8 +31,9 @@ final class MemberPhotoController extends Controller
         return $this->photoResponse($member, $files);
     }
 
-    public function member(Member $member, PrivateFiles $files): BinaryFileResponse|StreamedResponse
+    public function member(Request $request, Member $member, PrivateFiles $files): BinaryFileResponse|StreamedResponse
     {
+        abort_unless((int) $member->tenant_id === (int) $request->user()->tenant_id, 404);
         Gate::authorize('view-member-dossier', $member);
 
         return $this->photoResponse($member, $files);

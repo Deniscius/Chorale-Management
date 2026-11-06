@@ -14,7 +14,7 @@ final class VoiceResourceAudioController extends Controller
 {
     public function __invoke(Request $request, VoiceResource $resource, VoiceSpaceAccess $access, PrivateFiles $files): Response
     {
-        $access->authorizeVoice($request->user(), $resource->voice);
+        $access->authorizeRead($request->user(), $resource);
         abort_unless($resource->audio_path, 404);
         $contents = $files->contents($resource->audio_path);
         $size = strlen($contents);

@@ -4,13 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Instrument;
 use App\Services\PrivateFiles;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class InstrumentImageController extends Controller
 {
-    public function __invoke(Instrument $instrument): BinaryFileResponse|StreamedResponse
+    public function __invoke(Request $request, Instrument $instrument): BinaryFileResponse|StreamedResponse
     {
+        abort_unless((int) $instrument->tenant_id === (int) $request->user()->tenant_id, 404);
         abort_unless($instrument->image_path, 404);
         $mime = match (strtolower(pathinfo($instrument->image_path, PATHINFO_EXTENSION))) {
             'jpg', 'jpeg' => 'image/jpeg',

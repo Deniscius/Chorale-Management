@@ -7,12 +7,13 @@ use App\Models\Activity;
 use App\Models\Rehearsal;
 use App\Services\ChoraleIdentity;
 use App\Services\Letterhead;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 
 final class AttendanceReportController
 {
-    public function __invoke(string $eventType, int $event, Letterhead $letterhead, ChoraleIdentity $identity)
+    public function __invoke(Request $request, string $eventType, int $event, Letterhead $letterhead, ChoraleIdentity $identity)
     {
         abort_unless(Gate::any(['view-attendance', 'view-attendance-finance']), 403);
 
@@ -33,6 +34,8 @@ final class AttendanceReportController
         } else {
             abort(404);
         }
+
+        abort_unless((int) $record->tenant_id === (int) $request->user()->tenant_id, 404);
 
         abort_unless($record->attendance_finalized_at, 404, 'Cette fiche de présence n’est pas finalisée.');
 

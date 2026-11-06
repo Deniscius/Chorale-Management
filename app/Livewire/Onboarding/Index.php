@@ -15,6 +15,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -118,10 +119,11 @@ final class Index extends Component
             $this->dispatch('toast', type: 'error', message: 'Impossible d’accepter cette demande : cette adresse e-mail est déjà associée à un choriste.');
             return;
         }
-        $activationUrl = DB::transaction(function () use ($requestId): string {
+        try {
+            $activationUrl = DB::transaction(function () use ($requestId): string {
             $request = MemberJoinRequest::query()->lockForUpdate()->findOrFail($requestId);
             if ($request->status !== MemberJoinRequest::STATUS_PENDING) {
-                throw \Illuminate\Validation\ValidationException::withMessages(['request' => 'Cette demande a déjà été traitée.']);
+                throw ValidationException::withMessages(['request' => 'Cette demande a déjà été traitée.']);
             }
 
             $member = Member::create([
@@ -140,8 +142,17 @@ final class Index extends Component
                 'reviewed_at' => now(),
             ]);
 
-            return app(MemberOnboarding::class)->issue($member);
-        }, 3);
+                return app(MemberOnboarding::class)->issue($member);
+            }, 3);
+        } catch (ValidationException $exception) {
+            $message = collect($exception->errors())->flatten()->first() ?: 'La demande ne peut pas être acceptée dans son état actuel.';
+            $this->dispatch('toast', type: 'error', message: $message);
+            return;
+        } catch (\Throwable $exception) {
+            Log::error('Member join request approval failed.', ['request_id' => $requestId, 'exception' => $exception::class]);
+            $this->dispatch('toast', type: 'error', message: 'La demande n’a pas pu être acceptée. Réessayez ; si le problème persiste, contactez l’administrateur.');
+            return;
+        }
 
         $request = MemberJoinRequest::query()->findOrFail($requestId);
         $sent = false;

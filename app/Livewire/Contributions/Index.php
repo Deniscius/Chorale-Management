@@ -14,6 +14,7 @@ use App\Services\ManagementYearContext;
 use App\Services\ReceiptLedger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -126,16 +127,24 @@ class Index extends Component
         $this->authorizeManage();
         $contribution = Contribution::query()->with('member')->findOrFail($contributionId);
         $member = $contribution->member;
+        abort_unless(config('mail.delivery_enabled'), 422, 'L’envoi d’e-mails est temporairement désactivé.');
         abort_unless($member?->canReceiveEmail(), 422, 'Ce choriste n’a pas activé les notifications e-mail ou ne possède pas d’adresse e-mail.');
         abort_if($contribution->balance() <= 0 || $contribution->status === ContributionStatus::Exoneree, 422, 'Cette cotisation ne nécessite pas de relance.');
 
-        Mail::to($member->email)->send(new TenantAnnouncement(
-            'Rappel de cotisation — '.$contribution->typeLabel(),
-            'Bonjour '.$member->first_name.",\n\nVotre cotisation de ".$contribution->monthLabel().' '.$contribution->year.' présente un reste de '.number_format($contribution->balance(), 0, ',', ' ').' FCFA. Merci de vous rapprocher de la trésorerie.',
-            app(ChoraleIdentity::class)->name(),
-            route('personal-notebook.show'),
-            'Consulter mon carnet',
-        ));
+        try {
+            Mail::to($member->email)->send(new TenantAnnouncement(
+                'Rappel de cotisation — '.$contribution->typeLabel(),
+                'Bonjour '.$member->first_name.",\n\nVotre cotisation de ".$contribution->monthLabel().' '.$contribution->year.' présente un reste de '.number_format($contribution->balance(), 0, ',', ' ').' FCFA. Merci de vous rapprocher de la trésorerie.',
+                app(ChoraleIdentity::class)->name(),
+                route('personal-notebook.show'),
+                'Consulter mon carnet',
+            ));
+        } catch (\Throwable $exception) {
+            Log::warning('Contribution reminder delivery failed.', ['contribution_id' => $contribution->id, 'exception' => $exception::class]);
+            $this->dispatch('toast', type: 'error', message: 'Le rappel n’a pas pu être envoyé. Réessayez après vérification de Brevo.');
+
+            return;
+        }
         $this->dispatch('toast', type: 'success', message: 'Rappel envoyé par e-mail à '.$member->full_name.'.');
     }
 

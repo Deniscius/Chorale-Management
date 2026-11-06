@@ -62,6 +62,23 @@ class RehearsalRemindersTest extends TestCase
         ]);
     }
 
+    /** A bounded load check: each eligible member gets one e-mail and one ledger row. */
+    public function test_reminder_dispatch_scales_without_duplicate_email_reservations(): void
+    {
+        Mail::fake();
+        config()->set('chorale.reminders.queued', false);
+        $rehearsal = $this->rehearsalInTwoDays();
+        Member::factory()->count(300)->active()->create(['notify_email' => true, 'notify_sms' => false]);
+
+        $first = app(ReminderDispatcher::class)->dispatchForRehearsal($rehearsal);
+        $second = app(ReminderDispatcher::class)->dispatchForRehearsal($rehearsal);
+
+        $this->assertSame(300, $first['sent']);
+        $this->assertSame(300, $second['skipped']);
+        $this->assertDatabaseCount('reminders', 300);
+        Mail::assertSentCount(300);
+    }
+
     public function test_mail_delivery_kill_switch_prevents_email_reservations(): void
     {
         Mail::fake();

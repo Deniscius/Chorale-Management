@@ -7,6 +7,7 @@
             'items' => [
                 ['route' => 'dashboard', 'label' => 'Tableau de bord', 'icon' => 'home'],
                 ['route' => 'personal-notebook.show', 'label' => 'Mon carnet', 'icon' => 'calendar'],
+                ['route' => 'communications.compose', 'label' => 'Messages groupés', 'icon' => 'mail', 'any_module_manage' => [UserRole::MODULE_ACTIVITES, UserRole::MODULE_COURRIERS]],
                 ['route' => 'reports.index', 'label' => 'Centre de rapports', 'icon' => 'archive'],
                 ['route' => 'profile.edit', 'label' => 'Mes informations', 'icon' => 'user'],
                 ['route' => 'voice-space.index', 'label' => 'Mon pupitre', 'icon' => 'music', 'module' => UserRole::MODULE_LITURGIQUE],
@@ -105,6 +106,10 @@
                 $visible = collect($section['items'])->filter(function ($item) {
                     if ($item['admin'] ?? false) {
                         return auth()->user()?->can('manage-users');
+                    }
+
+                    if (isset($item['any_module_manage'])) {
+                        return collect($item['any_module_manage'])->contains(fn ($module) => auth()->user()?->can('manage-module', $module));
                     }
 
                     if (isset($item['module_manage'])) {

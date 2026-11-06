@@ -6,6 +6,7 @@ use App\Http\Controllers\ActivityFinancialReportController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ChoraleLogoController;
+use App\Http\Controllers\CommissionReportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentDownloadController;
 use App\Http\Controllers\DocumentPreviewController;
@@ -39,6 +40,7 @@ use App\Livewire\Audit\Index;
 use App\Livewire\Budgets\Index as BudgetsIndex;
 use App\Livewire\Contributions\CounterResets;
 use App\Livewire\Contributions\Index as ContributionsIndex;
+use App\Livewire\Communications\Compose as CommunicationsCompose;
 use App\Livewire\Correspondences\Index as CorrespondencesIndex;
 use App\Livewire\Documents\Index as DocumentsIndex;
 use App\Livewire\Donations\Index as DonationsIndex;
@@ -103,7 +105,9 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::post('/abonnement/activer', [BillingController::class, 'activate'])->middleware('throttle:5,1,billing-activation:')->name('billing.activate');
     Route::post('/abonnement/actualiser', [BillingController::class, 'refresh'])->middleware('throttle:5,1,billing-refresh:')->name('billing.refresh');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/messages', CommunicationsCompose::class)->name('communications.compose');
     Route::get('/rapports', ReportsCenterController::class)->name('reports.index');
+    Route::get('/rapports/commissions/{commission}', CommissionReportController::class)->name('reports.commission');
     Route::get('/mon-carnet', PersonalNotebookController::class)->name('personal-notebook.show');
 
     Route::get('/choristes/accueil-et-suivi', App\Livewire\Onboarding\Index::class)

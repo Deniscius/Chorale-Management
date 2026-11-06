@@ -87,6 +87,11 @@ class Member extends Model
         return $this->hasMany(ActivityParticipant::class);
     }
 
+    public function commissions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(ChoirCommission::class, 'choir_commission_member');
+    }
+
     public function contributions(): HasMany
     {
         return $this->hasMany(Contribution::class);

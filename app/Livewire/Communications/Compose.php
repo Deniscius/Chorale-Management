@@ -51,8 +51,8 @@ final class Compose extends Component
     #[Computed] public function candidates(): Collection
     {
         $query = Member::query()->with('user')->where('status', MemberStatus::Actif);
-        if ($this->audience === 'commission') { abort_unless($this->commissions->contains('id', (int) $this->commissionId), 403); $query->whereHas('commissions', fn ($q) => $q->whereKey((int) $this->commissionId)); }
-        if ($this->audience === 'activity') { abort_unless($this->activities->contains('id', (int) $this->activityId), 403); $query->whereHas('activityParticipants', fn ($q) => $q->where('activity_id', (int) $this->activityId)); }
+        if ($this->audience === 'commission') { if (! $this->commissions->contains('id', (int) $this->commissionId)) return collect(); $query->whereHas('commissions', fn ($q) => $q->whereKey((int) $this->commissionId)); }
+        if ($this->audience === 'activity') { if (! $this->activities->contains('id', (int) $this->activityId)) return collect(); $query->whereHas('activityParticipants', fn ($q) => $q->where('activity_id', (int) $this->activityId)); }
         return $query->orderBy('last_name')->orderBy('first_name')->get();
     }
     private function allowed(): bool { return auth()->user()?->canManageModule(UserRole::MODULE_ACTIVITES) || auth()->user()?->canManageModule(UserRole::MODULE_COURRIERS); }

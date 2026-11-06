@@ -5,10 +5,12 @@ namespace Tests\Feature;
 use App\Models\Activity;
 use App\Models\Contribution;
 use App\Models\Member;
+use App\Livewire\Activities\Form;
 use App\Services\ActivityParticipationFee;
 use App\Services\TenantRegistration;
 use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 final class ActivityParticipationFeeTest extends TestCase
@@ -46,6 +48,22 @@ final class ActivityParticipationFeeTest extends TestCase
             $this->assertSame('3500.00', $entries->first()->due_amount);
             $this->assertSame('2026-11-15', $entries->first()->due_on->toDateString());
             $this->assertSame($activity->id, $entries->first()->activity->id);
+        });
+    }
+
+    public function test_activity_form_can_toggle_the_participation_fee_section(): void
+    {
+        config(['tenancy.enabled' => true]);
+        $admin = app(TenantRegistration::class)->create([
+            'organization' => 'Chorale formulaire', 'name' => 'Responsable',
+            'username' => 'formulaire-admin', 'email' => 'formulaire@example.test', 'password' => 'SecretChorale2026',
+        ]);
+
+        app(TenantContext::class)->run($admin->tenant_id, function () use ($admin): void {
+            Livewire::actingAs($admin)->test(Form::class)
+                ->set('participation_fee_enabled', true)
+                ->assertSet('participation_fee_enabled', true)
+                ->assertSee('Montant demandé');
         });
     }
 }

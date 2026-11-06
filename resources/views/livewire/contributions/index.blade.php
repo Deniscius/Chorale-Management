@@ -92,7 +92,7 @@
         <x-data-table id="resultats" :headers="[
             ['label' => 'Choriste'],
             ['label' => 'Exercice'],
-            ['label' => 'Mois'],
+            ['label' => 'Période / activité'],
             ['label' => 'Dû', 'align' => 'text-right'],
             ['label' => 'Payé', 'align' => 'text-right'],
             ['label' => 'Solde', 'align' => 'text-right'],
@@ -109,7 +109,13 @@
                         {{ $contribution->year }}
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
-                        <span class="block text-xs text-slate-500">{{ $contribution->typeLabel() }}</span>{{ \App\Support\Months::short($contribution->month) }}
+                        <span class="block text-xs text-slate-500">{{ $contribution->typeLabel() }}</span>
+                        @if ($contribution->activity)
+                            <span class="font-medium text-slate-700">{{ $contribution->activity->title }}</span>
+                            <span class="block text-xs text-slate-500">{{ $contribution->due_on?->format('d/m/Y') }}</span>
+                        @else
+                            {{ \App\Support\Months::short($contribution->month) }}
+                        @endif
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-slate-700">
                         <x-money :value="$contribution->due_amount" />

@@ -10,7 +10,9 @@ use App\Models\Activity;
 use App\Models\Choir;
 use App\Models\ChoirCommission;
 use App\Rules\ReadableText;
+use App\Services\ActivityParticipationFee;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
@@ -63,6 +65,15 @@ class Form extends Component
     #[Validate('boolean')]
     public bool $is_public = false;
 
+    #[Validate('boolean')]
+    public bool $participation_fee_enabled = false;
+
+    #[Validate('nullable|numeric|min:1')]
+    public ?string $participation_fee_amount = null;
+
+    #[Validate('nullable|date')]
+    public ?string $participation_fee_due_on = null;
+
     protected function rules(): array
     {
         return [
@@ -95,9 +106,12 @@ class Form extends Component
                 'status' => $activity->status->value,
                 'report' => $activity->report,
                 'is_public' => (bool) $activity->is_public,
+                'participation_fee_enabled' => (bool) $activity->participation_fee_enabled,
+                'participation_fee_amount' => $activity->participation_fee_amount,
+                'participation_fee_due_on' => $activity->participation_fee_due_on?->format('Y-m-d'),
             ]);
         } else {
-            $this->starts_at = now()->addWeek()->format('Y-m-d H:i');
+            $this->starts_at = now()->addWeek()->format('Y-m-d\\TH:i');
             $this->choir_id = Choir::query()->value('id');
             $this->choir_commission_id = ChoirCommission::query()
                 ->whereNull('archived_at')
@@ -130,6 +144,11 @@ class Form extends Component
         $this->title = trim(preg_replace('/\\s+/u', ' ', $this->title));
         $this->venue = filled($this->venue) ? trim(preg_replace('/\\s+/u', ' ', $this->venue)) : null;
         $this->validate();
+        if ($this->participation_fee_enabled && blank($this->participation_fee_amount)) {
+            $this->addError('participation_fee_amount', 'Indiquez le montant demandé pour participer à cette activité.');
+
+            return;
+        }
 
         $data = [
             'title' => $this->title,
@@ -146,15 +165,26 @@ class Form extends Component
             'status' => $this->status,
             'report' => $this->report,
             'is_public' => $this->is_public,
+            'participation_fee_enabled' => $this->participation_fee_enabled,
+            'participation_fee_amount' => $this->participation_fee_enabled ? (float) $this->participation_fee_amount : null,
+            'participation_fee_due_on' => $this->participation_fee_enabled ? ($this->participation_fee_due_on ?: substr((string) $this->starts_at, 0, 10)) : null,
         ];
 
-        if ($this->activity) {
-            $this->activity->update($data);
-            $message = 'Activité mise à jour.';
-        } else {
-            $this->activity = Activity::create($data + ['created_by' => auth()->id()]);
-            $message = 'Activité enregistrée.';
-        }
+        $editing = $this->activity !== null;
+        $this->activity = DB::transaction(function () use ($data): Activity {
+            $activity = $this->activity;
+            if ($activity) {
+                $activity->update($data);
+            } else {
+                $activity = Activity::create($data + ['created_by' => auth()->id()]);
+            }
+            if ($activity->participation_fee_enabled) {
+                app(ActivityParticipationFee::class)->syncExisting($activity);
+            }
+
+            return $activity;
+        }, 3);
+        $message = $editing ? 'Activité mise à jour.' : 'Activité enregistrée.';
 
         $this->dispatch('toast', type: 'success', message: $message);
         $this->dispatch('close-form');

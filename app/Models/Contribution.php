@@ -24,6 +24,7 @@ class Contribution extends Model
     protected $fillable = [
         'type_code',
         'member_id',
+        'activity_id',
         'choir_id',
         'year',
         'month',
@@ -69,6 +70,11 @@ class Contribution extends Model
     public function choir(): BelongsTo
     {
         return $this->belongsTo(Choir::class);
+    }
+
+    public function activity(): BelongsTo
+    {
+        return $this->belongsTo(Activity::class);
     }
 
     public function exemption(): BelongsTo

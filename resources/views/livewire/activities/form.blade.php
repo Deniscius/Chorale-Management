@@ -121,6 +121,19 @@
             <span class="text-sm text-slate-700">Activité publiée (visible par les choristes)</span>
         </label>
 
+        <section class="rounded-xl border border-amber-200 bg-amber-50/60 p-4">
+            <label class="flex items-start gap-3">
+                <input type="checkbox" wire:model.live="participation_fee_enabled" class="mt-1 rounded border-amber-400 text-amber-700 focus:ring-amber-500">
+                <span class="text-sm text-amber-950"><strong>Prévoir une cotisation de participation</strong><span class="mt-1 block text-xs text-amber-800">Une échéance individuelle sera créée pour chaque choriste ajouté à l’activité. Les règlements seront suivis par la comptabilité.</span></span>
+            </label>
+            @if ($participation_fee_enabled)
+                <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div><x-input-label for="activities-form-participation_fee_amount" value="Montant demandé (FCFA)" /><x-text-input id="activities-form-participation_fee_amount" type="number" min="1" step="0.01" wire:model="participation_fee_amount" class="mt-1 block w-full" required /><x-input-error :messages="$errors->get('participation_fee_amount')" class="mt-1" /></div>
+                    <div><x-input-label for="activities-form-participation_fee_due_on" value="Échéance" /><x-text-input id="activities-form-participation_fee_due_on" type="date" wire:model="participation_fee_due_on" class="mt-1 block w-full" /><p class="mt-1 text-xs text-amber-800">Vide : la date de l’activité sera utilisée.</p><x-input-error :messages="$errors->get('participation_fee_due_on')" class="mt-1" /></div>
+                </div>
+            @endif
+        </section>
+
         <div class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">
             <button type="button" wire:click="$dispatch('close-form')"
                 class="btn btn-secondary">

@@ -8,6 +8,7 @@ use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Activity;
 use App\Models\Member;
+use App\Services\ActivityParticipationFee;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -77,6 +78,7 @@ class Participants extends Component
                 'hours' => (float) ($validated['hours'] ?: 0),
                 'notes' => $validated['notes'] ?: null,
             ]);
+            app(ActivityParticipationFee::class)->createFor($activity, [$memberId]);
 
             return true;
         });
@@ -110,7 +112,7 @@ class Participants extends Component
             return;
         }
 
-        $added = DB::transaction(function () use ($eligible): int {
+        $newIds = DB::transaction(function () use ($eligible): array {
             $activity = Activity::query()->lockForUpdate()->findOrFail($this->activity->id);
             $existing = $activity->participants()->whereIn('members.id', $eligible)
                 ->pluck('members.id')->map(fn ($id) => (int) $id)->all();
@@ -121,14 +123,15 @@ class Participants extends Component
             }
             if ($records !== []) {
                 $activity->participants()->attach($records);
+                app(ActivityParticipationFee::class)->createFor($activity, $newIds);
             }
 
-            return count($newIds);
+            return $newIds;
         }, 3);
 
         $this->selectedMemberIds = [];
         unset($this->availableMembers, $this->participants);
-        $this->dispatch('toast', type: 'success', message: $added.' participant(s) ajouté(s). Les inscriptions déjà présentes ont été conservées.');
+        $this->dispatch('toast', type: 'success', message: count($newIds).' participant(s) ajouté(s). Les inscriptions déjà présentes ont été conservées.');
     }
 
     public function selectAllVisible(): void

@@ -34,6 +34,9 @@ class Activity extends Model
         'status',
         'report',
         'is_public',
+        'participation_fee_enabled',
+        'participation_fee_amount',
+        'participation_fee_due_on',
         'created_by',
         'attendance_finalized_at',
         'attendance_finalized_by',
@@ -49,6 +52,9 @@ class Activity extends Model
             'budget_allocated' => 'decimal:2',
             'budget_spent' => 'decimal:2',
             'is_public' => 'boolean',
+            'participation_fee_enabled' => 'boolean',
+            'participation_fee_amount' => 'decimal:2',
+            'participation_fee_due_on' => 'date',
             'attendance_finalized_at' => 'datetime',
         ];
     }
@@ -93,6 +99,11 @@ class Activity extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function participationContributions(): HasMany
+    {
+        return $this->hasMany(Contribution::class);
     }
 
     /**

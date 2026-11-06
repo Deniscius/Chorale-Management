@@ -174,7 +174,7 @@ class Index extends Component
     {
         return Contribution::query()
             ->accrued()
-            ->with('member')
+            ->with(['member', 'activity:id,title'])
             ->when(app(ManagementYearContext::class)->selected(), fn ($q, $selected) => $q->whereDate('period_starts_on', '>=', $selected->starts_on)->whereDate('period_starts_on', '<=', $selected->ends_on))
             ->when($this->typeCode !== '', fn ($q) => $q->where('type_code', $this->typeCode))
             ->when($this->overview === 'reglees', fn ($q) => $q->where('paid_amount', '>', 0))

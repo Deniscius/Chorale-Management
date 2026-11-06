@@ -119,6 +119,19 @@ class Form extends Component
         $this->dispatch('close-form');
     }
 
+    /** Make planning a single rehearsal quick without taking away the date picker. */
+    public function useSuggestedDate(string $preset): void
+    {
+        $date = match ($preset) {
+            'today' => today(),
+            'tomorrow' => today()->addDay(),
+            'next_week' => today()->addWeek(),
+            default => throw new \InvalidArgumentException('Suggestion de date inconnue.'),
+        };
+
+        $this->date = $date->toDateString();
+    }
+
     #[Computed]
     public function availableWorks()
     {

@@ -102,7 +102,15 @@ class Index extends Component
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->period === 'avenir', fn (Builder $query) => $query->where('scheduled_at', '>=', now()))
             ->when($this->period === 'passee', fn (Builder $query) => $query->where('scheduled_at', '<', now()))
-            ->orderBy('scheduled_at')
+            // Keep the agenda useful at first glance: next events first, then
+            // completed events from most recent to oldest.
+            ->when($this->period === 'avenir', fn (Builder $query) => $query->orderBy('scheduled_at')->orderBy('id'))
+            ->when($this->period === 'passee', fn (Builder $query) => $query->orderByDesc('scheduled_at')->orderByDesc('id'))
+            ->when(! in_array($this->period, ['avenir', 'passee'], true), fn (Builder $query) => $query
+                ->orderByRaw('CASE WHEN scheduled_at >= ? THEN 0 ELSE 1 END', [now()])
+                ->orderByRaw('CASE WHEN scheduled_at >= ? THEN scheduled_at END ASC', [now()])
+                ->orderByRaw('CASE WHEN scheduled_at < ? THEN scheduled_at END DESC', [now()])
+                ->orderBy('id'))
             ->paginate(15);
     }
 

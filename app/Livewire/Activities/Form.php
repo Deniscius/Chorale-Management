@@ -85,8 +85,8 @@ class Form extends Component
                 'title' => $activity->title,
                 'type' => $activity->type->value,
                 'description' => $activity->description,
-                'starts_at' => $activity->starts_at?->format('Y-m-d H:i'),
-                'ends_at' => $activity->ends_at?->format('Y-m-d H:i'),
+                'starts_at' => $activity->starts_at?->format('Y-m-d\\TH:i'),
+                'ends_at' => $activity->ends_at?->format('Y-m-d\\TH:i'),
                 'venue' => $activity->venue,
                 'choir_commission_id' => $activity->choir_commission_id,
                 'choir_id' => $activity->choir_id,
@@ -104,6 +104,22 @@ class Form extends Component
                 ->orderByRaw("CASE WHEN module_key = 'activites' THEN 0 ELSE 1 END")
                 ->orderBy('name')
                 ->value('id');
+        }
+    }
+
+    /** Fill the native date picker with a useful future appointment. */
+    public function useSuggestedDate(string $preset): void
+    {
+        $startsAt = match ($preset) {
+            'today' => now()->startOfHour(),
+            'tomorrow' => now()->addDay()->setTime(19, 0),
+            'next_week' => now()->addWeek()->setTime(19, 0),
+            default => throw new \InvalidArgumentException('Suggestion de date inconnue.'),
+        };
+
+        $this->starts_at = $startsAt->format('Y-m-d\\TH:i');
+        if (blank($this->ends_at)) {
+            $this->ends_at = $startsAt->copy()->addHours(2)->format('Y-m-d\\TH:i');
         }
     }
 

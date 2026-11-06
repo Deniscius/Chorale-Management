@@ -167,12 +167,12 @@
         @can('view-module', \App\Enums\UserRole::MODULE_ACTIVITES)
             <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
                 <header class="flex items-center justify-between border-b border-slate-200 px-5 py-3">
-                    <h2 class="text-sm font-semibold text-slate-900">Activités récentes</h2>
-                    <span class="text-xs text-slate-500">{{ $kpis['activites'] }} en cours</span>
+                    <h2 class="text-sm font-semibold text-slate-900">Prochaines activités</h2>
+                    <span class="text-xs text-slate-500">{{ $kpis['activites'] }} actives</span>
                 </header>
 
                 @if ($activitesRecentes->isEmpty())
-                    <p class="px-5 py-8 text-center text-sm text-slate-500">Aucune activité enregistrée.</p>
+                    <p class="px-5 py-8 text-center text-sm text-slate-500">Aucune activité à venir.</p>
                 @else
                     <ul class="divide-y divide-slate-100">
                         @foreach ($activitesRecentes as $activite)

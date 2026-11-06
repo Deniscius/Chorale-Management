@@ -170,8 +170,15 @@ class Index extends Component
             ->when($this->period === 'encours', fn (Builder $query) => $query->where('starts_at', '<=', now()->endOfDay())
                 ->where('ends_at', '>=', now()->startOfDay()))
             ->when($this->period === 'passees', fn (Builder $query) => $query->where('starts_at', '<', now()->startOfDay()))
-            ->orderByDesc('starts_at')
-            ->orderByDesc('id')
+            // An agenda must show the next appointment first. Completed entries
+            // remain easy to find through the “Passées” filter, newest first.
+            ->when($this->period === 'avenir', fn (Builder $query) => $query->orderBy('starts_at')->orderBy('id'))
+            ->when($this->period === 'passees', fn (Builder $query) => $query->orderByDesc('starts_at')->orderByDesc('id'))
+            ->when(! in_array($this->period, ['avenir', 'passees'], true), fn (Builder $query) => $query
+                ->orderByRaw('CASE WHEN starts_at >= ? THEN 0 ELSE 1 END', [now()->startOfDay()])
+                ->orderByRaw('CASE WHEN starts_at >= ? THEN starts_at END ASC', [now()->startOfDay()])
+                ->orderByRaw('CASE WHEN starts_at < ? THEN starts_at END DESC', [now()->startOfDay()])
+                ->orderBy('id'))
             ->paginate(15);
     }
 

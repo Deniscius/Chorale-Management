@@ -5,6 +5,11 @@
             <div>
                 <x-input-label for="rehearsals-form-date" value="Date" />
                 <x-text-input id="rehearsals-form-date" type="date" name="date" aria-describedby="rehearsals-form-date-error" aria-invalid="{{ $errors->has('date') ? 'true' : 'false' }}" wire:model="date" class="mt-1 block w-full" required />
+                <div class="mt-2 flex flex-wrap gap-2" aria-label="Dates proposées">
+                    <button type="button" wire:click="useSuggestedDate('today')" class="btn btn-soft btn-sm">Aujourd’hui</button>
+                    <button type="button" wire:click="useSuggestedDate('tomorrow')" class="btn btn-soft btn-sm">Demain</button>
+                    <button type="button" wire:click="useSuggestedDate('next_week')" class="btn btn-soft btn-sm">Dans 7 jours</button>
+                </div>
                 <x-input-error id="rehearsals-form-date-error" :messages="$errors->get('date')" class="mt-1" />
             </div>
 

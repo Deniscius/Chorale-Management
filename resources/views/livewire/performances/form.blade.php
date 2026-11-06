@@ -24,6 +24,11 @@
             <div class="sm:col-span-2">
                 <x-input-label for="performances-form-scheduled_at" value="Date et heure" />
                 <x-text-input id="performances-form-scheduled_at" type="datetime-local" name="scheduled_at" aria-describedby="performances-form-scheduled_at-error" aria-invalid="{{ $errors->has('scheduled_at') ? 'true' : 'false' }}" wire:model="scheduled_at" class="mt-1 block w-full" required />
+                <div class="mt-2 flex flex-wrap gap-2" aria-label="Dates proposées">
+                    <button type="button" wire:click="useSuggestedDate('today')" class="btn btn-soft btn-sm">Aujourd’hui</button>
+                    <button type="button" wire:click="useSuggestedDate('tomorrow')" class="btn btn-soft btn-sm">Demain</button>
+                    <button type="button" wire:click="useSuggestedDate('next_week')" class="btn btn-soft btn-sm">Dans 7 jours</button>
+                </div>
                 <x-input-error id="performances-form-scheduled_at-error" :messages="$errors->get('scheduled_at')" class="mt-1" />
             </div>
 

@@ -43,6 +43,11 @@
             <div>
                 <x-input-label for="activities-form-starts_at" value="Début" />
                 <x-text-input id="activities-form-starts_at" type="datetime-local" name="starts_at" aria-describedby="activities-form-starts_at-error" aria-invalid="{{ $errors->has('starts_at') ? 'true' : 'false' }}" wire:model="starts_at" class="mt-1 block w-full" required />
+                <div class="mt-2 flex flex-wrap gap-2" aria-label="Dates proposées">
+                    <button type="button" wire:click="useSuggestedDate('today')" class="btn btn-soft btn-sm">Aujourd’hui</button>
+                    <button type="button" wire:click="useSuggestedDate('tomorrow')" class="btn btn-soft btn-sm">Demain</button>
+                    <button type="button" wire:click="useSuggestedDate('next_week')" class="btn btn-soft btn-sm">Dans 7 jours</button>
+                </div>
                 <x-input-error id="activities-form-starts_at-error" :messages="$errors->get('starts_at')" class="mt-1" />
             </div>
 

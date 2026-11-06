@@ -99,7 +99,12 @@ class DashboardController extends Controller
                 ->latest('correspondence_date')
                 ->limit(5)
                 ->get() : collect(),
-            'activitesRecentes' => $activities ? Activity::select(['id', 'tenant_id', 'title', 'starts_at', 'venue', 'status'])->orderByDesc('starts_at')->limit(5)->get() : collect(),
+            'activitesRecentes' => $activities ? Activity::select(['id', 'tenant_id', 'title', 'starts_at', 'venue', 'status'])
+                ->whereIn('status', ['planifiee', 'en_cours'])
+                ->where('starts_at', '>=', $now)
+                ->orderBy('starts_at')
+                ->limit(5)
+                ->get() : collect(),
         ];
     }
 }

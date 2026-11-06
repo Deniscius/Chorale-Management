@@ -101,6 +101,19 @@ class Form extends Component
         }
     }
 
+    /** Fill the native date picker with a useful future appointment. */
+    public function useSuggestedDate(string $preset): void
+    {
+        $scheduledAt = match ($preset) {
+            'today' => now()->startOfHour(),
+            'tomorrow' => now()->addDay()->setTime(19, 0),
+            'next_week' => now()->addWeek()->setTime(19, 0),
+            default => throw new \InvalidArgumentException('Suggestion de date inconnue.'),
+        };
+
+        $this->scheduled_at = $scheduledAt->format('Y-m-d\\TH:i');
+    }
+
     public function save(): void
     {
         $this->authorizeManage();

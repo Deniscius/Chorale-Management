@@ -109,11 +109,20 @@ final class Index extends Component
     {
         abort_unless(auth()->user()?->can('manage-users'), 403);
 
+        $pending = MemberJoinRequest::query()->findOrFail($requestId);
+        if (! $pending->email_verified_at) {
+            $this->dispatch('toast', type: 'error', message: 'Impossible d’accepter cette demande : le choriste doit d’abord confirmer son adresse e-mail depuis le lien reçu.');
+            return;
+        }
+        if (Member::query()->where('email', $pending->email)->exists()) {
+            $this->dispatch('toast', type: 'error', message: 'Impossible d’accepter cette demande : cette adresse e-mail est déjà associée à un choriste.');
+            return;
+        }
         $activationUrl = DB::transaction(function () use ($requestId): string {
             $request = MemberJoinRequest::query()->lockForUpdate()->findOrFail($requestId);
-            abort_unless($request->status === MemberJoinRequest::STATUS_PENDING, 409, 'Cette demande a déjà été traitée.');
-            abort_unless($request->email_verified_at, 422, 'L’adresse e-mail doit être confirmée par le choriste avant validation.');
-            abort_if(Member::query()->where('email', $request->email)->exists(), 409, 'Cette adresse est déjà associée à un choriste.');
+            if ($request->status !== MemberJoinRequest::STATUS_PENDING) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['request' => 'Cette demande a déjà été traitée.']);
+            }
 
             $member = Member::create([
                 'first_name' => $request->first_name,

@@ -3,6 +3,16 @@
         :subtitle="'Répétitions, concerts, sorties et actions — '.$this->stats['total'].' activité(s) enregistrée(s).'">
         <x-slot name="actions">
             @if ($this->canManage())
+                <form action="{{ route('activities.report') }}" method="get" target="_blank" rel="noopener" class="flex items-center gap-2">
+                    <label class="sr-only" for="activities-report-from">Début du rapport</label>
+                    <input id="activities-report-from" type="date" name="from" value="{{ now()->startOfYear()->format('Y-m-d') }}" class="form-input hidden xl:block">
+                    <label class="sr-only" for="activities-report-to">Fin du rapport</label>
+                    <input id="activities-report-to" type="date" name="to" value="{{ now()->format('Y-m-d') }}" class="form-input hidden xl:block">
+                    <select name="orientation" aria-label="Orientation du rapport" class="form-select hidden lg:block"><option value="landscape">Paysage</option><option value="portrait">Portrait</option></select>
+                    <button type="submit" class="btn btn-soft"><x-icon name="archive" class="h-4 w-4" />Rapport</button>
+                </form>
+            @endif
+            @if ($this->canManage())
                 <button type="button" wire:click="create"
                     class="btn btn-primary">
                     <x-icon name="plus" class="h-4 w-4" />

@@ -2,6 +2,7 @@
 
 use App\Enums\UserRole;
 use App\Http\Controllers\AttendanceReportController;
+use App\Http\Controllers\ActivityFinancialReportController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ChoraleLogoController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\MemberReportController;
 use App\Http\Controllers\NotificationCenterController;
 use App\Http\Controllers\PersonalNotebookController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportsCenterController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\RunReminderSchedulerController;
 use App\Http\Controllers\TenantAddressController;
@@ -101,6 +103,7 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::post('/abonnement/activer', [BillingController::class, 'activate'])->middleware('throttle:5,1,billing-activation:')->name('billing.activate');
     Route::post('/abonnement/actualiser', [BillingController::class, 'refresh'])->middleware('throttle:5,1,billing-refresh:')->name('billing.refresh');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/rapports', ReportsCenterController::class)->name('reports.index');
     Route::get('/mon-carnet', PersonalNotebookController::class)->name('personal-notebook.show');
 
     Route::get('/choristes/accueil-et-suivi', App\Livewire\Onboarding\Index::class)
@@ -232,6 +235,8 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::get('/comptabilite/choristes', AccountingMemberOverview::class)
         ->middleware('can:view-attendance-finance')
         ->name('accounting.members');
+
+    Route::get('/activites/rapport', ActivityFinancialReportController::class)->name('activities.report');
 
     Route::get('/presences/{eventType}/{event}/rapport', AttendanceReportController::class)
         ->where(['eventType' => 'repetition|activite', 'event' => '[0-9]+'])

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPublicId;
 use App\Enums\InstrumentCategory;
 use App\Enums\InstrumentCondition;
 use App\Tenancy\BelongsToTenant;
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Instrument extends Model
 {
     use BelongsToTenant;
+    use HasPublicId;
 
     /** @use HasFactory<InstrumentFactory> */
     use HasFactory, SoftDeletes;

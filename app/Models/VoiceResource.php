@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPublicId;
 use App\Enums\Voice;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 final class VoiceResource extends Model
 {
     use BelongsToTenant;
+    use HasPublicId;
 
     protected $fillable = [
         'voice', 'title', 'lyrics', 'audio_path', 'audio_original_name',

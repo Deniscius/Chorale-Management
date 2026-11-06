@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPublicId;
 use App\Enums\MemberStatus;
 use App\Enums\UserRole;
 use App\Enums\Voice;
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Member extends Model
 {
     use BelongsToTenant;
+    use HasPublicId;
 
     /** @use HasFactory<MemberFactory> */
     use HasFactory, SoftDeletes;

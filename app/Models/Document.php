@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Commission;
+use App\Models\Concerns\HasPublicId;
 use App\Services\PrivateFiles;
 use App\Tenancy\BelongsToTenant;
 use Database\Factories\DocumentFactory;
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Document extends Model
 {
     use BelongsToTenant;
+    use HasPublicId;
 
     /** @use HasFactory<DocumentFactory> */
     use HasFactory, SoftDeletes;

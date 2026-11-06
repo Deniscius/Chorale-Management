@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\UserRole;
+use App\Models\Concerns\HasPublicId;
 use App\Services\CommissionAccess;
 use App\Tenancy\BelongsToTenant;
 use Database\Factories\UserFactory;
@@ -17,6 +18,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable implements MustVerifyEmail
 {
     use BelongsToTenant;
+    use HasPublicId;
 
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;

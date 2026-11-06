@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPublicId;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ChoirCommission extends Model
 {
     use BelongsToTenant;
+    use HasPublicId;
 
     protected $fillable = ['name', 'name_key', 'kind', 'mission', 'starts_on', 'ends_on', 'archived_at', 'module_key', 'archive_commission', 'leader_id', 'associate_id'];
 

@@ -44,12 +44,15 @@ final class IdorProtectionTest extends TestCase
             return [$member, $instrument, $resource, $template, $commission];
         });
 
-        $this->actingAs($adminA)->get('/membres/'.$member->id.'/photo')->assertNotFound();
-        $this->actingAs($adminA)->get('/membres/'.$member->id.'/dossier')->assertNotFound();
-        $this->actingAs($adminA)->get('/instruments/'.$instrument->id.'/image')->assertNotFound();
-        $this->actingAs($adminA)->get('/mon-pupitre/'.$resource->id.'/audio')->assertNotFound();
-        $this->actingAs($adminA)->get('/parametres/chorale/papier-entete/'.$template->id.'/original')->assertNotFound();
-        $this->actingAs($adminA)->get('/rapports/commissions/'.$commission->id)->assertNotFound();
+        $this->assertMatchesRegularExpression('/^[0-9a-f-]{36}$/', $member->getRouteKey());
+        $this->assertStringNotContainsString('/'.$member->id.'/', route('members.photo', $member));
+
+        $this->actingAs($adminA)->get(route('members.photo', $member))->assertNotFound();
+        $this->actingAs($adminA)->get(route('members.show', $member))->assertNotFound();
+        $this->actingAs($adminA)->get(route('instruments.image', $instrument))->assertNotFound();
+        $this->actingAs($adminA)->get(route('voice-space.audio', $resource))->assertNotFound();
+        $this->actingAs($adminA)->get(route('settings.letterheads.file', ['template' => $template, 'kind' => 'original']))->assertNotFound();
+        $this->actingAs($adminA)->get(route('reports.commission', $commission))->assertNotFound();
 
         $this->assertSame($tenantA->id, $adminA->tenant_id);
     }

@@ -109,4 +109,10 @@ class Contribution extends Model
     {
         return Months::label($this->month);
     }
+
+    /** Human-readable origin for monthly and activity participation contributions. */
+    public function periodLabel(): string
+    {
+        return $this->activity?->title ?? $this->monthLabel().' '.$this->year;
+    }
 }

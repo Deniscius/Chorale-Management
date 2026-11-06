@@ -68,7 +68,7 @@ final class PersonalNotebook
         $timeline = $rehearsals->concat($performances)->concat($activities)
             ->sortBy('at')->take($limit)->values();
 
-        $contributions = $member->contributions()
+        $contributions = $member->contributions()->with('activity:id,title')
             ->whereIn('status', ['due', 'partiel', 'retard'])
             ->accrued()
             ->orderByDesc('year')->orderByDesc('month')->get();

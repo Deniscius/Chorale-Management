@@ -66,4 +66,28 @@ final class ActivityParticipationFeeTest extends TestCase
                 ->assertSee('Montant demandé');
         });
     }
+
+    public function test_existing_activity_with_a_fee_can_be_rendered_and_updated(): void
+    {
+        config(['tenancy.enabled' => true]);
+        $admin = app(TenantRegistration::class)->create([
+            'organization' => 'Chorale modification', 'name' => 'Responsable',
+            'username' => 'modification-admin', 'email' => 'modification@example.test', 'password' => 'SecretChorale2026',
+        ]);
+
+        app(TenantContext::class)->run($admin->tenant_id, function () use ($admin): void {
+            $activity = Activity::factory()->create([
+                'participation_fee_enabled' => true,
+                'participation_fee_amount' => 3000,
+                'participation_fee_due_on' => null,
+            ]);
+
+            Livewire::actingAs($admin)->test(Form::class, ['activity' => $activity])
+                ->assertSet('participation_fee_enabled', true)
+                ->assertSet('participation_fee_amount', '3000.00')
+                ->set('participation_fee_enabled', false)
+                ->assertSet('participation_fee_enabled', false)
+                ->assertDontSee('Montant demandé');
+        });
+    }
 }

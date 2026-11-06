@@ -112,7 +112,7 @@
                             <thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left">Période</th><th class="px-4 py-3 text-left">Type</th><th class="px-4 py-3 text-right">Attendu</th><th class="px-4 py-3 text-right">Versé</th><th class="px-4 py-3 text-left">Statut</th></tr></thead>
                             <tbody class="divide-y divide-slate-100">
                                 @forelse($contributions as $contribution)
-                                    <tr><td class="px-4 py-3">{{ $contribution->monthLabel() }} {{ $contribution->year }}</td><td class="px-4 py-3">{{ $contribution->typeLabel() }}</td><td class="px-4 py-3 text-right">{{ number_format((float)$contribution->due_amount, 0, ',', ' ') }}</td><td class="px-4 py-3 text-right">{{ number_format((float)$contribution->paid_amount, 0, ',', ' ') }}</td><td class="px-4 py-3"><x-enum-badge :enum="$contribution->status" /></td></tr>
+                                    <tr><td class="px-4 py-3">{{ $contribution->periodLabel() }}</td><td class="px-4 py-3">{{ $contribution->typeLabel() }}</td><td class="px-4 py-3 text-right">{{ number_format((float)$contribution->due_amount, 0, ',', ' ') }}</td><td class="px-4 py-3 text-right">{{ number_format((float)$contribution->paid_amount, 0, ',', ' ') }}</td><td class="px-4 py-3"><x-enum-badge :enum="$contribution->status" /></td></tr>
                                 @empty <tr><td colspan="5" class="px-4 py-8 text-center text-slate-500">Aucune cotisation enregistrée.</td></tr> @endforelse
                             </tbody>
                         </table>

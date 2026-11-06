@@ -126,7 +126,7 @@ final class PlatformReminderDispatcher
 
     private function dispatchPersonalObligations(bool $dryRun, array &$result): void
     {
-        Contribution::query()->with('member.user')
+        Contribution::query()->with(['member.user', 'activity:id,title'])
             ->whereIn('status', ['due', 'partiel', 'retard'])
             ->where(fn ($query) => $query->where('year', '<', today()->year)
                 ->orWhere(fn ($current) => $current->where('year', today()->year)->where('month', '<=', today()->month)))
@@ -138,7 +138,7 @@ final class PlatformReminderDispatcher
                     'key' => "contribution:{$item->id}:week:".today()->format('o-W'),
                     'kind' => 'contribution', 'subject' => $item, 'date' => today(),
                     'title' => 'Cotisation à régulariser',
-                    'message' => 'votre cotisation de '.$item->monthLabel().' '.$item->year.' présente un reste de '.number_format($item->balance(), 0, ',', ' ').' FCFA.',
+                    'message' => 'votre cotisation « '.$item->periodLabel().' » présente un reste de '.number_format($item->balance(), 0, ',', ' ').' FCFA.',
                     'url' => route('personal-notebook.show', absolute: false), 'icon' => 'banknotes',
                 ], $dryRun, $result);
             });

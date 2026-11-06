@@ -125,7 +125,7 @@ class Index extends Component
     public function sendReminder(int $contributionId): void
     {
         $this->authorizeManage();
-        $contribution = Contribution::query()->with('member')->findOrFail($contributionId);
+        $contribution = Contribution::query()->with(['member', 'activity:id,title'])->findOrFail($contributionId);
         $member = $contribution->member;
         abort_unless(config('mail.delivery_enabled'), 422, 'L’envoi d’e-mails est temporairement désactivé.');
         abort_unless($member?->canReceiveEmail(), 422, 'Ce choriste n’a pas activé les notifications e-mail ou ne possède pas d’adresse e-mail.');
@@ -134,7 +134,7 @@ class Index extends Component
         try {
             Mail::to($member->email)->send(new TenantAnnouncement(
                 'Rappel de cotisation — '.$contribution->typeLabel(),
-                'Bonjour '.$member->first_name.",\n\nVotre cotisation de ".$contribution->monthLabel().' '.$contribution->year.' présente un reste de '.number_format($contribution->balance(), 0, ',', ' ').' FCFA. Merci de vous rapprocher de la trésorerie.',
+                'Bonjour '.$member->first_name.",\n\nVotre cotisation « ".$contribution->periodLabel().' » présente un reste de '.number_format($contribution->balance(), 0, ',', ' ').' FCFA. Merci de vous rapprocher de la trésorerie.',
                 app(ChoraleIdentity::class)->name(),
                 route('personal-notebook.show'),
                 'Consulter mon carnet',

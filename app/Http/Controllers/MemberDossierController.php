@@ -27,7 +27,7 @@ final class MemberDossierController extends Controller
             ? $member->attendanceIncidents()->latest('occurred_on')->limit(100)->get()
             : collect();
         $contributions = $canViewFinance
-            ? $member->contributions()->latest('year')->latest('month')->limit(120)->get()
+            ? $member->contributions()->with('activity:id,title')->latest('year')->latest('month')->limit(120)->get()
             : collect();
         $transactions = $canViewFinance
             ? $member->transactions()->validated()->latest('transaction_date')->limit(50)->get()

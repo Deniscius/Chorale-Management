@@ -38,7 +38,7 @@ final class AuditObserver
             Document::class => ['commission', 'path', 'size', 'visibility', 'correspondence_id'],
             CommissionTeam::class => ['commission', 'leader_id', 'associate_id'],
             Donation::class => ['type_code', 'amount', 'donor_type', 'member_id', 'transaction_id', 'donated_on'],
-            Contribution::class => ['type_code', 'member_id', 'year', 'month', 'due_amount', 'paid_amount', 'paid_on', 'status'],
+            Contribution::class => ['type_code', 'member_id', 'activity_id', 'year', 'month', 'due_amount', 'paid_amount', 'paid_on', 'status'],
             Budget::class => ['year', 'category', 'allocated_amount', 'committed_amount', 'opening_realized_amount'],
             Transaction::class => ['reference', 'type', 'amount', 'transaction_date', 'status', 'budget_id', 'member_id', 'validated_by'],
             Reminder::class => ['status', 'attempts'],
@@ -48,7 +48,7 @@ final class AuditObserver
             AttendanceIncident::class => ['member_id', 'source_type', 'incident_type', 'minutes_late', 'amount', 'status', 'reviewed_by', 'reviewed_at', 'review_note'],
             RehearsalRhythm::class => ['choir_id', 'weekday', 'starts_at', 'ends_at', 'venue', 'effective_from', 'effective_until', 'is_active'],
             Rehearsal::class => ['choir_id', 'rehearsal_rhythm_id', 'date', 'starts_at', 'ends_at', 'venue', 'status', 'is_special', 'type', 'attendance_finalized_at', 'attendance_finalized_by'],
-            Activity::class => ['attendance_finalized_at', 'attendance_finalized_by'],
+            Activity::class => ['attendance_finalized_at', 'attendance_finalized_by', 'participation_fee_enabled', 'participation_fee_amount', 'participation_fee_due_on'],
             RehearsalAttendance::class, ActivityParticipant::class => ['member_id', 'status', 'minutes_late', 'excuse_reason', 'checked_at', 'recorded_by'],
             default => [],
         };

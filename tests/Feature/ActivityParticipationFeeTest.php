@@ -130,4 +130,25 @@ final class ActivityParticipationFeeTest extends TestCase
             ]);
         });
     }
+
+    public function test_long_activity_title_keeps_its_accounting_label_within_database_limit(): void
+    {
+        config(['tenancy.enabled' => true]);
+        $admin = app(TenantRegistration::class)->create([
+            'organization' => 'Chorale libellé', 'name' => 'Responsable',
+            'username' => 'libelle-admin', 'email' => 'libelle@example.test', 'password' => 'SecretChorale2026',
+        ]);
+
+        app(TenantContext::class)->run($admin->tenant_id, function (): void {
+            $member = Member::factory()->active()->create();
+            $activity = Activity::factory()->create([
+                'title' => str_repeat('Activité chorale importante ', 8),
+                'participation_fee_enabled' => true, 'participation_fee_amount' => 3000,
+            ]);
+            $activity->participants()->attach($member->id, ['status' => 'invite', 'hours' => 0]);
+
+            $this->assertSame(1, app(ActivityParticipationFee::class)->syncExisting($activity));
+            $this->assertLessThanOrEqual(80, mb_strlen(Contribution::firstOrFail()->typeLabel()));
+        });
+    }
 }

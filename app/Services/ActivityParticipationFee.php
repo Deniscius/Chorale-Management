@@ -9,6 +9,7 @@ use App\Models\FinancialType;
 use App\Models\Member;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /** Creates one traceable participation contribution per activity and chorister. */
 final class ActivityParticipationFee
@@ -71,7 +72,9 @@ final class ActivityParticipationFee
         $type->forceFill([
             'code' => $code,
             'kind' => 'contribution',
-            'label' => 'Participation — '.$activity->title,
+            // FinancialType labels are intentionally capped at 80 characters.
+            // The full activity name remains available through activity_id.
+            'label' => Str::limit('Participation — '.$activity->title, 77),
             'default_amount' => $activity->participation_fee_amount,
             'frequency_months' => 0,
             'starts_on' => null,

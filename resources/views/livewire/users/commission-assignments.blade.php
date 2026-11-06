@@ -24,9 +24,7 @@
                         @if($entry->module_key === 'instruments')
                             <label class="help-control inline-flex items-center gap-3"><input type="checkbox" wire:model="instrumentAssociates" value="{{ $entry->id }}" class="h-5 w-5 rounded"><span>Associé habilité — gestion du matériel</span></label>
                         @endif
-                        @if($private)
-                            <label class="help-control inline-flex items-center gap-3"><input type="checkbox" wire:model="archiveAssociates" value="{{ $entry->id }}" @disabled($entry->associate_id && (int)$entry->associate_id !== $userId) class="h-5 w-5 rounded"><span>Associé désigné — archives privées</span></label>
-                        @endif
+                        <label class="help-control inline-flex items-center gap-3"><input type="checkbox" wire:model="archiveAssociates" value="{{ $entry->id }}" @disabled($entry->associate_id && (int)$entry->associate_id !== $userId) class="h-5 w-5 rounded"><span>Associé — mêmes droits de gestion</span></label>
                     </div>
                     @if($entry->leader_id && (int)$entry->leader_id !== $userId)<p class="mt-3 text-sm text-slate-700">Responsable actuel : {{ $entry->leader?->name }}. Pour le remplacer, utilisez la gestion de cette commission.</p>@endif
                     @if($private && $entry->associate_id && (int)$entry->associate_id !== $userId)<p class="mt-2 text-sm text-slate-700">Associé actuel : {{ $entry->associate?->name }}. Son remplacement se fait dans la commission.</p>@endif
@@ -34,7 +32,7 @@
             @empty
                 <p class="rounded-xl border bg-white p-4">Aucune commission créée pour cette chorale.</p>
             @endforelse
-            <p class="text-sm text-slate-700">Responsable ou associé implique également l’appartenance à la commission. Un responsable ne doit pas être sélectionné comme son propre associé. Décocher toutes les cases retire les délégations de ces commissions, mais ne change pas le rôle général.</p>
+            <p class="text-sm text-slate-700">Responsable ou associé implique également l’appartenance à la commission. L’associé exerce les mêmes droits de création, modification et suppression dans le module de sa commission, uniquement pendant sa période active. Un responsable ne doit pas être son propre associé.</p>
             <p wire:dirty role="status" class="text-sm font-semibold text-amber-900">Changements non enregistrés. Utilisez le bouton ci-dessous pour les appliquer.</p>
             @if($saved)<p wire:dirty.remove role="status" class="text-sm font-semibold text-emerald-800">Affectations enregistrées. Les accès suivent les commissions actives et le rôle général.</p>@endif
             <button type="submit" wire:loading.attr="disabled" class="btn btn-primary max-w-full whitespace-normal">Enregistrer les affectations</button>

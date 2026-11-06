@@ -8,7 +8,7 @@
                 <p class="mt-2 text-sm text-slate-700">Appartenance à la chorale : choriste. Rôle général : <strong>{{ $user->role->label() }}</strong>.</p>
                 <ul class="mt-3 space-y-2 text-sm text-slate-800">
                     @forelse($commissions as $commission)
-                        <li><strong>{{ (int)$commission->leader_id === $user->id ? 'Responsable' : ($delegations->get($commission->id)?->is_instrument_associate ? 'Associé habilité' : ((int)$commission->associate_id === $user->id ? 'Associé désigné aux archives' : 'Membre')) }}</strong> — {{ $commission->name }}</li>
+                        <li><strong>{{ (int)$commission->leader_id === $user->id ? 'Responsable' : ($delegations->get($commission->id)?->is_instrument_associate ? 'Associé habilité' : ((int)$commission->associate_id === $user->id ? 'Associé — gestion' : 'Membre')) }}</strong> — {{ $commission->name }}</li>
                     @empty
                         <li>Aucune affectation de commission active pour le moment.</li>
                     @endforelse

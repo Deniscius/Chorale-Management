@@ -20,8 +20,8 @@ final class CommissionResponsibilities
     {
         abort_unless(auth()->user()?->isAdmin(), 403);
         Validator::make(['leader_id' => $leaderId, 'associate_id' => $associateId, 'module_key' => $module], [
-            'leader_id' => ['nullable', Rule::exists('users', 'id')],
-            'associate_id' => ['nullable', 'different:leader_id', Rule::exists('users', 'id')],
+            'leader_id' => ['nullable', Rule::exists('users', 'id')->where('tenant_id', app(TenantContext::class)->requireId())],
+            'associate_id' => ['nullable', 'different:leader_id', Rule::exists('users', 'id')->where('tenant_id', app(TenantContext::class)->requireId())],
             'module_key' => ['nullable', Rule::in(UserRole::allModules())],
         ])->validate();
         DB::transaction(function () use ($id, $leaderId, $associateId, $module, $instrumentAssociateIds, $choirMasterIds) {
@@ -56,6 +56,9 @@ final class CommissionResponsibilities
             if ($effectiveModule === UserRole::MODULE_INSTRUMENTS && $ids && ! $leaderId) {
                 throw ValidationException::withMessages(['leader_id' => 'Désignez le responsable avant ses associés.']);
             }
+            if ($associateId && ! $leaderId) {
+                throw ValidationException::withMessages(['leader_id' => 'Désignez le responsable avant de lui attribuer un associé.']);
+            }
             foreach ($effectiveModule === UserRole::MODULE_INSTRUMENTS ? $ids : [] as $userId) {
                 $associate = User::lockForUpdate()->findOrFail($userId);
                 if ($associate->member_id && ! $associate->member()->exists()) {
@@ -71,7 +74,17 @@ final class CommissionResponsibilities
                     $entry->members()->syncWithoutDetaching([$leader->member_id]);
                 }
             }
-            $entry->update(['leader_id' => $leaderId, 'associate_id' => $code?->hasPrivateArchive() ? $associateId : null, 'module_key' => $code?->module() ?? $module]);
+            if ($associateId) {
+                $associate = User::lockForUpdate()->findOrFail($associateId);
+                if ($associate->member_id) {
+                    if (! $associate->member()->exists()) {
+                        throw ValidationException::withMessages(['associate_id' => 'Restaurez la fiche de ce choriste avant de lui déléguer une responsabilité.']);
+                    }
+                    $entry->members()->syncWithoutDetaching([$associate->member_id]);
+                }
+            }
+            // An associate is a true deputy: same module CRUD as the leader while the commission is active.
+            $entry->update(['leader_id' => $leaderId, 'associate_id' => $associateId, 'module_key' => $code?->module() ?? $module]);
             $beforeMasters = $entry->choirMasters()->orderBy('users.id')->pluck('users.id')->all();
             $newMasters = $effectiveModule === UserRole::MODULE_LITURGIQUE ? $masters : [];
             $entry->choirMasters()->sync($newMasters);

@@ -66,7 +66,7 @@ final class UserCommissionAssignments
                     || ($archive && $entry->associate_id && (int) $entry->associate_id !== $userId)) {
                     throw ValidationException::withMessages(['assignments' => 'Une responsabilité est déjà attribuée dans « '.$entry->name.' ». Utilisez la gestion de cette commission pour remplacer la personne.']);
                 }
-                if (($instrument && $entry->module_key !== 'instruments') || ($archive && ! $private) || ($leader && ($instrument || $archive))) {
+                if (($instrument && $entry->module_key !== 'instruments') || ($leader && ($instrument || $archive))) {
                     throw ValidationException::withMessages(['assignments' => 'Affectations incompatibles dans « '.$entry->name.' ». Un responsable ne doit pas être coché comme son propre associé.']);
                 }
                 $associateIds = $entry->instrumentAssociates->pluck('id')->map(fn ($id) => (int) $id)->all();

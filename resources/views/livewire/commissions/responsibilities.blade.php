@@ -32,9 +32,9 @@
             <p class="mt-3 text-xs text-slate-500">Les maîtres de chœur sont affectés uniquement à cette commission. La sélection ne change pas leur rôle général.</p>
         </fieldset>
     @endif
-    @if($privateArchive)
-        <div><x-input-label for="commission-associate" value="Associé désigné pour les archives privées"/><select id="commission-associate" wire:model="associate_id" class="form-select mt-1"><option value="">Aucun associé</option>@foreach($this->accounts as $account)<option value="{{ $account->id }}">{{ $account->name }}</option>@endforeach</select><x-input-error :messages="$errors->get('associate_id')"/></div>
-        <p class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">Les pièces privées restent réservées au responsable et à son associé désigné. Les membres ordinaires voient les documents explicitement partagés.</p>
+    @if($module_key)
+        <div><x-input-label for="commission-associate" value="Associé de la commission"/><select id="commission-associate" wire:model="associate_id" class="form-select mt-1"><option value="">Aucun associé</option>@foreach($this->accounts as $account)<option value="{{ $account->id }}">{{ $account->name }}</option>@endforeach</select><x-input-error :messages="$errors->get('associate_id')"/><p class="mt-1 text-xs text-slate-500">L’associé est le suppléant du responsable : mêmes droits de création, modification et suppression dans ce module, seulement durant l’activité de la commission.</p></div>
+        @if($privateArchive)<p class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">Pour cette commission, l’associé accède aussi aux pièces privées. Les membres ordinaires voient seulement les documents explicitement partagés.</p>@endif
     @endif
     <div class="flex flex-wrap justify-end gap-3 border-t pt-4"><button type="button" x-on:click="requestClose()" class="btn btn-secondary">Annuler</button><button type="submit" wire:loading.attr="disabled" class="btn btn-primary"><span wire:loading.remove wire:target="save">Enregistrer la délégation</span><span wire:loading wire:target="save">Enregistrement…</span></button></div>
 </form>

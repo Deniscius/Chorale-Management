@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Activity;
 use App\Models\Contribution;
+use App\Models\ChoirCommission;
 use App\Models\Member;
 use App\Livewire\Activities\Form;
 use App\Services\ActivityParticipationFee;
@@ -87,7 +88,46 @@ final class ActivityParticipationFeeTest extends TestCase
                 ->assertSet('participation_fee_amount', '3000.00')
                 ->set('participation_fee_enabled', false)
                 ->assertSet('participation_fee_enabled', false)
-                ->assertDontSee('Montant demandé');
+                ->assertSee('x-show="enabled"', false)
+                ->assertDontSee('wire:model.live="participation_fee_enabled"', false);
+        });
+    }
+
+    public function test_existing_programmed_activity_can_be_made_chargeable(): void
+    {
+        config(['tenancy.enabled' => true]);
+        $admin = app(TenantRegistration::class)->create([
+            'organization' => 'Chorale activation', 'name' => 'Responsable',
+            'username' => 'activation-admin', 'email' => 'activation@example.test', 'password' => 'SecretChorale2026',
+        ]);
+
+        app(TenantContext::class)->run($admin->tenant_id, function () use ($admin): void {
+            $member = Member::factory()->active()->create();
+            $commission = ChoirCommission::create([
+                'name' => 'Secrétariat', 'name_key' => 'secretariat activation', 'kind' => 'permanent',
+                'mission' => 'Organiser les activités.', 'starts_on' => today(), 'module_key' => 'activites',
+            ]);
+            $startsAt = now()->addWeek()->startOfHour();
+            $activity = Activity::factory()->create([
+                'title' => 'Sortie déjà programmée', 'starts_at' => $startsAt, 'ends_at' => $startsAt->copy()->addHours(2),
+                'choir_commission_id' => $commission->id,
+                'participation_fee_enabled' => false,
+            ]);
+            $activity->participants()->attach($member->id, ['status' => 'invite', 'hours' => 0]);
+
+            Livewire::actingAs($admin)->test(Form::class, ['activity' => $activity])
+                ->set('participation_fee_enabled', true)
+                ->set('participation_fee_amount', '3000')
+                ->set('participation_fee_due_on', now()->addDays(3)->toDateString())
+                ->call('save')
+                ->assertHasNoErrors()
+                ->assertDispatched('close-form');
+
+            $this->assertTrue($activity->fresh()->participation_fee_enabled);
+            $this->assertDatabaseHas('contributions', [
+                'tenant_id' => $admin->tenant_id, 'activity_id' => $activity->id,
+                'member_id' => $member->id, 'due_amount' => 3000,
+            ]);
         });
     }
 }

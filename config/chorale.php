@@ -14,7 +14,10 @@ return [
      */
     'reminders' => [
         'enabled' => (bool) env('REMINDERS_ENABLED', true),
-        'queued' => (bool) env('REMINDERS_QUEUED', true),
+        // A queue worker is optional in the current single-web-service
+        // deployment. Deliver synchronously by default so a reminder never
+        // remains stuck in the database when no worker is running.
+        'queued' => (bool) env('REMINDERS_QUEUED', false),
         'lease_minutes' => (int) env('REMINDERS_LEASE_MINUTES', 60),
         'days_before' => (int) env('REMINDERS_DAYS_BEFORE', 2),
         'platform_days' => array_map('intval', explode(',', env('REMINDERS_PLATFORM_DAYS', '7,2,0'))),

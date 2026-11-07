@@ -43,7 +43,9 @@ final class PlatformReminderDispatcher
     private function dispatchCalendar(Collection $members, bool $dryRun, array &$result): void
     {
         foreach ($this->leadDays() as $days) {
-            if ($days === 0 && ! $this->isDailyReminderSlot()) {
+            // A hosted scheduler can start a few minutes late. Send the most
+            // recent day-J slot once instead of silently losing the reminder.
+            if ($days === 0 && ! $this->hasReachedDailyReminderSlot()) {
                 continue;
             }
             $date = today()->addDays($days);
@@ -277,9 +279,14 @@ final class PlatformReminderDispatcher
         return $key.':j'.today()->toDateString().":h{$slot}";
     }
 
-    private function isDailyReminderSlot(): bool
+    private function hasReachedDailyReminderSlot(): bool
     {
-        return now()->minute < 15 && in_array(now()->hour, (array) config('chorale.reminders.day_of_reminder_hours', [8, 12, 17]), true);
+        $first = collect((array) config('chorale.reminders.day_of_reminder_hours', [8, 12, 17]))
+            ->map(fn ($hour) => max(0, min(23, (int) $hour)))
+            ->sort()
+            ->first();
+
+        return $first !== null && now()->hour >= $first;
     }
 
     private function moduleUsers(Collection $users, string $module): Collection

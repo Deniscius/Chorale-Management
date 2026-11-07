@@ -132,6 +132,23 @@ final class PlatformRemindersAndPersonalNotebookTest extends TestCase
         $this->assertSame(3, NotificationDispatch::query()->where('kind', 'performance')->count());
     }
 
+    public function test_a_late_day_j_scheduler_run_catches_up_the_latest_slot_without_duplication(): void
+    {
+        Notification::fake();
+        config(['chorale.reminders.platform_days' => [0], 'chorale.reminders.day_of_reminder_hours' => [8, 12, 17]]);
+        $member = Member::factory()->active()->create();
+        $user = User::factory()->role(UserRole::Choriste)->create(['member_id' => $member->id]);
+        Performance::factory()->create(['scheduled_at' => Carbon::parse('2026-10-30 18:00:00'), 'status' => 'planifiee']);
+
+        Carbon::setTestNow('2026-10-30 08:23:00');
+        app(PlatformReminderDispatcher::class)->dispatchAll();
+        app(PlatformReminderDispatcher::class)->dispatchAll();
+        Carbon::setTestNow();
+
+        Notification::assertSentToTimes($user, PlatformReminderNotification::class, 1);
+        $this->assertSame(1, NotificationDispatch::query()->where('kind', 'performance')->count());
+    }
+
     public function test_personal_notebook_shows_common_and_assigned_events_without_leaking_another_members_activity(): void
     {
         $member = Member::factory()->active()->create(['first_name' => 'Afi', 'photo_path' => 'tenants/1/members/1/identity/afi.png']);

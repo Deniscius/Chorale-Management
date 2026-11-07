@@ -3,7 +3,7 @@ name: Rappels quotidiens
 on:
   schedule:
     # Africa/Lome reste sur UTC toute l’année.
-    - cron: '*/15 * * * *' # Dernière heure avant un événement, puis créneaux jour J (Africa/Lome = UTC)
+    - cron: '*/5 * * * *' # Tolère un léger retard du service ; les empreintes empêchent les doublons.
   workflow_dispatch:
     inputs:
       dry_run:

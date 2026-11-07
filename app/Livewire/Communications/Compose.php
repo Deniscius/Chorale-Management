@@ -8,8 +8,11 @@ use App\Models\Activity;
 use App\Models\AuditEvent;
 use App\Models\ChoirCommission;
 use App\Models\Member;
+use App\Models\Tenant;
+use App\Mail\TenantAnnouncement;
 use App\Notifications\PlatformReminderNotification;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -36,14 +39,26 @@ final class Compose extends Component
         abort_unless($this->canSend($data['audience']), 403);
         $members = $this->candidates;
         if ($this->recipientMode === 'selected') { $members = $members->whereIn('id', array_map('intval', $this->memberIds)); }
-        $users = $members->map(fn (Member $member) => $member->user)->filter()->unique('id')->values();
-        if ($users->isEmpty()) { $this->addError('memberIds', 'Choisissez au moins un choriste ayant un compte actif.'); return; }
+        $deliverable = $members->filter(fn (Member $member) => $member->user !== null || (config('mail.delivery_enabled') && $member->canReceiveEmail()));
+        if ($deliverable->isEmpty()) { $this->addError('memberIds', 'Choisissez au moins un choriste ayant un compte ou une adresse e-mail.'); return; }
         $tag = 'message-groupe:'.Str::uuid(); $sent = 0;
         $body = trim($this->message)."\n\n".$this->signature();
-        foreach ($users as $user) { try { $user->notify(new PlatformReminderNotification($this->title, $body, route('personal-notebook.show', absolute: false), 'group-message', $tag, 'mail')); $sent++; } catch (\Throwable $exception) { report($exception); } }
+        $tenant = Tenant::findOrFail(auth()->user()->tenant_id);
+        foreach ($deliverable as $member) {
+            try {
+                if ($user = $member->user) {
+                    $user->notify(new PlatformReminderNotification($this->title, $body, route('personal-notebook.show', absolute: false), 'group-message', $tag, 'mail'));
+                } else {
+                    Mail::to($member->email)->send(new TenantAnnouncement($this->title, $body, $tenant->name, route('tenant.entry', ['slug' => $tenant->slug]), 'Ouvrir la chorale'));
+                }
+                $sent++;
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        }
         AuditEvent::create(['actor_id' => auth()->id(), 'subject_type' => \App\Models\User::class, 'subject_id' => auth()->id(), 'action' => 'created', 'changes' => ['after' => ['group_message' => ['audience' => $this->audience, 'commission_id' => $this->commissionId ?: null, 'activity_id' => $this->activityId ?: null, 'title' => $this->title, 'recipient_count' => $sent]]], 'created_at' => now()]);
         $this->reset('title', 'message', 'memberIds');
-        $this->dispatch('toast', type: 'success', message: $sent.' message(s) envoyé(s) dans l’application et, si autorisé, par e-mail.');
+        $this->dispatch('toast', type: 'success', message: $sent.' message(s) envoyé(s) dans l’application et par e-mail lorsque l’adresse est renseignée.');
     }
 
     #[Computed] public function commissions(): Collection { $user = auth()->user(); return ChoirCommission::inStatus('active')->when(! in_array($user->role, [UserRole::Admin, UserRole::Directeur], true), fn ($q) => $q->where(fn ($x) => $x->where('leader_id', $user->id)->orWhere('associate_id', $user->id)))->orderBy('name')->get(['id','name','module_key','leader_id','associate_id']); }

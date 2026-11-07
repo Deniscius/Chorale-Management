@@ -13,6 +13,7 @@ use App\Models\Correspondence;
 use App\Models\CorrespondenceService;
 use App\Models\Member;
 use App\Services\DocumentArchive;
+use App\Services\CorrespondenceNotificationService;
 use App\Tenancy\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
@@ -170,6 +171,11 @@ class Form extends Component
 
             return $entry;
         });
+        if ($this->correspondence->wasRecentlyCreated || $this->correspondence->wasChanged([
+            'subject', 'body', 'recipient_member_id', 'assigned_to', 'status', 'sent_at', 'received_at',
+        ])) {
+            app(CorrespondenceNotificationService::class)->notify($this->correspondence);
+        }
         $message = 'Courrier enregistré ('.$this->correspondence->reference.').';
         $this->reset('attachment');
 

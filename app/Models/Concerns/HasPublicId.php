@@ -26,4 +26,20 @@ trait HasPublicId
     {
         return 'public_id';
     }
+
+    /**
+     * Prevent malformed route parameters from reaching UUID columns.
+     *
+     * PostgreSQL rejects a numeric value when it is compared to a UUID,
+     * whereas SQLite silently accepts it. Returning an empty query keeps the
+     * route-binding contract identical on both database engines: a 404.
+     */
+    public function resolveRouteBindingQuery($query, $value, $field = null)
+    {
+        if (! is_string($value) || ! Str::isUuid($value)) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return parent::resolveRouteBindingQuery($query, $value, $field);
+    }
 }

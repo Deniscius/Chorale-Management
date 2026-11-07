@@ -157,6 +157,9 @@ class AppServiceProvider extends ServiceProvider
         // Paramètres de l'application (identité de la chorale) : administrateur uniquement.
         Gate::define('manage-settings', fn (User $user) => $user->role === UserRole::Admin);
 
+        Gate::define('manage-communications', fn (User $user) => $user->canManageModule(UserRole::MODULE_ACTIVITES)
+            || $user->canManageModule(UserRole::MODULE_COURRIERS));
+
         Gate::define('view-attendance', fn (User $user) => in_array($user->role, [
             UserRole::Directeur, UserRole::Secretaire, UserRole::CommissionLiturgique,
             UserRole::CommissionSuivieFormation,

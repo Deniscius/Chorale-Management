@@ -170,10 +170,12 @@ class AuditHardeningTest extends TestCase
         $d->dispatchForRehearsal($r);
         $e = Reminder::firstOrFail();
         $this->assertSame('skipped', $d->deliver($e->id, 'obsolete'));
+        // E-mail is now mandatory for every member with an address: an old
+        // per-member opt-out must not suppress an official reminder.
         $m->update(['notify_email' => false]);
-        $this->assertSame('skipped', $d->deliver($e->id, $e->lease_token));
-        $this->assertSame('ignore', $e->fresh()->status->value);
-        Mail::assertNothingSent();
+        $this->assertSame('sent', $d->deliver($e->id, $e->lease_token));
+        $this->assertSame('envoye', $e->fresh()->status->value);
+        Mail::assertSentCount(1);
     }
 
     public function test_uncertain_send_is_reconciled_and_old_job_invalidated(): void
@@ -273,6 +275,7 @@ class AuditHardeningTest extends TestCase
 
     public function test_uncertain_transport_error_is_not_automatically_retried(): void
     {
+        config()->set('mail.delivery_enabled', false);
         [$r, $member] = $this->fixture();
         $member->update(['notify_email' => false, 'notify_sms' => true, 'phone' => '+22800000000']);
         config()->set('chorale.reminders.sms_enabled', true);
@@ -297,6 +300,7 @@ class AuditHardeningTest extends TestCase
 
     public function test_explicit_delivery_refusal_can_be_retried(): void
     {
+        config()->set('mail.delivery_enabled', false);
         [$r, $member] = $this->fixture();
         $member->update(['notify_email' => false, 'notify_sms' => true, 'phone' => '+22800000000']);
         config()->set('chorale.reminders.sms_enabled', true);

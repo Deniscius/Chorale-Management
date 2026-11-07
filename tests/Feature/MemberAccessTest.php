@@ -114,7 +114,7 @@ class MemberAccessTest extends TestCase
         $this->assertSame('jean.personnel', $user->username);
         $this->assertSame(UserRole::Secretaire, $user->role);
         $this->assertTrue(Hash::check('MonSecretPersonnel2026', $user->password));
-        $this->assertNull($user->email_verified_at);
+        $this->assertNotNull($user->email_verified_at);
         $this->assertSame('jean@example.test', $member->fresh()->email);
     }
 

@@ -18,6 +18,7 @@ final class RehearsalRhythmTest extends TestCase
 
     public function test_weekly_generation_is_idempotent_and_preserves_existing_sessions(): void
     {
+        CarbonImmutable::setTestNow('2026-10-01 09:00:00');
         $choir = Choir::factory()->create();
         $rhythm = RehearsalRhythm::create([
             'choir_id' => $choir->id,
@@ -39,6 +40,7 @@ final class RehearsalRhythmTest extends TestCase
         $session->update(['status' => EventStatus::Annulee->value]);
         $this->assertSame(0, $planner->generate($from, $to));
         $this->assertSame(EventStatus::Annulee, $session->fresh()->status);
+        CarbonImmutable::setTestNow();
     }
 
     public function test_special_rehearsals_remain_independent_of_regular_rhythms(): void

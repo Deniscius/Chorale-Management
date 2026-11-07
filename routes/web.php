@@ -105,7 +105,7 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::post('/abonnement/activer', [BillingController::class, 'activate'])->middleware('throttle:5,1,billing-activation:')->name('billing.activate');
     Route::post('/abonnement/actualiser', [BillingController::class, 'refresh'])->middleware('throttle:5,1,billing-refresh:')->name('billing.refresh');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
-    Route::get('/messages', CommunicationsCompose::class)->name('communications.compose');
+    Route::get('/messages', CommunicationsCompose::class)->middleware('can:manage-communications')->name('communications.compose');
     Route::get('/rapports', ReportsCenterController::class)->name('reports.index');
     Route::get('/rapports/commissions/{commission}', CommissionReportController::class)->name('reports.commission');
     Route::get('/mon-carnet', PersonalNotebookController::class)->name('personal-notebook.show');

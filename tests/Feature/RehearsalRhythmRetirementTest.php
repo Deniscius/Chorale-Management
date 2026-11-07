@@ -41,6 +41,7 @@ final class RehearsalRhythmRetirementTest extends TestCase
 
     public function test_used_rhythm_is_deactivated_without_deleting_rehearsals(): void
     {
+        CarbonImmutable::setTestNow('2026-11-06 09:00:00');
         $this->actingAs(User::factory()->role(UserRole::Admin)->create());
         $rhythm = $this->rhythm();
         $from = CarbonImmutable::parse('2026-11-07');
@@ -50,6 +51,7 @@ final class RehearsalRhythmRetirementTest extends TestCase
         $this->assertFalse($rhythm->fresh()->is_active);
         $this->assertSame(1, Rehearsal::query()->where('rehearsal_rhythm_id', $rhythm->id)->count());
         $this->assertSame(0, app(RehearsalPlanner::class)->generate($from->addWeek(), $from->addWeek()));
+        CarbonImmutable::setTestNow();
     }
 
     public function test_ordinary_chorister_cannot_remove_a_rhythm(): void

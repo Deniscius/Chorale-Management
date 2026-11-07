@@ -28,6 +28,7 @@ class D7SmsSenderTest extends TestCase
             'chorale.reminders.sms_driver' => 'd7',
             'chorale.reminders.sms_enabled' => true,
             'chorale.reminders.queued' => false,
+            'mail.delivery_enabled' => false,
             'chorale.sms.d7.token' => 'test-only-d7-token',
             'chorale.sms.d7.originator' => 'CHORALE',
         ]);

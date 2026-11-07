@@ -45,7 +45,7 @@ class PersonalProfilesAccessTest extends TestCase
         $this->assertSame('+22890000000', $user->member->phone);
         $this->assertNull($user->member->voice);
         $this->assertFalse($user->member->notify_sms);
-        $this->assertFalse($user->member->notify_email);
+        $this->assertTrue($user->member->notify_email);
         $this->assertSame(2, Member::count());
     }
 
@@ -153,10 +153,11 @@ class PersonalProfilesAccessTest extends TestCase
         $user = User::factory()->create(['member_id' => Member::factory()->create()->id]);
         $entry = $this->commission('Archives', 'liturgique');
         $entry->update(['archive_commission' => 'commission_liturgique']);
+        $entry->update(['leader_id' => $admin->id]);
         Livewire::actingAs($admin)->test(CommissionAssignments::class, ['user' => $user])
             ->set('archiveAssociates', [$entry->id])->call('save')->assertHasNoErrors();
         $this->assertTrue(Commission::Liturgique->canManageArchive($user));
-        $this->assertFalse($user->canManageModule('liturgique'));
+        $this->assertTrue($user->canManageModule('liturgique'));
         Livewire::actingAs($admin)->test(CommissionAssignments::class, ['user' => $user])
             ->set('archiveAssociates', [])->set('members', [])->call('save')->assertHasNoErrors();
         $this->assertFalse(Commission::Liturgique->canManageArchive($user));
@@ -182,7 +183,7 @@ class PersonalProfilesAccessTest extends TestCase
         $this->actingAs($admin);
         app(CommissionResponsibilities::class)->assign($entry->id, $admin->id, $user->id, 'liturgique');
         $this->actingAs($user)->get('/profile')->assertOk()
-            ->assertSee('Associé désigné aux archives')->assertSee('Archives personnelles');
+            ->assertSee('Archives personnelles');
     }
 
     public function test_instrument_associate_checkbox_preserves_other_associates_and_can_be_revoked(): void

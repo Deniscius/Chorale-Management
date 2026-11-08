@@ -95,6 +95,9 @@
             @endif
 
             <div class="flex flex-wrap justify-end gap-3 border-t border-slate-200 px-5 py-4">
+                @if(!$this->isFinalized())
+                    <a href="{{ route('attendance.report', [$eventType === 'rehearsal' ? 'repetition' : 'activite', $eventId]) }}" target="_blank" rel="noopener" class="btn btn-secondary">Rapport provisoire (données enregistrées)</a>
+                @endif
                 @if($this->isFinalized())
                     <a href="{{ route('attendance.report', [$eventType === 'rehearsal' ? 'repetition' : 'activite', $eventId]) }}" target="_blank" rel="noopener" class="btn btn-primary"><x-icon name="archive" class="h-4 w-4" />Voir le rapport officiel</a>
                     @can('finalize-attendance')<x-confirm-action call="reopen" title="Corriger la fiche" message="Les incidents du rapport courant seront annulés." label="Corriger la fiche" />@endcan

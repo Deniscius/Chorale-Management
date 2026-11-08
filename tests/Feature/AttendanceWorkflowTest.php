@@ -8,10 +8,12 @@ use App\Models\Activity;
 use App\Models\ActivityParticipant;
 use App\Models\AttendanceIncident;
 use App\Models\AttendanceRule;
+use App\Models\Contribution;
 use App\Models\LetterheadTemplate;
 use App\Models\Member;
 use App\Models\Rehearsal;
 use App\Models\RehearsalAttendance;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Services\PrivateFiles;
 use App\Tenancy\TenantContext;
@@ -197,5 +199,102 @@ class AttendanceWorkflowTest extends TestCase
             'source_type' => 'activity',
             'incident_type' => 'absence',
         ]);
+    }
+
+    public function test_draft_activity_report_is_available_and_clearly_provisional(): void
+    {
+        $secretary = User::factory()->role(UserRole::Secretaire)->create();
+        $activity = Activity::factory()->create(['title' => 'Sortie provisoire']);
+        $member = Member::factory()->active()->create();
+        ActivityParticipant::query()->create([
+            'activity_id' => $activity->id, 'member_id' => $member->id, 'status' => 'invite',
+        ]);
+
+        Livewire::actingAs($secretary)->test(Sheet::class)
+            ->set('eventType', 'activity')->set('eventId', $activity->id)
+            ->assertSee('Rapport provisoire (données enregistrées)');
+        $this->actingAs($secretary)->get(route('attendance.report', ['activite', $activity->id]))
+            ->assertOk()->assertSee('Brouillon — rapport provisoire')
+            ->assertSee($member->full_name)->assertSee('Non renseigné')->assertDontSee('Point financier');
+        $treasurer = User::factory()->role(UserRole::Tresorier)->create();
+        $this->actingAs($treasurer)->get(route('attendance.report', ['activite', $activity->id]))
+            ->assertForbidden();
+    }
+
+    public function test_activity_report_finances_are_scoped_and_exclude_unvalidated_entries(): void
+    {
+        $director = User::factory()->role(UserRole::Directeur)->create();
+        $activity = Activity::factory()->create(['attendance_finalized_at' => now()]);
+        $other = Activity::factory()->create();
+        Transaction::factory()->recette()->create([
+            'activity_id' => $activity->id, 'amount' => 12345, 'description' => 'Recette du concert',
+        ]);
+        Transaction::factory()->depense()->create([
+            'activity_id' => $activity->id, 'amount' => 2345, 'description' => 'Transport du concert',
+        ]);
+        foreach (['brouillon', 'rejetee'] as $status) {
+            Transaction::factory()->create([
+                'activity_id' => $activity->id, 'status' => $status, 'description' => 'Écriture exclue '.$status,
+            ]);
+        }
+        Transaction::factory()->recette()->create([
+            'activity_id' => $other->id, 'description' => 'Autre activité privée',
+        ]);
+        $response = $this->actingAs($director)->get(route('attendance.report', ['activite', $activity->id]));
+        $response->assertOk()->assertSee('Point financier')->assertSee('Recette du concert')
+            ->assertSee('Transport du concert')->assertSee('10 000,00')
+            ->assertDontSee('Écriture exclue')->assertDontSee('Autre activité privée');
+        $this->assertEquals(12345, $response->viewData('finance')['receipts']);
+        $this->assertEquals(2345, $response->viewData('finance')['expenses']);
+
+        $secretary = User::factory()->role(UserRole::Secretaire)->create();
+        $this->actingAs($secretary)->get(route('attendance.report', ['activite', $activity->id]))
+            ->assertOk()->assertDontSee('Point financier')->assertDontSee('Recette du concert');
+        $chorister = User::factory()->role(UserRole::Choriste)->create();
+        $this->actingAs($chorister)->get(route('attendance.report', ['activite', $activity->id]))
+            ->assertForbidden();
+    }
+
+    public function test_activity_report_shows_contributions_and_only_current_event_incidents(): void
+    {
+        $treasurer = User::factory()->role(UserRole::Tresorier)->create();
+        $member = Member::factory()->active()->create();
+        $activity = Activity::factory()->create(['attendance_finalized_at' => now()]);
+        $participant = ActivityParticipant::query()->create([
+            'activity_id' => $activity->id, 'member_id' => $member->id, 'status' => 'absent',
+        ]);
+        Contribution::factory()->create([
+            'activity_id' => $activity->id, 'member_id' => $member->id,
+            'due_amount' => 5000, 'paid_amount' => 2000, 'status' => 'partiel',
+        ]);
+        foreach (['pending' => 1500, 'waived' => 500, 'cancelled' => 9999] as $status => $amount) {
+            if ($status !== 'pending') {
+                $member = Member::factory()->active()->create();
+                $participant = ActivityParticipant::query()->create([
+                    'activity_id' => $activity->id, 'member_id' => $member->id, 'status' => 'absent',
+                ]);
+            }
+            AttendanceIncident::query()->create([
+                'activity_participant_id' => $participant->id, 'member_id' => $member->id,
+                'source_type' => 'activity', 'occurred_on' => today(), 'event_label' => $activity->title,
+                'incident_type' => 'absence', 'amount' => $amount, 'status' => $status,
+            ]);
+        }
+        $response = $this->actingAs($treasurer)->get(route('attendance.report', ['activite', $activity->id]));
+        $response->assertOk()->assertSee('3 000,00')->assertSee('Partiellement payée')
+            ->assertSee('Dispensé')->assertDontSee('9 999,00');
+        $this->assertEquals(1500, $response->viewData('finance')['pending']);
+        $this->assertEquals(500, $response->viewData('finance')['waived']);
+    }
+
+    public function test_older_activities_remain_selectable_for_reporting(): void
+    {
+        $secretary = User::factory()->role(UserRole::Secretaire)->create();
+        $old = Activity::factory()->create(['title' => 'Ancienne activité', 'starts_at' => now()->subYears(2)]);
+        Activity::factory()->count(100)->create(['starts_at' => now()]);
+
+        Livewire::actingAs($secretary)->test(Sheet::class)
+            ->set('eventType', 'activity')->assertSee('Ancienne activité')
+            ->set('eventId', $old->id)->assertSee('Rapport provisoire (données enregistrées)');
     }
 }

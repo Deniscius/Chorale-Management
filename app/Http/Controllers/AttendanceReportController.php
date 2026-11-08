@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ParticipationStatus;
+use App\Enums\TransactionType;
 use App\Models\Activity;
+use App\Models\AttendanceIncident;
 use App\Models\Rehearsal;
 use App\Services\ChoraleIdentity;
 use App\Services\Letterhead;
@@ -37,7 +39,28 @@ final class AttendanceReportController
 
         abort_unless((int) $record->tenant_id === (int) $request->user()->tenant_id, 404);
 
-        abort_unless($record->attendance_finalized_at, 404, 'Cette fiche de présence n’est pas finalisée.');
+        // Draft reports are useful before validation, but must never look official.
+        abort_unless($record->attendance_finalized_at || Gate::allows('view-attendance'), 403);
+        $finance = null;
+        if (Gate::allows('view-attendance-finance')) {
+            $incidents = AttendanceIncident::query()
+                ->whereIn($eventType === 'activite' ? 'activity_participant_id' : 'rehearsal_attendance_id', $rows->pluck('id'))
+                ->where('status', '!=', AttendanceIncident::CANCELLED)
+                ->with('member')->orderBy('id')->get();
+            $transactions = $record instanceof Activity
+                ? $record->transactions()->validated()->orderBy('transaction_date')->orderBy('id')->get()
+                : collect();
+            $contributions = $record instanceof Activity
+                ? $record->participationContributions()->with('member')->orderBy('member_id')->get()
+                : collect();
+            $finance = [
+                'incidents' => $incidents, 'transactions' => $transactions, 'contributions' => $contributions,
+                'receipts' => $transactions->where('type', TransactionType::Recette)->sum('amount'),
+                'expenses' => $transactions->where('type', TransactionType::Depense)->sum('amount'),
+                'pending' => $incidents->where('status', AttendanceIncident::PENDING)->sum('amount'),
+                'waived' => $incidents->where('status', AttendanceIncident::WAIVED)->sum('amount'),
+            ];
+        }
 
         $counts = $rows->countBy(fn ($row): string => $row->status->value);
         $filename = 'rapport-presence-'.$eventType.'-'.$date->format('Y-m-d').'.html';
@@ -47,6 +70,7 @@ final class AttendanceReportController
             'identity' => $identity, 'record' => $record,
             'title' => $title, 'label' => $label, 'date' => $date, 'venue' => $venue, 'rows' => $rows,
             'counts' => $counts, 'statusLabels' => ParticipationStatus::labels(),
+            'finance' => $finance,
             'backUrl' => Gate::allows('view-attendance-finance')
                 ? route('attendance.financial-report')
                 : route('attendance.sheet'),

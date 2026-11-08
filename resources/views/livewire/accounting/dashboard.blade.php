@@ -19,6 +19,8 @@
         <x-stat-card label="Dons enregistrés" :value="number_format($this->figures['donation_declared'], 0, ',', ' ').' FCFA'" :hint="$this->figures['donation_count'].' don(s), toutes natures confondues'" icon="banknotes" color="blue" />
         <x-stat-card label="Échéances exonérées" :value="$this->figures['exempt_count']" icon="check" color="slate" />
         <x-stat-card label="Écritures en brouillon" :value="$this->figures['pending']" icon="clock" color="amber" />
+        <x-stat-card label="Avances approuvées restant à rembourser" :value="number_format($this->advances['outstanding'], 2, ',', ' ').' FCFA'" hint="Toutes périodes" icon="banknotes" color="amber" :href="route('accounting.member-expenses', ['statut' => 'approved'])" />
+        <x-stat-card label="Avances en attente de décision" :value="number_format($this->advances['pending'], 2, ',', ' ').' FCFA'" hint="Toutes périodes" icon="clock" color="slate" :href="route('accounting.member-expenses', ['statut' => 'pending'])" />
     </div>
 
     <div class="mt-5 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
@@ -28,5 +30,7 @@
         <a href="{{ route('contributions.index') }}" wire:navigate class="btn btn-secondary">Analyser les cotisations</a>
         <a href="{{ route('donations.index') }}" wire:navigate class="btn btn-secondary">Analyser les dons</a>
         <a href="{{ route('transactions.index') }}" wire:navigate class="btn btn-secondary">Voir les écritures</a>
+        <a href="{{ route('accounting.accounts') }}" wire:navigate class="btn btn-secondary">Gérer les comptes</a>
+        <a href="{{ route('accounting.member-expenses') }}" wire:navigate class="btn btn-secondary">Suivre les avances et remboursements</a>
     </div>
 </div>

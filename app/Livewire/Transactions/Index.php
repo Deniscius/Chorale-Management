@@ -12,8 +12,9 @@ use App\Models\Activity;
 use App\Models\Budget;
 use App\Models\Member;
 use App\Models\Transaction;
-use App\Services\TransactionWriter;
 use App\Services\ManagementYearContext;
+use App\Services\TransactionWriter;
+use App\Support\SearchTerms;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -50,6 +51,12 @@ class Index extends Component
     #[Url(as: 'annee', except: '')]
     public string $year = '';
 
+    #[Url(as: 'activite')]
+    public ?int $activityId = null;
+
+    #[Url(as: 'compte')]
+    public ?int $accountId = null;
+
     public bool $showForm = false;
 
     public ?int $editingId = null;
@@ -61,14 +68,14 @@ class Index extends Component
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['overview', 'search', 'type', 'status', 'category', 'month', 'year'], true)) {
+        if (in_array($property, ['overview', 'search', 'type', 'status', 'category', 'month', 'year', 'activityId', 'accountId'], true)) {
             $this->resetPage();
         }
     }
 
     public function resetFilters(): void
     {
-        $this->reset(['search', 'type', 'status', 'category', 'month', 'year', 'overview']);
+        $this->reset(['search', 'type', 'status', 'category', 'month', 'year', 'overview', 'activityId', 'accountId']);
         $this->resetPage();
     }
 
@@ -134,19 +141,34 @@ class Index extends Component
     #[Computed]
     public function transactions()
     {
+        $transactions = $this->filteredQuery()->with(['budget', 'member', 'performance'])
+            ->orderByDesc('transaction_date')
+            ->orderByDesc('id')
+            ->paginate(15);
+        // The filter lists already contain these records; reuse them for each row.
+        $accounts = $this->accounts->keyBy('id');
+        $activities = $this->activities->keyBy('id');
+        foreach ($transactions as $transaction) {
+            $transaction->setRelation('account', $accounts->get($transaction->account_id));
+            $transaction->setRelation('activity', $activities->get($transaction->activity_id));
+        }
+
+        return $transactions;
+    }
+
+    private function filteredQuery(): Builder
+    {
         return Transaction::query()
-            ->when(app(ManagementYearContext::class)->selected(), fn (Builder $query, $year) => $query->whereDate('transaction_date', '>=', $year->starts_on)->whereDate('transaction_date', '<=', $year->ends_on))
-            ->with(['account', 'budget', 'member', 'activity', 'performance'])
+            ->when($this->activityId, fn (Builder $query) => $query->where('activity_id', $this->activityId))
+            ->when($this->accountId, fn (Builder $query) => $query->where('account_id', $this->accountId))
+            ->when(! $this->activityId ? app(ManagementYearContext::class)->selected() : null, fn (Builder $query, $year) => $query->whereDate('transaction_date', '>=', $year->starts_on)->whereDate('transaction_date', '<=', $year->ends_on))
             ->when($this->overview === 'validees', fn ($q) => $q->validated())
-            ->when(trim($this->search) !== '', fn (Builder $query) => \App\Support\SearchTerms::apply($query, $this->search, ['reference','description','category']))
+            ->when(trim($this->search) !== '', fn (Builder $query) => SearchTerms::apply($query, $this->search, ['reference', 'description', 'category']))
             ->when($this->type !== '', fn (Builder $query) => $query->where('type', $this->type))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->category !== '', fn (Builder $query) => $query->where('category', $this->category))
             ->when($this->month !== '', fn (Builder $query) => $query->whereMonth('transaction_date', (int) $this->month))
-            ->when($this->year !== '', fn (Builder $query) => $query->whereYear('transaction_date', (int) $this->year))
-            ->orderByDesc('transaction_date')
-            ->orderByDesc('id')
-            ->paginate(15);
+            ->when($this->year !== '', fn (Builder $query) => $query->whereYear('transaction_date', (int) $this->year));
     }
 
     #[Computed]
@@ -158,7 +180,7 @@ class Index extends Component
     #[Computed]
     public function accounts()
     {
-        return Account::query()->where('is_active', true)->orderBy('code')->get();
+        return Account::query()->orderBy('code')->get();
     }
 
     #[Computed]
@@ -221,12 +243,11 @@ class Index extends Component
     #[Computed]
     public function stats(): array
     {
-        $row = Transaction::query()
-            ->when(app(ManagementYearContext::class)->selected(), fn (Builder $query, $year) => $query->whereDate('transaction_date', '>=', $year->starts_on)->whereDate('transaction_date', '<=', $year->ends_on))
+        $row = $this->filteredQuery()
             ->selectRaw(
-            'COUNT(*) AS total, COALESCE(SUM(CASE WHEN status IN (?, ?) AND type = ? THEN amount ELSE 0 END), 0) AS recettes, COALESCE(SUM(CASE WHEN status IN (?, ?) AND type = ? THEN amount ELSE 0 END), 0) AS depenses, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS brouillons',
-            [TransactionStatus::Validee->value, TransactionStatus::Cloturee->value, TransactionType::Recette->value, TransactionStatus::Validee->value, TransactionStatus::Cloturee->value, TransactionType::Depense->value, TransactionStatus::Brouillon->value]
-        )->toBase()->first();
+                'COUNT(*) AS total, COALESCE(SUM(CASE WHEN status IN (?, ?) AND type = ? THEN amount ELSE 0 END), 0) AS recettes, COALESCE(SUM(CASE WHEN status IN (?, ?) AND type = ? THEN amount ELSE 0 END), 0) AS depenses, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS brouillons',
+                [TransactionStatus::Validee->value, TransactionStatus::Cloturee->value, TransactionType::Recette->value, TransactionStatus::Validee->value, TransactionStatus::Cloturee->value, TransactionType::Depense->value, TransactionStatus::Brouillon->value]
+            )->toBase()->first();
         $recettes = (float) $row->recettes;
         $depenses = (float) $row->depenses;
 

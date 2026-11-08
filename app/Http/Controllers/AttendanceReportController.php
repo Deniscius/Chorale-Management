@@ -48,7 +48,7 @@ final class AttendanceReportController
                 ->where('status', '!=', AttendanceIncident::CANCELLED)
                 ->with('member')->orderBy('id')->get();
             $transactions = $record instanceof Activity
-                ? $record->transactions()->validated()->orderBy('transaction_date')->orderBy('id')->get()
+                ? $record->transactions()->validated()->with(['account', 'member'])->orderBy('transaction_date')->orderBy('id')->get()
                 : collect();
             $contributions = $record instanceof Activity
                 ? $record->participationContributions()->with('member')->orderBy('member_id')->get()
@@ -59,6 +59,9 @@ final class AttendanceReportController
                 'expenses' => $transactions->where('type', TransactionType::Depense)->sum('amount'),
                 'pending' => $incidents->where('status', AttendanceIncident::PENDING)->sum('amount'),
                 'waived' => $incidents->where('status', AttendanceIncident::WAIVED)->sum('amount'),
+                'advances' => $record instanceof Activity
+                    ? $record->memberExpenses()->with('member')->withSum('repayments', 'amount')->orderBy('incurred_on')->get()
+                    : collect(),
             ];
         }
 

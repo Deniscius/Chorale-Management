@@ -101,6 +101,11 @@ class Activity extends Model
         return $this->hasMany(Transaction::class);
     }
 
+    public function memberExpenses(): HasMany
+    {
+        return $this->hasMany(MemberExpense::class);
+    }
+
     public function participationContributions(): HasMany
     {
         return $this->hasMany(Contribution::class);

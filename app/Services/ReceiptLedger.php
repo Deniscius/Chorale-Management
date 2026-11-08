@@ -95,7 +95,7 @@ final class ReceiptLedger
             if ($paid < 0 || $paid > $due || $paid < $validated) {
                 throw ValidationException::withMessages(['paid_amount' => 'Le montant encaissé doit rester entre le total déjà validé et le montant dû.']);
             }
-            if ($validated > 0 && $contribution->isDirty(['member_id', 'year', 'month', 'due_amount', 'type_code'])) {
+            if ($validated > 0 && $contribution->isDirty(['member_id', 'activity_id', 'year', 'month', 'due_amount', 'type_code'])) {
                 throw ValidationException::withMessages(['member_id' => 'Une cotisation avec un règlement validé conserve son choriste, sa période et son montant dû.']);
             }
             // Never infer a second receipt for a historical payment without an accounting link.
@@ -115,7 +115,7 @@ final class ReceiptLedger
             if ($remaining > 0) {
                 $pending ??= new Transaction;
                 $pending->fill([
-                    'contribution_id' => $contribution->id, 'type' => 'recette',
+                    'contribution_id' => $contribution->id, 'activity_id' => $contribution->activity_id, 'type' => 'recette',
                     'transaction_date' => $data['paid_on'] ?? ($pending->exists ? $pending->transaction_date : ($validated > 0 ? today() : $contribution->paid_on)),
                     'description' => $type->label.' '.$contribution->month.'/'.$contribution->year,
                     'amount' => number_format($remaining / 100, 2, '.', ''), 'member_id' => $contribution->member_id,

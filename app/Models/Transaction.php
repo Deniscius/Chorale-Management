@@ -35,6 +35,8 @@ class Transaction extends Model
         'status',
         'member_id',
         'activity_id',
+        'member_expense_id',
+        'reimbursement_key',
         'performance_id',
         'document_path',
         'validated_by',
@@ -102,6 +104,11 @@ class Transaction extends Model
     public function activity(): BelongsTo
     {
         return $this->belongsTo(Activity::class);
+    }
+
+    public function memberExpense(): BelongsTo
+    {
+        return $this->belongsTo(MemberExpense::class);
     }
 
     public function performance(): BelongsTo

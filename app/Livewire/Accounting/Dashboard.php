@@ -8,8 +8,8 @@ use App\Enums\TransactionType;
 use App\Enums\UserRole;
 use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Contribution;
-use App\Models\ContributionCounterReset;
 use App\Models\Donation;
+use App\Models\MemberExpense;
 use App\Models\Transaction;
 use App\Services\ManagementYearContext;
 use Illuminate\Contracts\View\View;
@@ -111,5 +111,16 @@ final class Dashboard extends Component
     public function render(): View
     {
         return view('livewire.accounting.dashboard');
+    }
+
+    #[Computed]
+    public function advances(): array
+    {
+        // Debts remain due when the working year changes.
+        $approved = MemberExpense::query()->where('status', 'approved')->sum('amount');
+        $repaid = Transaction::query()->validated()->whereHas('memberExpense', fn ($q) => $q->where('status', 'approved'))->sum('amount');
+
+        return ['outstanding' => max(0, (float) $approved - (float) $repaid),
+            'pending' => MemberExpense::query()->where('status', 'pending')->sum('amount')];
     }
 }

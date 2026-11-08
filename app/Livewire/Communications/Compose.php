@@ -81,6 +81,7 @@ final class Compose extends Component
         $sent = 0;
         $emailed = 0;
         $failed = 0;
+        $delivered = [];
         $body = trim($this->message)."\n\n".$this->signature();
         $tenant = Tenant::findOrFail(auth()->user()->tenant_id);
         foreach ($deliverable as $member) {
@@ -90,6 +91,7 @@ final class Compose extends Component
                     $notification = new PlatformReminderNotification($this->title, $body, route('personal-notebook.show', absolute: false), 'group-message', $tag, 'mail');
                     Notification::sendNow($user, $notification, ['database', WebPushChannel::class]);
                     $sent++;
+                    $delivered[$member->id] = true;
                     if (config('mail.delivery_enabled') && $user->notificationEmail()) {
                         Notification::sendNow($user, $notification, ['mail']);
                         $emailed++;
@@ -97,13 +99,14 @@ final class Compose extends Component
                 } else {
                     Mail::to(trim($member->email))->send(new TenantAnnouncement($this->title, $body, $tenant->name, route('tenant.entry', ['slug' => $tenant->slug]), 'Ouvrir la chorale'));
                     $emailed++;
+                    $delivered[$member->id] = true;
                 }
             } catch (\Throwable $exception) {
                 $failed++;
                 report($exception);
             }
         }
-        AuditEvent::create(['actor_id' => auth()->id(), 'subject_type' => User::class, 'subject_id' => auth()->id(), 'action' => 'created', 'changes' => ['after' => ['group_message' => ['audience' => $this->audience, 'commission_id' => $this->commissionId ?: null, 'activity_id' => $this->activityId ?: null, 'title' => $this->title, 'recipient_count' => $sent]]], 'created_at' => now()]);
+        AuditEvent::create(['actor_id' => auth()->id(), 'subject_type' => User::class, 'subject_id' => auth()->id(), 'action' => 'created', 'changes' => ['after' => ['group_message' => ['audience' => $this->audience, 'commission_id' => $this->commissionId ?: null, 'activity_id' => $this->activityId ?: null, 'title' => $this->title, 'recipient_count' => count($delivered), 'application_count' => $sent, 'email_count' => $emailed, 'failure_count' => $failed]]], 'created_at' => now()]);
         if ($failed === 0) {
             $this->reset('title', 'message', 'memberIds');
         }

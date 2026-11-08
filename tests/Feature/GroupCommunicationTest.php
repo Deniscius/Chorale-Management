@@ -4,10 +4,11 @@ namespace Tests\Feature;
 
 use App\Enums\UserRole;
 use App\Livewire\Communications\Compose;
+use App\Mail\TenantAnnouncement;
+use App\Models\AuditEvent;
 use App\Models\ChoirCommission;
 use App\Models\Member;
 use App\Models\User;
-use App\Mail\TenantAnnouncement;
 use App\Notifications\PlatformReminderNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -52,5 +53,8 @@ final class GroupCommunicationTest extends TestCase
             ->call('send')->assertHasNoErrors();
 
         Mail::assertSent(TenantAnnouncement::class, fn (TenantAnnouncement $mail) => $mail->hasTo('groupe-sans-compte@example.test'));
+        $audit = AuditEvent::query()->where('actor_id', $associate->id)->latest('id')->firstOrFail();
+        $this->assertSame(1, $audit->changes['after']['group_message']['recipient_count']);
+        $this->assertSame(1, $audit->changes['after']['group_message']['email_count']);
     }
 }

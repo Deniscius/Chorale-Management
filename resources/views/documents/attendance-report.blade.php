@@ -23,11 +23,12 @@
 <tr><th>Solde des écritures</th><td colspan="3">{{ number_format($finance['receipts'] - $finance['expenses'], 2, ',', ' ') }}</td></tr>
 </tbody></table>
 <h3>Écritures de l’activité</h3>
-<table><thead><tr><th>Date / référence</th><th>Libellé</th><th>Type</th><th>Montant</th></tr></thead><tbody>
+<table><thead><tr><th>Date / référence</th><th>Libellé / choriste</th><th>Compte</th><th>Type</th><th>Montant</th></tr></thead><tbody>
 @forelse($finance['transactions'] as $transaction)
-<tr><td>{{ $transaction->transaction_date->format('d/m/Y') }} · {{ $transaction->reference }}</td><td>{{ $transaction->description }}</td><td>{{ $transaction->type->label() }}</td><td>{{ number_format((float) $transaction->amount, 2, ',', ' ') }}</td></tr>
-@empty<tr><td colspan="4">Aucune écriture validée pour cette activité.</td></tr>@endforelse
+<tr><td>{{ $transaction->transaction_date->format('d/m/Y') }} · {{ $transaction->reference }}</td><td>{{ $transaction->description }}<br>{{ $transaction->member?->full_name }}</td><td>{{ $transaction->account?->code }} — {{ $transaction->account?->name }}</td><td>{{ $transaction->type->label() }}</td><td>{{ number_format((float) $transaction->amount, 2, ',', ' ') }}</td></tr>
+@empty<tr><td colspan="5">Aucune écriture validée pour cette activité.</td></tr>@endforelse
 </tbody></table>
+@include('documents.partials.member-expenses', ['memberExpenses' => $finance['advances']])
 <h3>Participations financières des choristes</h3>
 <p>Total dû : {{ number_format($finance['contributions']->sum('due_amount'), 2, ',', ' ') }} · Total payé : {{ number_format($finance['contributions']->sum('paid_amount'), 2, ',', ' ') }} · Reste à payer : {{ number_format($finance['contributions']->sum(fn ($contribution) => max(0, $contribution->balance())), 2, ',', ' ') }}.</p>
 <table><thead><tr><th>Choriste</th><th>Montant dû</th><th>Montant payé</th><th>Reste à payer</th><th>Statut</th></tr></thead><tbody>

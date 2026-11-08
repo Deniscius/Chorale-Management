@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Http\Middleware\AuthenticateChoraleSession;
 use App\Http\Middleware\EnsureModuleAccess;
 use App\Mail\Transport\BrevoApiTransport;
+use App\Models\Account;
 use App\Models\Activity;
 use App\Models\ActivityParticipant;
 use App\Models\AttendanceIncident;
@@ -19,6 +20,7 @@ use App\Models\Donation;
 use App\Models\FinancialType;
 use App\Models\LetterheadTemplate;
 use App\Models\Member;
+use App\Models\MemberExpense;
 use App\Models\MemberInvitation;
 use App\Models\Rehearsal;
 use App\Models\RehearsalAttendance;
@@ -115,7 +117,7 @@ class AppServiceProvider extends ServiceProvider
         // composant Livewire) pour que les interactions x-data de la coque restent actives.
         app('livewire')->forceAssetInjection();
         Livewire::addPersistentMiddleware([EnsureModuleAccess::class, AuthenticateChoraleSession::class]);
-        foreach ([FinancialType::class, MemberInvitation::class, CommissionTeam::class, User::class, Document::class, Donation::class, Contribution::class, Budget::class, Transaction::class, Reminder::class, RehearsalRhythm::class, LetterheadTemplate::class, VoiceResource::class, AttendanceRule::class, AttendanceIncident::class, Rehearsal::class, RehearsalAttendance::class, Activity::class, ActivityParticipant::class] as $model) {
+        foreach ([Account::class, MemberExpense::class, FinancialType::class, MemberInvitation::class, CommissionTeam::class, User::class, Document::class, Donation::class, Contribution::class, Budget::class, Transaction::class, Reminder::class, RehearsalRhythm::class, LetterheadTemplate::class, VoiceResource::class, AttendanceRule::class, AttendanceIncident::class, Rehearsal::class, RehearsalAttendance::class, Activity::class, ActivityParticipant::class] as $model) {
             $model::observe(AuditObserver::class);
         }
 

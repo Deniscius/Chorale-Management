@@ -45,7 +45,7 @@
 
         <div class="grid gap-4 sm:grid-cols-4">
             <div>
-                <x-input-label for="transactions-form-account_id" value="Compte" />
+                <x-input-label for="transactions-form-account_id" value="Compte d’opération" />
                 <select id="transactions-form-account_id" aria-describedby="transactions-form-account_id-error" aria-invalid="{{ $errors->has('account_id') ? 'true' : 'false' }}" wire:model="account_id"
                     class="form-select mt-1">
                     <option value="">—</option>
@@ -53,6 +53,7 @@
                         <option value="{{ $account->id }}">{{ $account->code }} — {{ $account->name }}</option>
                     @endforeach
                 </select>
+                <a href="{{ route('accounting.accounts') }}" wire:navigate class="text-sm underline">Créer ou modifier les comptes</a>
                 <x-input-error id="transactions-form-account_id-error" :messages="$errors->get('account_id')" class="mt-1" />
             </div>
 
@@ -70,7 +71,7 @@
 
             <div>
                 <x-input-label for="transactions-form-category" value="Poste" />
-                <input id="transactions-form-category" type="text" list="categories" aria-describedby="transactions-form-category-error" aria-invalid="{{ $errors->has('category') ? 'true' : 'false' }}" wire:model="category"
+                <input id="transactions-form-category" type="text" list="transactions-form-categories" aria-describedby="transactions-form-category-error" aria-invalid="{{ $errors->has('category') ? 'true' : 'false' }}" wire:model="category"
                     class="form-select mt-1">
                 <datalist id="transactions-form-categories">
                     @foreach ($this->categoryOptions as $value => $label)

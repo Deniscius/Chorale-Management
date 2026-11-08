@@ -144,6 +144,9 @@
                         <x-enum-badge :enum="$activity->status" />
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-right">
+                        @can('view-module', \App\Enums\UserRole::MODULE_COMPTABILITE)
+                            <div class="mb-2 flex justify-end gap-2"><a href="{{ route('transactions.index', ['activite' => $activity->id]) }}" wire:navigate class="btn btn-secondary btn-sm">Écritures</a><a href="{{ route('accounting.member-expenses', ['activite' => $activity->id]) }}" wire:navigate class="btn btn-secondary btn-sm">Avances</a></div>
+                        @endcan
                         @if ($this->canManage())
                             <div class="flex items-center justify-end gap-1">
                                 @unless (in_array($activity->status->value, ['terminee', 'annulee'], true))

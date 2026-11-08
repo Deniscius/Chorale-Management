@@ -77,7 +77,7 @@ class Form extends Component
         ];
     }
 
-    public function mount(?Transaction $transaction = null): void
+    public function mount(?Transaction $transaction = null, ?int $activityId = null): void
     {
         $this->authorizeManage();
 
@@ -102,6 +102,9 @@ class Form extends Component
             ]);
         } else {
             $this->transaction_date = today()->format('Y-m-d');
+            if ($activityId) {
+                $this->activity_id = (string) Activity::query()->findOrFail($activityId)->id;
+            }
         }
     }
 
@@ -137,7 +140,8 @@ class Form extends Component
     #[Computed]
     public function accounts()
     {
-        return Account::query()->where('is_active', true)->orderBy('code')->get();
+        return Account::query()->where(fn ($query) => $query->where('is_active', true)
+            ->when($this->transaction?->account_id, fn ($q, $id) => $q->orWhere('id', $id)))->orderBy('code')->get();
     }
 
     #[Computed]

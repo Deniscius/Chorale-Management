@@ -1,8 +1,8 @@
 <?php
 
 use App\Enums\UserRole;
-use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\ActivityFinancialReportController;
+use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ChoraleLogoController;
@@ -22,8 +22,8 @@ use App\Http\Controllers\MemberReportController;
 use App\Http\Controllers\NotificationCenterController;
 use App\Http\Controllers\PersonalNotebookController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ReportsCenterController;
 use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Controllers\ReportsCenterController;
 use App\Http\Controllers\RunReminderSchedulerController;
 use App\Http\Controllers\TenantAddressController;
 use App\Http\Controllers\TenantJoinRequestController;
@@ -31,16 +31,18 @@ use App\Http\Controllers\TenantRegistrationController;
 use App\Http\Controllers\VoiceResourceAudioController;
 use App\Http\Controllers\VoiceSpaceController;
 use App\Http\Middleware\TenantAddress;
+use App\Livewire\Accounting\Accounts;
 use App\Livewire\Accounting\Dashboard as AccountingDashboard;
+use App\Livewire\Accounting\MemberExpenses;
 use App\Livewire\Accounting\MemberOverview as AccountingMemberOverview;
 use App\Livewire\Activities\Index as ActivitiesIndex;
 use App\Livewire\Attendance\FinancialReport as AttendanceFinancialReport;
 use App\Livewire\Attendance\Sheet as AttendanceSheet;
 use App\Livewire\Audit\Index;
 use App\Livewire\Budgets\Index as BudgetsIndex;
+use App\Livewire\Communications\Compose as CommunicationsCompose;
 use App\Livewire\Contributions\CounterResets;
 use App\Livewire\Contributions\Index as ContributionsIndex;
-use App\Livewire\Communications\Compose as CommunicationsCompose;
 use App\Livewire\Correspondences\Index as CorrespondencesIndex;
 use App\Livewire\Documents\Index as DocumentsIndex;
 use App\Livewire\Donations\Index as DonationsIndex;
@@ -214,6 +216,10 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
         ->name('attendance.sheet');
 
     // Comptabilité
+    Route::get('/comptabilite/comptes', Accounts::class)
+        ->middleware('module:'.UserRole::MODULE_COMPTABILITE)->name('accounting.accounts');
+    Route::get('/comptabilite/avances', MemberExpenses::class)
+        ->middleware('module:'.UserRole::MODULE_COMPTABILITE)->name('accounting.member-expenses');
     Route::get('/comptabilite/synthese', AccountingDashboard::class)
         ->middleware('module:'.UserRole::MODULE_COMPTABILITE)->name('accounting.dashboard');
 

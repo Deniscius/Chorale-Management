@@ -3,6 +3,8 @@
     <x-page-header title="Recettes & dépenses" icon="banknotes"
         :subtitle="'Journal des opérations de la chorale — '.$this->stats['total'].' écriture(s).'">
         <x-slot name="actions">
+            <a href="{{ route('accounting.accounts') }}" wire:navigate class="btn btn-secondary">Comptes</a>
+            <a href="{{ route('accounting.member-expenses', ['activite' => $activityId]) }}" wire:navigate class="btn btn-secondary">Avances des choristes</a>
             <a href="{{ route('accounting.dashboard') }}" wire:navigate class="btn btn-secondary">Synthèse comptable</a>
             @if ($this->canManage())
                 <button type="button" wire:click="create"
@@ -15,10 +17,10 @@
     </x-page-header>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat-card label="Recettes" :value="\App\Support\Money::compact($this->stats['recettes'])" icon="banknotes" color="green" :href="route('transactions.index', ['type'=>'recette','vue'=>'validees']).'#resultats'" />
-        <x-stat-card label="Dépenses" :value="\App\Support\Money::compact($this->stats['depenses'])" icon="banknotes" color="red" :href="route('transactions.index', ['type'=>'depense','vue'=>'validees']).'#resultats'" />
-        <x-stat-card label="Solde" :value="\App\Support\Money::compact($this->stats['solde'])" icon="chart" color="blue" :href="route('transactions.index', ['vue'=>'validees']).'#resultats'" />
-        <x-stat-card label="Brouillons" :value="$this->stats['brouillons']" icon="folder" color="amber" :href="route('transactions.index', ['statut'=>'brouillon']).'#resultats'" />
+        <x-stat-card label="Recettes" :value="\App\Support\Money::compact($this->stats['recettes'])" icon="banknotes" color="green" :href="route('transactions.index', ['activite'=>$activityId,'compte'=>$accountId,'type'=>'recette','vue'=>'validees']).'#resultats'" />
+        <x-stat-card label="Dépenses" :value="\App\Support\Money::compact($this->stats['depenses'])" icon="banknotes" color="red" :href="route('transactions.index', ['activite'=>$activityId,'compte'=>$accountId,'type'=>'depense','vue'=>'validees']).'#resultats'" />
+        <x-stat-card label="Solde" :value="\App\Support\Money::compact($this->stats['solde'])" icon="chart" color="blue" :href="route('transactions.index', ['activite'=>$activityId,'compte'=>$accountId,'vue'=>'validees']).'#resultats'" />
+        <x-stat-card label="Brouillons" :value="$this->stats['brouillons']" icon="folder" color="amber" :href="route('transactions.index', ['activite'=>$activityId,'compte'=>$accountId,'statut'=>'brouillon']).'#resultats'" />
     </div>
 
     @if ($overview !== '')
@@ -90,7 +92,7 @@
             </div>
         </div>
 
-        @if ($this->search !== '' || $this->type !== '' || $this->status !== '' || $this->category !== '' || $this->month !== '' || $this->year !== '')
+        @if ($this->search !== '' || $this->type !== '' || $this->status !== '' || $this->category !== '' || $this->month !== '' || $this->year !== '' || $activityId || $accountId)
             <div class="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
                 <span class="text-xs text-slate-500">Filtres actifs</span>
                 <button type="button" wire:click="resetFilters"
@@ -101,6 +103,11 @@
         @endif
     </x-filter-bar>
 
+    <div class="my-4 grid gap-4 md:grid-cols-2">
+        <div><label for="transaction-activity-filter" class="form-label">Activité</label><select id="transaction-activity-filter" wire:model.live="activityId" class="form-select"><option value="">Toutes les activités</option>@foreach($this->activities as $activity)<option value="{{ $activity->id }}">{{ $activity->title }}</option>@endforeach</select></div>
+        <div><label for="transaction-account-filter" class="form-label">Compte d’opération</label><select id="transaction-account-filter" wire:model.live="accountId" class="form-select"><option value="">Tous les comptes</option>@foreach($this->accounts as $account)<option value="{{ $account->id }}">{{ $account->code }} — {{ $account->name }}{{ $account->is_active ? '' : ' (désactivé)' }}</option>@endforeach</select></div>
+    </div>
+    @if($activityId)<p class="my-3 text-sm text-slate-600">Toutes les écritures de cette activité sont incluses, même hors de la période globale de travail. Les autres filtres ci-dessus restent applicables.</p>@endif
     <div class="mt-4">
         <x-data-table id="resultats" :headers="[
             ['label' => 'Référence'],
@@ -126,7 +133,10 @@
                         <p class="text-sm text-slate-800">{{ $transaction->description }}</p>
                         @if ($transaction->member || $transaction->activity || $transaction->performance)
                             <p class="mt-0.5 text-xs text-slate-500">
-                                {{ $transaction->member?->full_name ?? $transaction->activity?->title ?? $transaction->performance?->title }}
+                                @if($transaction->member)<span class="block">Choriste : {{ $transaction->member->full_name }}</span>@endif
+                                @if($transaction->activity)<a href="{{ route('transactions.index', ['activite' => $transaction->activity_id]) }}" wire:navigate class="block underline">Activité : {{ $transaction->activity->title }}</a>@endif
+                                @if($transaction->performance)<span class="block">Célébration : {{ $transaction->performance->title }}</span>@endif
+                                @if($transaction->member_expense_id)<a href="{{ route('accounting.member-expenses', ['activite' => $transaction->activity_id]) }}" wire:navigate class="block underline">Remboursement de l’avance #{{ $transaction->member_expense_id }}</a>@endif
                             </p>
                         @endif
                     </td>
@@ -137,10 +147,10 @@
                         {{ $transaction->category ?? '—' }}
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
-                        {{ $transaction->account?->code ?? '—' }}
+                        {{ $transaction->account?->code ?? '—' }}<p class="text-xs text-slate-500">{{ $transaction->account?->name }}</p>
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold {{ $transaction->type->value === 'recette' ? 'text-emerald-700' : 'text-rose-700' }}">
-                        {{ $transaction->type->value === 'recette' ? '+' : '−' }} {{ \App\Support\Money::format($transaction->amount, false) }}
+                        {{ $transaction->type->value === 'recette' ? '+' : '−' }} {{ number_format((float) $transaction->amount, 2, ',', ' ') }}
                     </td>
                     <td class="whitespace-nowrap px-4 py-3">
                         <x-enum-badge :enum="$transaction->status" />
@@ -174,7 +184,7 @@
     @if ($showForm)
         <x-modal-panel :title="$editingId ? 'Modifier l\'opération' : 'Nouvelle opération'"
             subtitle="La référence d'écriture (OP/AAAA/0000) est attribuée automatiquement.">
-            <livewire:transactions.form :transaction="$this->editingTransaction" />
+            <livewire:transactions.form :transaction="$this->editingTransaction" :activity-id="$activityId" />
         </x-modal-panel>
     @endif
 </div>

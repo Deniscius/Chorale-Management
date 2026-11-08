@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Models\Account;
 use App\Models\Activity;
 use App\Models\ActivityParticipant;
 use App\Models\AttendanceIncident;
@@ -15,10 +16,11 @@ use App\Models\Document;
 use App\Models\Donation;
 use App\Models\FinancialType;
 use App\Models\LetterheadTemplate;
+use App\Models\MemberExpense;
 use App\Models\MemberInvitation;
 use App\Models\Rehearsal;
-use App\Models\RehearsalRhythm;
 use App\Models\RehearsalAttendance;
+use App\Models\RehearsalRhythm;
 use App\Models\Reminder;
 use App\Models\Transaction;
 use App\Models\User;
@@ -31,6 +33,8 @@ final class AuditObserver
     private function fields(Model $model): array
     {
         return match ($model::class) {
+            Account::class => ['code', 'name', 'type', 'is_active', 'description'],
+            MemberExpense::class => ['member_id', 'activity_id', 'incurred_on', 'description', 'amount', 'claimed_on', 'evidence_reference', 'status', 'decision_note', 'decided_by', 'decided_at'],
             ChoirCommission::class => ['name', 'kind', 'mission', 'starts_on', 'ends_on', 'archived_at', 'module_key', 'leader_id', 'associate_id'],
             User::class => ['role', 'member_id'],
             FinancialType::class => ['kind', 'label', 'default_amount', 'is_active', 'base_type'],
@@ -40,7 +44,7 @@ final class AuditObserver
             Donation::class => ['type_code', 'amount', 'donor_type', 'member_id', 'transaction_id', 'donated_on'],
             Contribution::class => ['type_code', 'member_id', 'activity_id', 'year', 'month', 'due_amount', 'paid_amount', 'paid_on', 'status'],
             Budget::class => ['year', 'category', 'allocated_amount', 'committed_amount', 'opening_realized_amount'],
-            Transaction::class => ['reference', 'type', 'amount', 'transaction_date', 'status', 'budget_id', 'member_id', 'validated_by'],
+            Transaction::class => ['account_id', 'activity_id', 'member_expense_id', 'reference', 'type', 'amount', 'transaction_date', 'status', 'budget_id', 'member_id', 'validated_by'],
             Reminder::class => ['status', 'attempts'],
             LetterheadTemplate::class => ['original_name', 'status', 'header_height_mm', 'activated_at'],
             VoiceResource::class => ['voice', 'title', 'audio_original_name', 'audio_size'],

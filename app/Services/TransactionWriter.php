@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Enums\TransactionStatus;
+use App\Models\Account;
+use App\Models\Activity;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -15,6 +17,15 @@ final class TransactionWriter
             $entry = $entry?->exists ? Transaction::query()->lockForUpdate()->findOrFail($entry->id) : new Transaction;
             if ($entry->exists) {
                 $this->assertEditable($entry);
+            }
+            if ($data['account_id'] ?? null) {
+                $account = Account::query()->findOrFail($data['account_id']);
+                if (! $account->is_active && (int) $entry->account_id !== (int) $account->id) {
+                    throw ValidationException::withMessages(['account_id' => 'Ce compte est désactivé. Choisissez un compte actif.']);
+                }
+            }
+            if ($data['activity_id'] ?? null) {
+                Activity::query()->findOrFail($data['activity_id']);
             }
             $entry->fill($data);
             if (! $entry->exists) {

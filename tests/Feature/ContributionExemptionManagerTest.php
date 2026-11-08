@@ -27,7 +27,7 @@ class ContributionExemptionManagerTest extends TestCase
             $activity = \App\Models\Activity::factory()->create();
             $type = new FinancialType;
             $type->forceFill(['code' => 'participation-activite-'.$activity->id, 'label' => 'Participation', 'label_key' => 'participation', 'kind' => 'contribution'])->save();
-            $unpaid = Contribution::factory()->create(['member_id' => $member->id, 'activity_id' => $activity->id, 'type_code' => $type->code, 'due_amount' => 3000, 'paid_amount' => 0, 'status' => 'due']);
+            $unpaid = Contribution::factory()->create(['member_id' => $member->id, 'activity_id' => $activity->id, 'type_code' => $type->code, 'year' => 2026, 'month' => 10, 'due_amount' => 3000, 'paid_amount' => 0, 'status' => 'due']);
             $otherActivity = \App\Models\Activity::factory()->create();
             $paid = Contribution::factory()->create(['member_id' => $member->id, 'activity_id' => $otherActivity->id, 'type_code' => $type->code, 'year' => 2026, 'month' => 9, 'due_amount' => 3000, 'paid_amount' => 3000, 'status' => 'payee']);
             [$exemption, $count] = app(ContributionExemptionManager::class)->create(['member_id' => $member->id, 'activity_id' => $activity->id, 'type_code' => $type->code, 'starts_on' => today(), 'ends_on' => today(), 'reason' => 'Décision', 'approved_by' => $admin->id]);

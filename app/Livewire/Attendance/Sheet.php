@@ -103,15 +103,15 @@ final class Sheet extends Component
         $this->validateRows(true);
 
         DB::transaction(function (): void {
+            $event = $this->eventType === 'rehearsal'
+                ? Rehearsal::query()->lockForUpdate()->findOrFail($this->eventId)
+                : Activity::query()->lockForUpdate()->findOrFail($this->eventId);
+            abort_if($event->attendance_finalized_at !== null, 422, 'Cette fiche est déjà finalisée.');
             $this->persistRows();
             if ($this->eventType === 'rehearsal') {
-                $event = Rehearsal::query()->lockForUpdate()->findOrFail($this->eventId);
-                abort_if($event->attendance_finalized_at !== null, 422, 'Cette fiche est déjà finalisée.');
                 $event->forceFill(['attendance_finalized_at' => now(), 'attendance_finalized_by' => auth()->id()])->save();
                 app(AttendanceIncidentManager::class)->finalizeRehearsal($event);
             } else {
-                $event = Activity::query()->lockForUpdate()->findOrFail($this->eventId);
-                abort_if($event->attendance_finalized_at !== null, 422, 'Cette fiche est déjà finalisée.');
                 $event->forceFill(['attendance_finalized_at' => now(), 'attendance_finalized_by' => auth()->id()])->save();
                 app(AttendanceIncidentManager::class)->finalizeActivity($event);
             }
@@ -139,8 +139,8 @@ final class Sheet extends Component
     public function events()
     {
         return $this->eventType === 'rehearsal'
-            ? Rehearsal::query()->orderByDesc('date')->limit(100)->get()
-            : Activity::query()->orderByDesc('starts_at')->limit(100)->get();
+            ? Rehearsal::query()->orderByDesc('date')->get()
+            : Activity::query()->orderByDesc('starts_at')->get();
     }
 
     #[Computed]
@@ -175,6 +175,7 @@ final class Sheet extends Component
     {
         $statuses = array_keys($this->statusOptions);
         $this->validate([
+            'eventType' => ['required', Rule::in(['rehearsal', 'activity'])],
             'eventId' => ['required', 'integer'],
             'rows' => [$final ? 'required' : 'present', 'array', ...($final ? ['min:1'] : [])],
             'rows.*.member_id' => ['required', 'integer'],

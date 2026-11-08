@@ -41,7 +41,7 @@ final class ActivityFinancialReportController
             : collect();
 
         return response()->view('documents.activity-financial-report', compact('identity', 'from', 'to', 'orientation', 'activities', 'transactions', 'memberExpenses') + [
-            'header' => $letterhead->headerDataUri(), 'headerHeightMm' => $letterhead->headerHeightMm(),
+            ...$letterhead->viewData(),
             'summary' => ['budget' => (float) $activities->sum('budget_allocated'), 'activity_spent' => (float) $activities->sum('budget_spent'), 'receipts' => $receipts, 'expenses' => $expenses, 'balance' => $receipts - $expenses, 'participation_due' => $due, 'participation_paid' => $paid],
         ], 200, ['Cache-Control' => 'private, no-store', 'Content-Disposition' => HeaderUtils::makeDisposition('inline', 'rapport-activites-finances-'.$from->format('Y-m-d').'-'.$to->format('Y-m-d').'.html'), 'X-Content-Type-Options' => 'nosniff']);
     }

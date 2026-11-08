@@ -25,8 +25,7 @@ final class MemberReportController extends Controller
         $filename = 'rapport-general-choristes-'.today()->format('Y-m-d').'.html';
 
         return response()->view('documents.member-report', [
-            'header' => $letterhead->headerDataUri(),
-            'headerHeightMm' => $letterhead->headerHeightMm(),
+            ...$letterhead->viewData(),
             'identity' => $identity,
             'members' => $members,
             'statusCounts' => $statusCounts,

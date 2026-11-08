@@ -90,6 +90,9 @@ final class ReceiptLedger
             $validated = $entries->filter(fn (Transaction $entry) => $entry->isLocked())->sum(fn ($entry) => $this->cents($entry->amount));
             $previousPaidOn = $contribution->paid_on;
             $contribution->fill($data);
+            if ($previousPaidOn && $contribution->paid_on?->isSameDay($previousPaidOn)) {
+                $contribution->paid_on = $contribution->getRawOriginal('paid_on');
+            }
             $paid = $this->cents($contribution->paid_amount ?? 0);
             $due = $this->cents($contribution->due_amount);
             if ($paid < 0 || $paid > $due || $paid < $validated) {
@@ -100,7 +103,14 @@ final class ReceiptLedger
             }
             // Never infer a second receipt for a historical payment without an accounting link.
             if ($contribution->exists && $entries->isEmpty() && $this->cents($contribution->getRawOriginal('paid_amount') ?? 0) > 0) {
-                throw ValidationException::withMessages(['paid_amount' => 'Ce règlement historique doit être rapproché par le trésorier avant modification.']);
+                if ($contribution->isDirty(['member_id', 'activity_id', 'year', 'month', 'due_amount', 'paid_amount', 'paid_on'])
+                    || ($contribution->isDirty('type_code') && ! ($contribution->getRawOriginal('type_code') === null && $contribution->type_code === 'mensuelle'))) {
+                    throw ValidationException::withMessages(['paid_amount' => 'Ce règlement historique doit être rapproché par le trésorier avant modification des montants ou de la période. Les notes restent modifiables.']);
+                }
+                $contribution->status = $contribution->getRawOriginal('status');
+                $contribution->save();
+
+                return $contribution;
             }
             $contribution->status = $paid > 0 ? ($paid >= $due ? ContributionStatus::Payee : ContributionStatus::Partiel)
                 : ($contribution->status === ContributionStatus::Retard ? ContributionStatus::Retard : ContributionStatus::Due);

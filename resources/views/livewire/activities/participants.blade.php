@@ -22,7 +22,7 @@
                 @forelse($this->availableMembers as $member)
                     <label wire:key="member-check-{{ $member->id }}" class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-slate-50 focus-within:ring-2 focus-within:ring-indigo-500">
                         <input type="checkbox" value="{{ $member->id }}" wire:model.live="selectedMemberIds" class="h-4 w-4 rounded border-slate-300 text-indigo-700" />
-                        <span class="font-medium text-slate-800">{{ $member->full_name }}</span>
+                        <span class="font-medium text-slate-800">{{ $member->full_name }}{{ $member->status === \App\Enums\MemberStatus::Externe ? ' · Intervenant extérieur' : '' }}</span>
                     </label>
                 @empty
                     <p class="p-3 text-sm text-slate-500">Aucun choriste disponible pour ce filtre.</p>
@@ -49,7 +49,7 @@
                     class="form-select mt-1">
                     <option value="">—</option>
                     @foreach ($this->availableMembers as $member)
-                        <option value="{{ $member->id }}">{{ $member->full_name }}</option>
+                        <option value="{{ $member->id }}">{{ $member->full_name }}{{ $member->status === \App\Enums\MemberStatus::Externe ? ' · Intervenant extérieur' : '' }}</option>
                     @endforeach
                 </select>
                 <x-input-error id="activities-participants-memberId-error" :messages="$errors->get('memberId')" class="mt-1" />
@@ -125,7 +125,7 @@
                     @forelse ($this->participants as $participant)
                         <tr wire:key="participant-{{ $participant->id }}" class="transition hover:bg-slate-50">
                             <td class="px-4 py-3 text-sm font-medium text-slate-900">
-                                {{ $participant->full_name }}
+                                {{ $participant->full_name }}{{ $participant->status === \App\Enums\MemberStatus::Externe ? ' · Intervenant extérieur' : '' }}
                             </td>
                             <td class="px-4 py-3 text-sm text-slate-600">
                                 {{ $participant->pivot->role ? (\App\Enums\ActivityRole::tryFrom($participant->pivot->role)?->label() ?? $participant->pivot->role) : '—' }}

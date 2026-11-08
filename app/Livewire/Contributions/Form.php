@@ -78,7 +78,7 @@ class Form extends Component
         if ($contribution) {
             $this->fill([
                 'payment_method' => $contribution->receipts()->where('status', 'brouillon')->value('payment_method') ?? 'especes',
-                'type_code' => $contribution->type_code,
+                'type_code' => $contribution->type_code ?: 'mensuelle',
                 'member_id' => $contribution->member_id,
                 'year' => (string) $contribution->year,
                 'month' => (string) $contribution->month,

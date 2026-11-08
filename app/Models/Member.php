@@ -178,6 +178,11 @@ class Member extends Model
     /**
      * Scope : recherche plein texte simple.
      */
+    public function scopeActivityEligible(Builder $query): Builder
+    {
+        return $query->whereIn('status', [MemberStatus::Actif->value, MemberStatus::Externe->value]);
+    }
+
     public function scopeSearch(Builder $query, ?string $term): Builder
     {
         if (blank($term)) {

@@ -1,4 +1,5 @@
 <div>
+    <x-validation-summary />
     <x-page-header title="Fiches de présence" icon="users"
         subtitle="Saisissez les faits, enregistrez un brouillon puis finalisez la fiche pour la transmettre à la comptabilité." />
 
@@ -31,6 +32,22 @@
     </div>
 
     @if($this->selectedEvent)
+        @if($eventType === 'activity' && !$this->isFinalized())
+            @can('manage-attendance')
+                <section class="mt-5 rounded-xl border border-slate-200 bg-white p-5" aria-label="Ajouter des choristes à l’activité">
+                    <h2 class="font-semibold">Choristes attendus pour cette activité</h2>
+                    <p class="mt-1 text-sm text-slate-600">Sélectionnez les participants pour préparer la fiche. L’ajout ne les marque pas présents. Les frais de participation s’appliquent aux choristes actifs ; les intervenants extérieurs en sont exclus.</p>
+                    <x-input id="attendance-member-search" name="memberSearch" label="Rechercher un choriste" wire:model.live.debounce.300ms="memberSearch" class="mt-3" />
+                    <fieldset class="mt-3 max-h-60 space-y-2 overflow-y-auto rounded-lg border p-3">
+                        <legend class="px-1 text-sm font-medium">Choristes actifs et intervenants disponibles</legend>
+                        @forelse($this->availableMembers as $member)
+                            <label wire:key="available-{{ $eventId }}-{{ $member->id }}" class="flex items-center gap-2"><input type="checkbox" wire:model="selectedMemberIds" value="{{ $member->id }}">{{ $member->full_name }}{{ $member->status === \App\Enums\MemberStatus::Externe ? ' · Intervenant extérieur' : '' }}</label>
+                        @empty<p class="text-sm text-slate-600">Aucun autre participant disponible ne correspond à la recherche.</p>@endforelse
+                    </fieldset>
+                    <div class="mt-3 flex flex-wrap gap-3"><button type="button" wire:click="selectVisibleMembers" class="btn btn-secondary">Sélectionner la liste affichée</button><button type="button" wire:click="addSelectedMembers" wire:loading.attr="disabled" class="btn btn-primary">Ajouter à la fiche</button></div>
+                </section>
+            @endcan
+        @endif
         <div class="mt-5 rounded-xl border border-slate-200 bg-white shadow-sm">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
                 <div>
@@ -53,7 +70,7 @@
 
             @if(count($rows) === 0)
                 <div class="p-8 text-center text-sm text-slate-600">
-                    {{ $eventType === 'activity' ? 'Ajoutez d’abord les participants à cette activité.' : 'Aucun choriste actif à afficher.' }}
+                    {{ $eventType === 'activity' ? 'Aucun participant inscrit. Ajoutez les choristes attendus avec la sélection ci-dessus.' : 'Aucun choriste actif à afficher.' }}
                 </div>
             @else
                 <div class="overflow-x-auto">
@@ -66,7 +83,7 @@
                         </tr></thead>
                         <tbody class="divide-y divide-slate-100">
                             @foreach($rows as $index => $row)
-                                <tr wire:key="attendance-row-{{ $row['member_id'] }}">
+                                <tr wire:key="attendance-row-{{ $eventType }}-{{ $eventId }}-{{ $row['member_id'] }}">
                                     <td class="px-4 py-3 text-sm font-medium text-slate-900">{{ $row['name'] }}</td>
                                     <td class="px-4 py-3">
                                         <select wire:model.live="rows.{{ $index }}.status" @disabled($this->isFinalized()) class="form-select min-w-36">
@@ -95,6 +112,8 @@
             @endif
 
             <div class="flex flex-wrap justify-end gap-3 border-t border-slate-200 px-5 py-4">
+                <a href="{{ route('attendance.report', [$eventType === 'rehearsal' ? 'repetition' : 'activite', $eventId, 'document' => 'fiche']) }}" target="_blank" rel="noopener" class="btn btn-secondary">Imprimer la fiche de présence</a>
+                @if($eventType === 'activity')<a href="{{ route('activities.detail-report', $eventId) }}" target="_blank" rel="noopener" class="btn btn-secondary">Rapport de l’activité</a>@endif
                 @if(!$this->isFinalized())
                     <a href="{{ route('attendance.report', [$eventType === 'rehearsal' ? 'repetition' : 'activite', $eventId]) }}" target="_blank" rel="noopener" class="btn btn-secondary">Rapport provisoire (données enregistrées)</a>
                 @endif

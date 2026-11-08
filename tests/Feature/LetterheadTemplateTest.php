@@ -119,7 +119,7 @@ class LetterheadTemplateTest extends TestCase
         $this->actingAs($admin)->get(route('settings.letterheads.sample'))
             ->assertOk()
             ->assertSee('data:image/png;base64,', false)
-            ->assertSee('width:210mm;height:52mm', false);
+            ->assertSee('class="document-letterhead"', false)->assertSee('height:auto', false)->assertDontSee('object-fit:fill', false);
     }
 
     public function test_a_non_administrator_cannot_manage_or_read_letterhead_files(): void

@@ -1,6 +1,9 @@
 <div>
     <form wire:submit="save" class="space-y-5">
         <x-validation-summary />
+        @if($contribution)
+            <p class="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">Les règlements validés restent protégés : leur montant, leur choriste et leur période nécessitent une régularisation comptable. Pour un ancien règlement sans écriture liée, les notes restent modifiables ; contactez la trésorerie pour rapprocher le paiement avant de changer les montants.</p>
+        @endif
         <div>
             <x-input-label for="contributions-form-type" value="Type de cotisation" />
             <select id="contributions-form-type" wire:model.live="type_code" class="form-select mt-1">@foreach($this->typeOptions as $code => $label)<option value="{{ $code }}">{{ $label }}</option>@endforeach</select>

@@ -60,6 +60,11 @@
                                 <img src="{{ route('settings.letterheads.file', [$template, 'preview']) }}" alt="Aperçu de la première page" class="mx-auto max-h-96 object-contain" />
                             </a>
                             <div class="space-y-3">
+                                @if($template->header_path)
+                                    <p class="text-xs font-semibold text-slate-600">En-tête qui sera imprimé</p>
+                                    <a href="{{ route('settings.letterheads.file', [$template, 'header']) }}" target="_blank" rel="noopener"><img src="{{ route('settings.letterheads.file', [$template, 'header']) }}" alt="Zone d’en-tête conservée pour les rapports" style="display:block;width:100%;height:auto;object-fit:contain" class="rounded border bg-white" /></a>
+                                    <p class="text-xs text-slate-500">Si une ligne est coupée, augmentez la hauteur, recalculez puis activez la nouvelle version.</p>
+                                @endif
                                 <label class="text-sm font-medium text-slate-700" for="height-{{ $template->id }}">Zone d’en-tête</label>
                                 <div class="flex items-center gap-2"><x-text-input id="height-{{ $template->id }}" type="number" min="20" max="100" wire:model="heights.{{ $template->id }}" class="w-24" /><span class="text-sm text-slate-500">mm</span></div>
                                 <button type="button" wire:click="reprocess({{ $template->id }})" class="btn btn-secondary">Recalculer l’aperçu</button>

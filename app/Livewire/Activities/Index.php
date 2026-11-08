@@ -9,6 +9,7 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Activity;
 use App\Models\Choir;
 use App\Services\ManagementYearContext;
+use App\Support\SearchTerms;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -95,6 +96,8 @@ class Index extends Component
     {
         $this->authorizeManage();
 
+        $activity = Activity::query()->findOrFail($activityId);
+        abort_if($activity->attendance_finalized_at !== null, 422, 'Rouvrez la fiche de présence avant de modifier les participants.');
         $this->participantsActivityId = $activityId;
         $this->showParticipants = true;
     }
@@ -162,7 +165,7 @@ class Index extends Component
             ->when(app(ManagementYearContext::class)->selected(), fn (Builder $query, $year) => $query->whereDate('starts_at', '>=', $year->starts_on)->whereDate('starts_at', '<=', $year->ends_on))
             ->with('commission:id,name')
             ->withCount('participants')
-            ->when(trim($this->search) !== '', fn (Builder $query) => \App\Support\SearchTerms::apply($query, $this->search, ['title','description','venue']))
+            ->when(trim($this->search) !== '', fn (Builder $query) => SearchTerms::apply($query, $this->search, ['title', 'description', 'venue']))
             ->when($this->type !== '', fn (Builder $query) => $query->where('type', $this->type))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->choirId, fn (Builder $query) => $query->where('choir_id', $this->choirId))
@@ -218,9 +221,9 @@ class Index extends Component
         $row = Activity::query()
             ->when(app(ManagementYearContext::class)->selected(), fn (Builder $query, $year) => $query->whereDate('starts_at', '>=', $year->starts_on)->whereDate('starts_at', '<=', $year->ends_on))
             ->selectRaw(
-            'COUNT(*) AS total, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS planifiees, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS terminees, COALESCE(SUM(CASE WHEN starts_at >= ? THEN 1 ELSE 0 END), 0) AS a_venir, COALESCE(SUM(budget_allocated), 0) AS budget, COALESCE(SUM(budget_spent), 0) AS depense',
-            [ActivityStatus::Planifiee->value, ActivityStatus::Terminee->value, now()->startOfDay()]
-        )->toBase()->first();
+                'COUNT(*) AS total, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS planifiees, COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS terminees, COALESCE(SUM(CASE WHEN starts_at >= ? THEN 1 ELSE 0 END), 0) AS a_venir, COALESCE(SUM(budget_allocated), 0) AS budget, COALESCE(SUM(budget_spent), 0) AS depense',
+                [ActivityStatus::Planifiee->value, ActivityStatus::Terminee->value, now()->startOfDay()]
+            )->toBase()->first();
 
         return ['total' => (int) $row->total, 'planifiees' => (int) $row->planifiees, 'terminees' => (int) $row->terminees, 'a_venir' => (int) $row->a_venir, 'budget' => (float) $row->budget, 'depense' => (float) $row->depense];
     }

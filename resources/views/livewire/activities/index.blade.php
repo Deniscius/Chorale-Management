@@ -126,11 +126,13 @@
                         {{ $activity->commission?->name ?? 'À attribuer' }}
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
+                        @if($this->canManage() && !$activity->attendance_finalized_at)
                         <button type="button" wire:click="manageParticipants({{ $activity->id }})"
                             class="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-200">
                             <x-icon name="users" class="h-3.5 w-3.5" />
                             {{ $activity->participants_count }}
                         </button>
+                        @else{{ $activity->participants_count }}@endif
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
                         <x-money :value="$activity->budget_allocated" />
@@ -144,6 +146,10 @@
                         <x-enum-badge :enum="$activity->status" />
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-right">
+                        <div class="mb-2 flex flex-wrap justify-end gap-2">
+                            @can('view-attendance')<a href="{{ route('attendance.sheet', ['type' => 'activity', 'evenement' => $activity->id]) }}" wire:navigate class="btn btn-secondary btn-sm">Fiche de présence</a>@endcan
+                            @if($this->canManage() || auth()->user()->can('view-attendance') || auth()->user()->can('view-module', \App\Enums\UserRole::MODULE_COMPTABILITE))<a href="{{ route('activities.detail-report', $activity) }}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">Rapport complet</a>@endif
+                        </div>
                         @can('view-module', \App\Enums\UserRole::MODULE_COMPTABILITE)
                             <div class="mb-2 flex justify-end gap-2"><a href="{{ route('transactions.index', ['activite' => $activity->id]) }}" wire:navigate class="btn btn-secondary btn-sm">Écritures</a><a href="{{ route('accounting.member-expenses', ['activite' => $activity->id]) }}" wire:navigate class="btn btn-secondary btn-sm">Avances</a></div>
                         @endcan

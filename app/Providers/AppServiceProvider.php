@@ -22,6 +22,7 @@ use App\Models\LetterheadTemplate;
 use App\Models\Member;
 use App\Models\MemberExpense;
 use App\Models\MemberInvitation;
+use App\Models\NotificationDispatch;
 use App\Models\Rehearsal;
 use App\Models\RehearsalAttendance;
 use App\Models\RehearsalRhythm;
@@ -29,6 +30,7 @@ use App\Models\Reminder;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\VoiceResource;
+use App\Notifications\PlatformReminderNotification;
 use App\Observers\AuditObserver;
 use App\Observers\PersonalInformationObserver;
 use App\Services\Ai\AiClient;
@@ -39,6 +41,7 @@ use App\Services\ChoraleAssistant;
 use App\Services\ChoraleIdentity;
 use App\Services\CommissionAccess;
 use App\Services\FinancialCatalog;
+use App\Services\MailConfiguration;
 use App\Services\ManagementYearContext;
 use App\Services\PrivateFiles;
 use App\Services\SettingsStore;
@@ -51,7 +54,10 @@ use App\Tenancy\TenantPresenceVerifier;
 use App\Tenancy\TenantUserProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Mail\Events\MessageSending;
+use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
@@ -107,6 +113,23 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Event::listen(MessageSending::class, function (): void {
+            if (app()->isProduction()) {
+                app(MailConfiguration::class)->assertReady();
+            }
+        });
+        Event::listen(NotificationSent::class, function ($event): void {
+            $notification = $event->notification;
+            if (! $notification instanceof PlatformReminderNotification || ! $notification->dispatchId) {
+                return;
+            }
+            $query = NotificationDispatch::query()->whereKey($notification->dispatchId)->where('user_id', $event->notifiable->id);
+            if ($event->channel === 'database') {
+                $query->update(['notified_at' => now()]);
+            } elseif ($event->channel === 'mail' && $event->response !== null) {
+                $query->update(['mail_status' => 'accepted', 'mail_notified_at' => now()]);
+            }
+        });
         Mail::extend('brevo', fn (array $config) => new BrevoApiTransport($config['key'] ?? null));
         Auth::provider('tenant-eloquent', fn ($app, $config) => new TenantUserProvider($app['hash'], $config['model']));
         foreach (['mail', 'sms', 'application'] as $channel) {

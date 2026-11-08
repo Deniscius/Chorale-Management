@@ -74,6 +74,7 @@
                 ['route' => 'users.index', 'label' => 'Utilisateurs', 'icon' => 'cog', 'admin' => true],
                 ['route' => 'settings.financial-types', 'label' => 'Types de contribution', 'icon' => 'banknotes', 'admin' => true],
                 ['route' => 'settings.chorale', 'label' => 'Informations de la chorale', 'icon' => 'building', 'admin' => true],
+                ['route' => 'settings.email-delivery', 'label' => 'Diagnostic des e-mails', 'icon' => 'mail', 'admin' => true],
             ],
         ],
     ];

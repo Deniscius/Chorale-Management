@@ -1,100 +1,58 @@
-# Configuration Brevo — courriels transactionnels Chorale-Management
+# Notifications e-mail et diagnostic Brevo
 
-## Objectif et limites
+## Configuration effective
 
-Laravel fournit déjà le transport SMTP dans `config/mail.php`. Les courriels
-de réinitialisation de mot de passe et les rappels de répétition peuvent utiliser
-le même transport après activation. Les notifications Web Push, les SMS et les
-notifications en base de données restent indépendants de Brevo.
+Le transport `brevo` utilise `https://api.brevo.com/v3/smtp/email` sur le port 443. Il ne lit pas `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_HOST` ou `MAIL_PORT` : ces paramètres concernent uniquement le transport `smtp`.
 
-**Aucun identifiant Brevo n'est stocké dans ce dépôt.** Le déploiement Render
-conserve `MAIL_MAILER=log` et `MAIL_DELIVERY_ENABLED=false` par défaut.
-Ne pas activer l'envoi tant que la vérification du domaine, les secrets,
-la délivrabilité et les tests n'ont pas abouti.
+Variables requises pour l’API :
 
-## 1. Préparer l'expéditeur dans Brevo
-
-1. Dans Brevo, valider le domaine d'expédition et configurer les enregistrements
-   DNS requis (SPF, DKIM et, idéalement, DMARC), puis attendre leur validation.
-2. Déclarer une adresse expéditrice vérifiée, par exemple
-   `notifications@votre-domaine.tld` (adresse indicative seulement).
-3. Dans **SMTP et API → API Keys**, générer une **clé API v3** dédiée à
-   Chorale Management. Le transport HTTPS est utilisé, car il reste fiable sur
-   les hébergements qui bloquent les ports SMTP.
-4. Vérifier que le compte autorise les e-mails transactionnels.
-
-Documentation : https://help.brevo.com/hc/fr/articles/7924908994450
-
-## 2. Préparer les secrets Render
-
-Dans le service **web** Render (et le **worker** si un service worker séparé
-est utilisé), configurer ces variables sans les partager dans les discussions
-ou les commits :
-
-| Variable | Valeur |
+| Variable | Usage |
 | --- | --- |
-| `BREVO_API_KEY` | clé API v3 Brevo (secret) |
-| `MAIL_FROM_ADDRESS` | adresse expéditrice vérifiée |
-| `MAIL_FROM_NAME` | `Chorale Management` |
-| `MAIL_SCHEME` | laisser non défini (STARTTLS automatique) |
-| `MAIL_MAILER` | d'abord `log`, puis `brevo` lors de l'activation |
-| `MAIL_DELIVERY_ENABLED` | d'abord `false`, puis `true` après test |
+| `MAIL_MAILER=brevo` | Transport API HTTPS |
+| `MAIL_DELIVERY_ENABLED=true` | Activation des envois |
+| `BREVO_API_KEY` | Clé API v3, conservée dans les secrets Render |
+| `MAIL_FROM_ADDRESS` | Expéditeur validé dans Brevo |
+| `MAIL_FROM_NAME` | Nom affiché de la chorale |
 
-Le transport Brevo passe par HTTPS sur le port 443. Il ne dépend donc pas des
-ports SMTP sortants. Ne pas désactiver la vérification TLS.
+Après modification des secrets dans Render, déployer le service pour recharger la configuration Laravel. Le processus Docker reconstruit le cache au démarrage. Si des workers séparés sont utilisés, ils doivent recevoir la même configuration et être redémarrés. Les Blueprints gardent l’envoi désactivé pour une nouvelle installation non configurée ; vérifier les valeurs effectives du service existant.
 
-Render Free : https://render.com/docs/free
+Ne jamais publier la clé dans une capture, un commit ou un journal. Toute clé exposée doit être révoquée dans Brevo et remplacée dans Render.
 
-Brevo : https://help.brevo.com/hc/fr/articles/10905415650322
+## Diagnostic depuis l’application
 
-Le Blueprint `render.yaml` contient des champs à renseigner manuellement.
-Dans `deploy/render.production.yaml`, le worker récupère ses identifiants
-SMTP depuis le service web via `fromService`.
+L’administrateur dispose de **Administration → Diagnostic des e-mails** (`/parametres/emails`). Cet écran affiche la configuration réellement chargée, sans montrer les secrets. Il indique aussi l’adresse de réception retenue et propose un test uniquement vers l’adresse de l’administrateur connecté. Les tests sont limités à un par minute.
 
-## 3. Vérifier avant d'activer l'envoi
+En console, `php artisan chorale:check-mail` effectue les mêmes contrôles de configuration, sans envoyer d’e-mail. Un contrôle vert signifie que les paramètres sont présents, pas que Brevo a validé la clé, l’expéditeur ou le domaine.
 
-- Vérifier le domaine d'envoi et l'expéditeur dans Brevo.
-- Vérifier les variables SMTP du web, et celles du worker si présent.
-- Déployer les variables, puis vider le cache de configuration Laravel via
-  le processus de déploiement prévu, sans toucher à la base.
-- Lors d'une fenêtre de test contrôlée, activer temporairement \`MAIL_MAILER=smtp\`
-  et \`MAIL_DELIVERY_ENABLED=true\` uniquement dans un environnement isolé
-  avec une boîte destinataire de test ; envoyer **un seul** courriel, puis
-  désactiver la livraison tant que les résultats ne sont pas validés.
-  Ne pas activer ces variables en production pour faire un simple essai.
-- Vérifier la réception, le dossier spam, la signature DKIM et le tableau de
-  transactions Brevo. Un serveur SMTP qui accepte le message ne garantit pas
-  sa livraison dans la boîte de réception.
-- Contrôler qu'aucun mot de passe, jeton ou lien de réinitialisation n'apparaît
-  dans les journaux applicatifs.
+Une configuration de production utilisant `log`, `array` ou un `failover` susceptible de tomber vers les journaux ne doit pas être considérée comme une livraison réelle. Le garde-fou refuse ces envois en production.
 
-**Puis seulement**, sur tous les processus qui envoient des e-mails,
-définir `MAIL_MAILER=smtp` et `MAIL_DELIVERY_ENABLED=true`.
-Ne pas ajouter `log` comme mailer de secours en production pour les
-e-mails contenant des liens de réinitialisation.
+## Adresse et contenu des notifications
 
-## 4. Vérification fonctionnelle
+Les notifications métier utilisent l’adresse valide de la fiche choriste ; si elle manque, elles utilisent l’adresse valide du compte. Les responsables sans fiche choriste peuvent recevoir leurs notifications métier. Les liens de vérification et de réinitialisation de mot de passe continuent d’utiliser exclusivement l’adresse du compte.
 
-- Réinitialisation de mot de passe : lien reçu, token utilisable et non
-  journalisé.
-- Rappel de répétition : envoyer un essai sur une séance de test, vérifier
-  l'horaire et le nom de l'expéditeur.
-- Gestion des erreurs : échec SMTP remonté au journal technique sans exposer
-  le secret ; pas de relance aveugle pour les envois incertains.
-- Multi-tenants : aucun destinataire d'une autre chorale.
-- Limites Brevo : vérifier quota, statut et réputation de l'expéditeur.
+Le texte complet et la signature sont conservés dans l’e-mail. Le résumé du centre de notifications peut être plus court. Les résultats des messages groupés et des courriers distinguent notifications applicatives, e-mails acceptés et échecs ; l’apparition d’une notification dans l’application ne prouve pas l’envoi d’un mail.
 
-Le drapeau \`MAIL_DELIVERY_ENABLED=false\` bloque aussi les réservations de
-rappels e-mail et les e-mails en attente dans les workers (les SMS et notifications
-applicatives restent indépendants).\n\nLes e-mails métier restent pilotés par l'application. Ne pas utiliser Brevo
-comme source de vérité des présences, inscriptions, cotisations ou rappels.
+## Rappels automatiques et files d’attente
 
-## Retour arrière
+Le point d’entrée signé des rappels GitHub Actions utilise `--inline` : l’envoi des rappels de répétition est exécuté dans ce processus, sans dépendre d’un worker séparé. La configuration habituelle des files reste inchangée pour les autres usages. Un planificateur externe doit néanmoins exécuter ce point d’entrée ; l’intervalle configuré dans GitHub ne garantit pas une exécution à l’instant exact.
 
-En cas d'incident, remettre immédiatement
-`MAIL_DELIVERY_ENABLED=false` puis `MAIL_MAILER=log` après s'être assuré
-qu'aucun secret ou token ne pourra être écrit dans les journaux. Une option
-plus sûre pour un arrêt provisoire est de conserver `MAIL_MAILER=smtp` avec
-le garde-fou de livraison désactivé, afin d'éviter la journalisation accidentelle
-de contenus sensibles. Conserver les enregistrements du journal des rappels
-pour rapprochement, ne pas réexpédier les messages marqués incertains sans contrôle.
+Les rappels imminents tolèrent une exécution retardée à l’intérieur du quart d’heure. Une empreinte stable empêche un second envoi dans le même créneau.
+
+La migration `2026_11_08_000003_track_notification_email_delivery` sépare le suivi applicatif du suivi e-mail des rappels transversaux :
+
+- `pending` : attente d’activation ou d’envoi ;
+- `accepted` : message accepté par le transport ;
+- `failed` : refus explicite, nouvelle tentative possible dans la limite prévue ;
+- `uncertain` / `sending` : vérifier les événements du fournisseur avant toute relance ;
+- `no_address` : aucune adresse valide ;
+- `legacy` : ancien enregistrement dont le statut e-mail ne peut pas être prouvé.
+
+Une livraison e-mail refusée peut être retentée sans dupliquer la copie applicative. Les anciens enregistrements ne sont pas renvoyés en masse. Les envois incertains ne sont pas automatiquement répétés.
+
+## Vérification chez Brevo
+
+Contrôler le domaine et l’expéditeur dans Brevo, puis les événements du message de test : accepté, délivré, rejeté, bloqué, quota dépassé ou rebond. Vérifier les enregistrements DNS demandés par Brevo et l’alignement DKIM/DMARC. Un domaine avec une politique DMARC `reject` exige un alignement correct ; un code de vérification de domaine seul ne prouve pas que DKIM est opérationnel.
+
+Les refus HTTP 400/401/403/429 sont distingués dans les erreurs de l’application sans afficher la réponse brute ni les secrets. Une référence `messageId` est exigée pour considérer une réponse API comme confirmée. Une réponse acceptée par l’API ne prouve pas l’arrivée dans la boîte de réception : vérifier aussi les indésirables et les événements de livraison Brevo.
+
+Pour suspendre les envois, conserver le transport réel et définir `MAIL_DELIVERY_ENABLED=false`, puis redéployer. Ne pas utiliser le mailer `log` comme preuve de livraison ou comme secours pour des messages contenant des liens privés.

@@ -8,6 +8,7 @@ use App\Mail\TenantAnnouncement;
 use App\Models\Correspondence;
 use App\Models\Member;
 use App\Models\User;
+use App\Notifications\Channels\WebPushChannel;
 use App\Notifications\PlatformReminderNotification;
 use App\Services\CorrespondenceNotificationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -35,7 +36,7 @@ final class CorrespondenceEmailNotificationTest extends TestCase
             ->assertHasNoErrors();
 
         Notification::assertSentTo($recipient, PlatformReminderNotification::class, function (PlatformReminderNotification $notification) use ($recipient): bool {
-            return $notification->via($recipient) === ['database', \App\Notifications\Channels\WebPushChannel::class, 'mail'];
+            return $notification->via($recipient) === ['database', 'mail', WebPushChannel::class];
         });
     }
 

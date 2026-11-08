@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\MailConfiguration;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +31,7 @@ final class CheckProductionReadiness extends Command
             'Session persistante configurée' => ! in_array(config('session.driver'), ['array', null], true),
             'Cache persistant configuré' => ! in_array(config('cache.default'), ['array', 'null', null], true),
             'Envoi e-mail configuré hors simulation' => ! in_array(config('mail.default'), ['log', 'array', null], true),
+            'Livraison e-mail activée et paramètres renseignés' => ! in_array(false, app(MailConfiguration::class)->checks(), true),
             'Lien commercial Chariow en HTTPS' => $https($payment),
             'Vérification des licences Chariow configurée' => filled(config('tenancy.chariow.api_key')) && filled(config('tenancy.chariow.product_id')),
         ];

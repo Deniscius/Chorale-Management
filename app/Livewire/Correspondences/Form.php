@@ -12,8 +12,8 @@ use App\Livewire\Concerns\InteractsWithModule;
 use App\Models\Correspondence;
 use App\Models\CorrespondenceService;
 use App\Models\Member;
-use App\Services\DocumentArchive;
 use App\Services\CorrespondenceNotificationService;
+use App\Services\DocumentArchive;
 use App\Tenancy\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
@@ -174,12 +174,18 @@ class Form extends Component
         if ($this->correspondence->wasRecentlyCreated || $this->correspondence->wasChanged([
             'subject', 'body', 'recipient_member_id', 'assigned_to', 'status', 'sent_at', 'received_at',
         ])) {
-            app(CorrespondenceNotificationService::class)->notify($this->correspondence);
+            $delivery = app(CorrespondenceNotificationService::class)->notify($this->correspondence);
         }
         $message = 'Courrier enregistré ('.$this->correspondence->reference.').';
         $this->reset('attachment');
 
-        $this->dispatch('toast', type: 'success', message: $message);
+        if (isset($delivery)) {
+            $message .= ' '.$delivery['application'].' notification(s) applicative(s), '.$delivery['email'].' e-mail(s) accepté(s), '.$delivery['failed'].' échec(s).';
+            if (! config('mail.delivery_enabled')) {
+                $message .= ' Envoi e-mail désactivé.';
+            }
+        }
+        $this->dispatch('toast', type: isset($delivery) && $delivery['failed'] > 0 ? 'warning' : 'success', message: $message);
         $this->dispatch('close-form');
     }
 

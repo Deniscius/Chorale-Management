@@ -61,11 +61,11 @@ final class PlatformRemindersAndPersonalNotebookTest extends TestCase
         $notification = new PlatformReminderNotification('Activité à venir', 'La formation commence demain.', '/mon-carnet', 'activity', 'test-activity');
 
         config(['mail.delivery_enabled' => true]);
-        $this->assertSame(['database', WebPushChannel::class, 'mail'], $notification->via($user));
+        $this->assertSame(['database', 'mail', WebPushChannel::class], $notification->via($user));
         $this->assertSame('Activité à venir — Gestion Chorale', $notification->toMail($user)->subject);
 
         $member->update(['notify_email' => false]);
-        $this->assertSame(['database', WebPushChannel::class, 'mail'], $notification->via($user->fresh()));
+        $this->assertSame(['database', 'mail', WebPushChannel::class], $notification->via($user->fresh()));
     }
 
     public function test_personal_obligations_notify_only_the_concerned_chorister(): void
@@ -117,7 +117,7 @@ final class PlatformRemindersAndPersonalNotebookTest extends TestCase
         config(['chorale.reminders.platform_days' => [0], 'chorale.reminders.day_of_reminder_hours' => [8, 12, 17]]);
         $member = Member::factory()->active()->create();
         $user = User::factory()->role(UserRole::Choriste)->create(['member_id' => $member->id]);
-        Performance::factory()->create(['scheduled_at' => Carbon::parse('2026-10-30 18:00:00'), 'status' => 'planifiee']);
+        Performance::factory()->create(['scheduled_at' => Carbon::parse('2026-10-30 19:00:00'), 'status' => 'planifiee']);
 
         Carbon::setTestNow('2026-10-30 08:05:00');
         app(PlatformReminderDispatcher::class)->dispatchAll();

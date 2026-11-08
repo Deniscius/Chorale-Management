@@ -12,7 +12,7 @@ final class NotificationDispatch extends Model
 
     protected $fillable = [
         'user_id', 'fingerprint', 'kind', 'subject_type', 'subject_id',
-        'scheduled_for', 'attempts', 'notified_at', 'error',
+        'scheduled_for', 'attempts', 'notified_at', 'error', 'mail_status', 'mail_notified_at',
     ];
 
     protected function casts(): array
@@ -21,6 +21,7 @@ final class NotificationDispatch extends Model
             'scheduled_for' => 'date',
             'attempts' => 'integer',
             'notified_at' => 'datetime',
+            'mail_notified_at' => 'datetime',
         ];
     }
 

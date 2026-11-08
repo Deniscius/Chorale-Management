@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\MemberStatus;
 use App\Enums\UserRole;
+use App\Mail\MailDeliveryRejected;
 use App\Models\Activity;
 use App\Models\AttendanceIncident;
 use App\Models\Contribution;
@@ -17,6 +18,7 @@ use App\Models\User;
 use App\Notifications\PlatformReminderNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Throwable;
 
 /**
@@ -25,10 +27,10 @@ use Throwable;
  */
 final class PlatformReminderDispatcher
 {
-    /** @return array{candidates:int,sent:int,skipped:int,failed:int} */
+    /** @return array{candidates:int,sent:int,skipped:int,failed:int,emailed:int} */
     public function dispatchAll(bool $dryRun = false): array
     {
-        $result = ['candidates' => 0, 'sent' => 0, 'skipped' => 0, 'failed' => 0];
+        $result = ['candidates' => 0, 'sent' => 0, 'skipped' => 0, 'failed' => 0, 'emailed' => 0];
         $users = User::query()->with('member')->get();
         $members = $users->filter(fn (User $user) => $user->member?->status === MemberStatus::Actif)->values();
 
@@ -95,17 +97,15 @@ final class PlatformReminderDispatcher
     /** Reminders at 60, 45, 30 and 15 minutes before a scheduled event. */
     private function dispatchImminentCalendar(Collection $members, bool $dryRun, array &$result): void
     {
-        if (now()->minute % 15 !== 0) {
-            return;
-        }
+        $slot = now()->copy()->startOfHour()->addMinutes(intdiv(now()->minute, 15) * 15);
 
-        $send = function (Collection $recipients, string $kind, object $event, $startsAt, string $title, ?string $venue, string $icon) use ($dryRun, &$result): void {
-            $minutes = now()->diffInMinutes($startsAt, false);
+        $send = function (Collection $recipients, string $kind, object $event, $startsAt, string $title, ?string $venue, string $icon) use ($dryRun, &$result, $slot): void {
+            $minutes = (int) ceil(now()->diffInMinutes($startsAt, false));
             if ($minutes < 1 || $minutes > 60) {
                 return;
             }
             $this->sendTo($recipients, [
-                'key' => "urgent:{$kind}:{$event->id}:".now()->format('YmdHi'),
+                'key' => "urgent:{$kind}:{$event->id}:".$slot->format('YmdHi'),
                 'kind' => $kind, 'subject' => $event, 'date' => $startsAt,
                 'title' => 'Rappel imminent',
                 'message' => $title.' commence dans '.$minutes.' minute'.($minutes > 1 ? 's' : '').($venue ? ' — '.$venue : '').'.',
@@ -227,13 +227,30 @@ final class PlatformReminderDispatcher
             }
 
             try {
-                $user->notify(new PlatformReminderNotification(
+                $notification = new PlatformReminderNotification(
                     $item['title'], $item['message'], $item['url'], $item['kind'], $fingerprint, $item['icon'],
-                ));
-                $dispatch->update(['notified_at' => now(), 'error' => null]);
+                );
+                $notification->dispatchId = $dispatch->id;
+                $mailRequired = config('mail.delivery_enabled') && $user->notificationEmail();
+                if ($dispatch->notified_at) {
+                    // The application copy succeeded previously; retry only the missing mail.
+                    Notification::sendNow($user, $notification, ['mail']);
+                } else {
+                    $user->notify($notification);
+                }
+                $dispatch->update(['notified_at' => $dispatch->fresh()->notified_at ?? now(), 'error' => null,
+                    'mail_status' => $mailRequired ? 'accepted' : ($user->notificationEmail() ? 'pending' : 'no_address'),
+                    'mail_notified_at' => $mailRequired ? now() : null]);
+                if ($mailRequired) {
+                    $result['emailed']++;
+                }
                 $result['sent']++;
             } catch (Throwable $exception) {
-                $dispatch->update(['error' => mb_substr($exception->getMessage(), 0, 2000)]);
+                $dispatch->refresh();
+                $dispatch->update(['error' => mb_substr($exception->getMessage(), 0, 2000),
+                    'mail_status' => $dispatch->notified_at
+                        ? ($exception instanceof MailDeliveryRejected ? 'failed' : 'uncertain')
+                        : 'pending']);
                 report($exception);
                 $result['failed']++;
             }
@@ -247,12 +264,21 @@ final class PlatformReminderDispatcher
             ['kind' => $item['kind'], 'subject_type' => $item['subject']::class, 'subject_id' => $item['subject']->getKey(), 'scheduled_for' => $item['date']],
         );
 
-        return DB::transaction(function () use ($seed) {
+        return DB::transaction(function () use ($seed, $user) {
             $dispatch = NotificationDispatch::query()->lockForUpdate()->findOrFail($seed->id);
-            if ($dispatch->notified_at || ($dispatch->attempts > 0 && blank($dispatch->error)) || $dispatch->attempts >= 3) {
+            if ($dispatch->notified_at) {
+                if (! config('mail.delivery_enabled') || ! $user->notificationEmail()
+                    || in_array($dispatch->mail_status, ['accepted', 'legacy', 'sending', 'uncertain'], true)) {
+                    return null;
+                }
+            } elseif ($dispatch->attempts > 0 && blank($dispatch->error)) {
                 return null;
             }
-            $dispatch->update(['attempts' => $dispatch->attempts + 1, 'error' => null]);
+            if ($dispatch->attempts >= 3) {
+                return null;
+            }
+            $dispatch->update(['attempts' => $dispatch->attempts + 1, 'error' => null,
+                'mail_status' => config('mail.delivery_enabled') && $user->notificationEmail() ? 'sending' : 'pending']);
 
             return $dispatch;
         }, 3);

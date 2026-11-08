@@ -63,6 +63,7 @@ final class ContributionEditingAndExternalMembersTest extends TestCase
             ->call('save')->assertHasNoErrors()->assertSet('activationLink', null);
         $member = Member::query()->where('last_name', 'Soutien')->firstOrFail();
         $this->assertSame('externe', $member->status->value);
+        $this->assertNull($member->choir_id);
         $this->assertNull($member->user);
         $this->assertDatabaseCount('member_invitations', 0);
         app(ContributionSchedule::class)->sync(CarbonImmutable::today()->addMonths(2));

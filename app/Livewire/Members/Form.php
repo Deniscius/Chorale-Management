@@ -118,7 +118,7 @@ class Form extends Component
         } else {
             $this->status = $initialStatus === MemberStatus::Externe->value ? $initialStatus : MemberStatus::Actif->value;
             $this->joined_on = now()->format('Y-m-d');
-            $this->choir_id = Choir::query()->value('id');
+            $this->choir_id = $this->status === MemberStatus::Externe->value ? null : Choir::query()->value('id');
         }
     }
 

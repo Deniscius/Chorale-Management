@@ -168,7 +168,7 @@ class AttendanceWorkflowTest extends TestCase
             ->assertOk()
             ->assertHeader('Cache-Control', 'no-store, private')
             ->assertSee('data:image/png;base64,', false)
-            ->assertSee('width:210mm;height:52mm', false)
+            ->assertSee('class="document-letterhead"', false)->assertSee('height:auto', false)->assertDontSee('object-fit:fill', false)
             ->assertSee('Alice')
             ->assertSee('Rapport de présence');
     }

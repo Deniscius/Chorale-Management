@@ -8,7 +8,8 @@
         "test:accessibility": "node tests/browser/accessibility.mjs",
         "test:material": "node tests/browser/material.mjs",
         "test:profiles": "node tests/browser/profiles.mjs",
-        "test:documents": "node tests/browser/documents.mjs"
+        "test:documents": "node tests/browser/documents.mjs",
+        "test:reports": "node tests/browser/activity-reports.mjs"
     },
     "devDependencies": {
         "@axe-core/playwright": "^4.14.0",

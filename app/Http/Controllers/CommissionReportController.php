@@ -27,7 +27,7 @@ final class CommissionReportController
         ]);
 
         return response()->view('documents.commission-report', [
-            'header' => $letterhead->headerDataUri(), 'headerHeightMm' => $letterhead->headerHeightMm(),
+            ...$letterhead->viewData(),
             'identity' => $identity, 'commission' => $commission,
         ], 200, [
             'Cache-Control' => 'private, no-store',

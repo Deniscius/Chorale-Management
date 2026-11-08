@@ -36,6 +36,8 @@ class Index extends Component
 
     public bool $showForm = false;
 
+    public string $newMemberStatus = 'actif';
+
     public ?int $editingId = null;
 
     public bool $showAccess = false;
@@ -65,7 +67,14 @@ class Index extends Component
         $this->authorizeManage();
 
         $this->editingId = null;
+        $this->newMemberStatus = 'actif';
         $this->showForm = true;
+    }
+
+    public function createExternal(): void
+    {
+        $this->create();
+        $this->newMemberStatus = MemberStatus::Externe->value;
     }
 
     public function edit(int $memberId): void

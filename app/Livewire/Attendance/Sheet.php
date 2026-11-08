@@ -8,20 +8,29 @@ use App\Models\ActivityParticipant;
 use App\Models\Member;
 use App\Models\Rehearsal;
 use App\Models\RehearsalAttendance;
+use App\Services\ActivityParticipationFee;
 use App\Services\AttendanceIncidentManager;
+use App\Services\AttendanceRoster;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 final class Sheet extends Component
 {
+    #[Url(as: 'type', except: 'rehearsal')]
     public string $eventType = 'rehearsal';
 
+    #[Url(as: 'evenement')]
     public ?int $eventId = null;
+
+    public string $memberSearch = '';
+
+    public array $selectedMemberIds = [];
 
     /** @var array<int, array{member_id:int,name:string,status:string,minutes_late:string,excuse_reason:string}> */
     public array $rows = [];
@@ -29,43 +38,100 @@ final class Sheet extends Component
     public function mount(): void
     {
         Gate::authorize('view-attendance');
+        abort_unless(in_array($this->eventType, ['rehearsal', 'activity'], true), 404);
+        if ($this->eventId) {
+            $this->loadSheet();
+        }
     }
 
     public function updatedEventType(): void
     {
+        abort_unless(in_array($this->eventType, ['rehearsal', 'activity'], true), 404);
         $this->eventId = null;
         $this->rows = [];
-        unset($this->events, $this->selectedEvent);
+        $this->selectedMemberIds = [];
+        $this->resetValidation();
+        unset($this->events, $this->selectedEvent, $this->availableMembers);
     }
 
     public function updatedEventId(): void
     {
+        $this->selectedMemberIds = [];
+        $this->resetValidation();
+        unset($this->selectedEvent, $this->availableMembers);
         $this->loadSheet();
     }
 
     public function loadSheet(): void
     {
         Gate::authorize('view-attendance');
+        abort_unless(in_array($this->eventType, ['rehearsal', 'activity'], true), 404);
         $this->rows = [];
         if (! $this->eventId) {
             return;
         }
 
-        if ($this->eventType === 'rehearsal') {
-            $event = Rehearsal::query()->findOrFail($this->eventId);
-            $existing = $event->attendances()->get()->keyBy('member_id');
-            $members = Member::query()->active()->orderBy('last_name')->orderBy('first_name')->get();
-            foreach ($members as $member) {
-                $attendance = $existing->get($member->id);
-                $this->rows[] = $this->row($member, $attendance?->status?->value ?? '', $attendance?->minutes_late, $attendance?->excuse_reason);
-            }
-        } else {
-            $event = Activity::query()->findOrFail($this->eventId);
-            foreach ($event->participantRecords()->with('member')->get()->sortBy('member.full_name') as $participant) {
-                $status = $participant->status === ParticipationStatus::Invite ? '' : $participant->status->value;
-                $this->rows[] = $this->row($participant->member, $status, $participant->minutes_late, $participant->excuse_reason);
+        $roster = app(AttendanceRoster::class);
+        $records = $this->eventType === 'rehearsal'
+            ? $roster->rehearsalRows(Rehearsal::query()->findOrFail($this->eventId))
+            : $roster->activityRows(Activity::query()->findOrFail($this->eventId));
+        foreach ($records as $record) {
+            if ($record->member) {
+                $status = $record->status === ParticipationStatus::Invite ? '' : $record->status->value;
+                $this->rows[] = $this->row($record->member, $status, $record->minutes_late, $record->excuse_reason);
             }
         }
+    }
+
+    public function addSelectedMembers(): void
+    {
+        Gate::authorize('manage-attendance');
+        abort_unless($this->eventType === 'activity' && $this->eventId, 422);
+        $data = $this->validate([
+            'selectedMemberIds' => ['required', 'array', 'min:1', 'max:500'],
+            'selectedMemberIds.*' => ['required', 'integer', 'distinct'],
+        ]);
+        $ids = array_map('intval', $data['selectedMemberIds']);
+        $eligible = Member::query()->activityEligible()->whereIn('id', $ids)->pluck('id')->map(fn ($id) => (int) $id)->all();
+        if (count($eligible) !== count($ids)) {
+            throw ValidationException::withMessages(['selectedMemberIds' => 'Sélectionnez des choristes actifs ou intervenants extérieurs de votre chorale.']);
+        }
+        DB::transaction(function () use ($eligible): void {
+            $event = Activity::query()->lockForUpdate()->findOrFail($this->eventId);
+            abort_if($event->attendance_finalized_at !== null, 422, 'Rouvrez la fiche avant de modifier les participants.');
+            $existing = $event->participantRecords()->pluck('member_id')->map(fn ($id) => (int) $id)->all();
+            $newIds = array_values(array_diff($eligible, $existing));
+            foreach ($newIds as $id) {
+                $event->participantRecords()->create(['member_id' => $id, 'status' => ParticipationStatus::Invite]);
+            }
+            app(ActivityParticipationFee::class)->createFor($event, $newIds);
+        }, 3);
+        $this->selectedMemberIds = [];
+        unset($this->availableMembers, $this->selectedEvent);
+        // Keep unsaved attendance edits for members already on the sheet.
+        $draft = collect($this->rows)->keyBy('member_id');
+        $this->loadSheet();
+        $this->rows = collect($this->rows)->map(fn ($row) => $draft->get($row['member_id'], $row))->all();
+        $this->dispatch('toast', type: 'success', message: 'Participants ajoutés à la fiche de présence.');
+    }
+
+    public function selectVisibleMembers(): void
+    {
+        Gate::authorize('manage-attendance');
+        $this->selectedMemberIds = $this->availableMembers->pluck('id')->map(fn ($id) => (string) $id)->all();
+    }
+
+    #[Computed]
+    public function availableMembers()
+    {
+        if ($this->eventType !== 'activity' || ! $this->eventId || $this->isFinalized()) {
+            return collect();
+        }
+
+        return Member::query()->activityEligible()
+            ->whereDoesntHave('activityParticipants', fn ($query) => $query->where('activity_id', $this->eventId))
+            ->when(trim($this->memberSearch) !== '', fn ($query) => $query->search(trim($this->memberSearch)))
+            ->orderBy('last_name')->orderBy('first_name')->limit(500)->get();
     }
 
     public function markAllPresent(): void
@@ -246,7 +312,7 @@ final class Sheet extends Component
     {
         $submitted = collect($this->rows)->pluck('member_id')->map(fn ($id) => (int) $id)->sort()->values()->all();
         $expected = $this->eventType === 'rehearsal'
-            ? Member::query()->active()->pluck('id')->map(fn ($id) => (int) $id)->sort()->values()->all()
+            ? app(AttendanceRoster::class)->rehearsalMembers(Rehearsal::query()->findOrFail($this->eventId))->pluck('id')->map(fn ($id) => (int) $id)->sort()->values()->all()
             : ActivityParticipant::query()->where('activity_id', $this->eventId)->pluck('member_id')->map(fn ($id) => (int) $id)->sort()->values()->all();
 
         if ($submitted !== $expected) {

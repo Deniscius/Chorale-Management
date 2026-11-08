@@ -3,6 +3,7 @@
         <x-member-activation-link :link="$activationLink" />
         <div class="mt-5 flex justify-end"><button type="button" wire:click="$dispatch('close-form')" class="btn btn-primary">Terminer</button></div>
     @else
+    <p class="mb-4 text-sm text-slate-600">Pour une personne qui aide ponctuellement sans appartenir à la chorale, choisissez « Intervenant extérieur ». Elle pourra être inscrite aux activités sans cotisation automatique ni création automatique de compte.</p>
     <form wire:submit="save" class="space-y-5">
         <x-validation-summary />
         @if((bool) $member)<p class="rounded-xl bg-sky-50 p-4 text-sm text-sky-900">Seul le choriste peut modifier ses informations personnelles dans Mon profil. La direction peut gérer sa voix, son pupitre, son statut, sa chorale et sa date d’adhésion.</p>@endif

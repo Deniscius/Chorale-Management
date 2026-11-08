@@ -127,7 +127,7 @@
                         @endif
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
-                        {{ $rehearsal->attendances_count }}
+                        @can('view-attendance')<a href="{{ route('attendance.sheet', ['type' => 'rehearsal', 'evenement' => $rehearsal->id]) }}" wire:navigate class="underline">{{ $rehearsal->attendances_count }} · Fiche de présence</a>@else{{ $rehearsal->attendances_count }}@endcan
                     </td>
                     <td class="whitespace-nowrap px-4 py-3">
                         <x-enum-badge :enum="$rehearsal->status" />

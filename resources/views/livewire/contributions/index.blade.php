@@ -157,7 +157,7 @@
     @if ($showForm)
         <x-modal-panel :title="$editingId ? 'Modifier la cotisation' : 'Nouvelle cotisation'"
             subtitle="Enregistrez la cotisation attendue et son règlement.">
-            <livewire:contributions.form :contribution="$this->editingContribution" />
+            <livewire:contributions.form :contribution="$this->editingContribution" :key="'contribution-form-'.($editingId ?? 'new')" />
         </x-modal-panel>
     @endif
 

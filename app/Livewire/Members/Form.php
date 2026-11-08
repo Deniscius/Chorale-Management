@@ -90,7 +90,7 @@ class Form extends Component
         ];
     }
 
-    public function mount(?Member $member = null): void
+    public function mount(?Member $member = null, string $initialStatus = 'actif'): void
     {
         $this->authorizeManage();
 
@@ -116,6 +116,7 @@ class Form extends Component
                 'notes' => $member->notes,
             ]);
         } else {
+            $this->status = $initialStatus === MemberStatus::Externe->value ? $initialStatus : MemberStatus::Actif->value;
             $this->joined_on = now()->format('Y-m-d');
             $this->choir_id = Choir::query()->value('id');
         }
@@ -168,11 +169,11 @@ class Form extends Component
         } else {
             DB::transaction(function () use ($data) {
                 $this->member = Member::create($data);
-                if (auth()->user()?->can('manage-users')) {
+                if ($this->member->status !== MemberStatus::Externe && auth()->user()?->can('manage-users')) {
                     $this->activationLink = app(MemberOnboarding::class)->issue($this->member);
                 }
             });
-            $message = 'Choriste enregistré.';
+            $message = $this->member->status === MemberStatus::Externe ? 'Intervenant extérieur enregistré.' : 'Choriste enregistré.';
         }
 
         $this->dispatch('toast', type: 'success', message: $message);

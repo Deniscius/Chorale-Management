@@ -8,6 +8,7 @@
                 </a>
             @endcan
             @if ($this->canManage())
+                <button type="button" wire:click="createExternal" class="btn btn-secondary">Nouvel intervenant extérieur</button>
                 <button type="button" wire:click="create"
                     class="btn btn-primary">
                     <x-icon name="plus" class="h-4 w-4" />
@@ -195,9 +196,9 @@
 
     @if ($showForm)
         <div wire:key="member-form">
-            <x-modal-panel :title="$editingId ? 'Modifier le choriste' : 'Nouveau choriste'"
+            <x-modal-panel :title="$editingId ? 'Modifier la fiche' : ($newMemberStatus === 'externe' ? 'Nouvel intervenant extérieur' : 'Nouveau choriste')"
                 subtitle="Renseignez la fiche du choriste.">
-                <livewire:members.form :member="$this->editingMember" />
+                <livewire:members.form :member="$this->editingMember" :initial-status="$newMemberStatus" :key="'member-form-'.($editingId ?? $newMemberStatus)" />
             </x-modal-panel>
         </div>
     @endif

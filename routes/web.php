@@ -248,6 +248,8 @@ Route::middleware(['auth', 'chorale.session'])->group(function () {
         ->middleware('can:view-attendance-finance')
         ->name('accounting.members');
 
+    Route::get('/activites/{activity}/rapport', [AttendanceReportController::class, 'activityReport'])->whereNumber('activity')->name('activities.detail-report');
+
     Route::get('/activites/rapport', ActivityFinancialReportController::class)->name('activities.report');
 
     Route::get('/presences/{eventType}/{event}/rapport', AttendanceReportController::class)

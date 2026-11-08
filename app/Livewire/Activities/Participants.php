@@ -47,6 +47,7 @@ class Participants extends Component
     {
         $this->authorizeManage();
 
+        abort_if($activity->attendance_finalized_at !== null, 422, 'Rouvrez la fiche de présence avant de modifier les participants.');
         $this->activity = $activity;
     }
 
@@ -65,10 +66,10 @@ class Participants extends Component
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $memberId = (int) $validated['memberId'];
+        $memberId = (int) Member::query()->activityEligible()->findOrFail($validated['memberId'])->id;
 
         $added = DB::transaction(function () use ($memberId, $validated) {
-            $activity = Activity::query()->lockForUpdate()->findOrFail($this->activity->id);
+            $activity = $this->lockedActivity();
             if ($activity->participants()->where('members.id', $memberId)->exists()) {
                 return false;
             }
@@ -105,15 +106,16 @@ class Participants extends Component
         ]);
 
         $ids = array_map('intval', $data['selectedMemberIds']);
-        $eligible = Member::query()->active()->whereIn('id', $ids)->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $eligible = Member::query()->activityEligible()->whereIn('id', $ids)->pluck('id')->map(fn ($id) => (int) $id)->all();
 
         if (count($eligible) !== count($ids)) {
             $this->addError('selectedMemberIds', 'La sélection contient un choriste indisponible.');
+
             return;
         }
 
         $newIds = DB::transaction(function () use ($eligible): array {
-            $activity = Activity::query()->lockForUpdate()->findOrFail($this->activity->id);
+            $activity = $this->lockedActivity();
             $existing = $activity->participants()->whereIn('members.id', $eligible)
                 ->pluck('members.id')->map(fn ($id) => (int) $id)->all();
             $newIds = array_values(array_diff($eligible, $existing));
@@ -152,7 +154,7 @@ class Participants extends Component
     {
         $this->authorizeManage();
 
-        $this->activity->participants()->detach($memberId);
+        DB::transaction(fn () => $this->lockedActivity()->participants()->detach($memberId), 3);
 
         $this->dispatch('toast', type: 'success', message: 'Participant retiré.');
     }
@@ -168,7 +170,7 @@ class Participants extends Component
             'status' => ['required', Rule::enum(ParticipationStatus::class)],
         ])->validate();
 
-        $this->activity->participants()->updateExistingPivot($memberId, ['status' => $status]);
+        DB::transaction(fn () => $this->lockedActivity()->participants()->updateExistingPivot($memberId, ['status' => $status]), 3);
     }
 
     /**
@@ -182,9 +184,15 @@ class Participants extends Component
             'hours' => 'nullable|numeric|min:0|max:1000',
         ])->validate();
 
-        $this->activity->participants()->updateExistingPivot($memberId, [
-            'hours' => (float) ($hours ?: 0),
-        ]);
+        DB::transaction(fn () => $this->lockedActivity()->participants()->updateExistingPivot($memberId, ['hours' => (float) ($hours ?: 0)]), 3);
+    }
+
+    private function lockedActivity(): Activity
+    {
+        $activity = Activity::query()->lockForUpdate()->findOrFail($this->activity->id);
+        abort_if($activity->attendance_finalized_at !== null, 422, 'Rouvrez la fiche de présence avant de modifier les participants.');
+
+        return $activity;
     }
 
     #[Computed]
@@ -203,7 +211,7 @@ class Participants extends Component
     public function availableMembers()
     {
         return Member::query()
-            ->active()
+            ->activityEligible()
             ->when(trim($this->memberSearch) !== '', fn (Builder $query) => $query->search(trim($this->memberSearch)))
             ->whereDoesntHave('activityParticipants', fn (Builder $query) => $query->where('activity_id', $this->activity->id))
             ->orderBy('last_name')

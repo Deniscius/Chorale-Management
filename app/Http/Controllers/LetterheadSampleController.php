@@ -10,8 +10,7 @@ final class LetterheadSampleController
     public function __invoke(Letterhead $letterhead, ChoraleIdentity $identity)
     {
         return view('documents.letterhead-sample', [
-            'header' => $letterhead->headerDataUri(),
-            'headerHeightMm' => $letterhead->headerHeightMm(),
+            ...$letterhead->viewData(),
             'identity' => $identity,
         ]);
     }

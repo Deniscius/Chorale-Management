@@ -91,7 +91,7 @@ final class ReceiptLedger
             $previousPaidOn = $contribution->paid_on;
             $contribution->fill($data);
             if ($previousPaidOn && $contribution->paid_on?->isSameDay($previousPaidOn)) {
-                $contribution->paid_on = $previousPaidOn;
+                $contribution->paid_on = $contribution->getRawOriginal('paid_on');
             }
             $paid = $this->cents($contribution->paid_amount ?? 0);
             $due = $this->cents($contribution->due_amount);

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\MemberStatus;
 use App\Enums\ParticipationStatus;
 use App\Models\Activity;
 use App\Models\AttendanceIncident;
@@ -52,7 +53,10 @@ final class AttendanceIncidentManager
         $rule = AttendanceRule::query()->firstOrCreate([]);
         $activeIds = [];
 
-        foreach ($activity->participantRecords()->get() as $participant) {
+        foreach ($activity->participantRecords()->with(['member' => fn ($query) => $query->withTrashed()])->get() as $participant) {
+            if ($participant->member?->status === MemberStatus::Externe) {
+                continue;
+            }
             $data = $this->incidentData(
                 $participant->status,
                 (int) ($participant->minutes_late ?? 0),

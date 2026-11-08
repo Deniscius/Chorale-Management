@@ -7,9 +7,11 @@ use App\Livewire\Activities\Participants;
 use App\Livewire\Attendance\Sheet;
 use App\Livewire\Contributions\Form;
 use App\Models\Activity;
+use App\Models\AttendanceRule;
 use App\Models\Contribution;
 use App\Models\Member;
 use App\Models\User;
+use App\Services\AttendanceIncidentManager;
 use App\Services\ContributionSchedule;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -35,7 +37,7 @@ final class ContributionEditingAndExternalMembersTest extends TestCase
     {
         $user = User::factory()->role(UserRole::Tresorier)->create();
         $member = Member::factory()->active()->create();
-        $contribution = Contribution::factory()->create(['member_id' => $member->id, 'due_amount' => 5000, 'paid_amount' => 1000, 'status' => 'partiel']);
+        $contribution = Contribution::factory()->create(['member_id' => $member->id, 'due_amount' => 5000, 'paid_amount' => 1000, 'paid_on' => '2026-05-12 15:35:48', 'status' => 'partiel']);
         Livewire::actingAs($user)->test(Form::class, ['contribution' => $contribution])
             ->set('notes', 'Justificatif retrouvé')->call('save')->assertHasNoErrors();
         $this->assertSame('Justificatif retrouvé', $contribution->refresh()->notes);
@@ -76,5 +78,21 @@ final class ContributionEditingAndExternalMembersTest extends TestCase
             ->set('eventType', 'activity')->set('eventId', $activity->id)
             ->set('selectedMemberIds', [(string) $member->id])->call('addSelectedMembers')->assertHasNoErrors()->assertCount('rows', 1);
         $this->actingAs($secretary)->get(route('activities.detail-report', $activity))->assertOk()->assertSee('Intervenant extérieur');
+    }
+
+    public function test_external_helpers_do_not_receive_automatic_attendance_charges(): void
+    {
+        $admin = User::factory()->role(UserRole::Admin)->create();
+        $this->actingAs($admin);
+        $external = Member::factory()->create(['status' => 'externe']);
+        $regular = Member::factory()->active()->create();
+        $activity = Activity::factory()->create();
+        AttendanceRule::query()->create(['financial_tracking_enabled' => true, 'activity_absence_amount' => 500]);
+        foreach ([$external, $regular] as $member) {
+            $activity->participantRecords()->create(['member_id' => $member->id, 'status' => 'absent']);
+        }
+        app(AttendanceIncidentManager::class)->finalizeActivity($activity);
+        $this->assertDatabaseMissing('attendance_incidents', ['member_id' => $external->id]);
+        $this->assertDatabaseHas('attendance_incidents', ['member_id' => $regular->id, 'amount' => 500]);
     }
 }

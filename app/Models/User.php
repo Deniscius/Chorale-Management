@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\UserRole;
 use App\Models\Concerns\HasPublicId;
+use App\Notifications\PlatformReminderNotification;
 use App\Services\CommissionAccess;
 use App\Tenancy\BelongsToTenant;
 use Database\Factories\UserFactory;
@@ -14,14 +15,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Notifications\Notification;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     use BelongsToTenant;
-    use HasPublicId;
 
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    use HasPublicId;
 
     private ?int $approvedInitialMemberId = null;
 
@@ -97,6 +100,29 @@ class User extends Authenticatable implements MustVerifyEmail
     public function pushSubscriptions(): HasMany
     {
         return $this->hasMany(PushSubscription::class);
+    }
+
+    /** Business messages use the member's contact address, then the account address. */
+    public function notificationEmail(): ?string
+    {
+        $this->loadMissing('member');
+        $member = $this->member;
+        foreach ([$member?->email, $this->email] as $address) {
+            $address = trim((string) $address);
+            if (filter_var($address, FILTER_VALIDATE_EMAIL)) {
+                return $address;
+            }
+        }
+
+        return null;
+    }
+
+    public function routeNotificationForMail(?Notification $notification = null): ?string
+    {
+        // Password resets and verification links must keep using the account identity.
+        return $notification instanceof PlatformReminderNotification
+            ? $this->notificationEmail()
+            : $this->email;
     }
 
     /**

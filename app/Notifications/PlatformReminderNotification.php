@@ -3,15 +3,17 @@
 namespace App\Notifications;
 
 use App\Notifications\Channels\WebPushChannel;
+use App\Services\ChoraleIdentity;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
-use App\Services\ChoraleIdentity;
 
 final class PlatformReminderNotification extends Notification
 {
     use Queueable;
+
+    public ?int $dispatchId = null;
 
     public function __construct(
         private readonly string $title,
@@ -24,13 +26,12 @@ final class PlatformReminderNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        $channels = ['database', WebPushChannel::class];
+        $channels = ['database'];
 
-        // Le choix appartient au choriste : un compte ne reçoit jamais de
-        // courriel si sa fiche ne contient pas une adresse et l'accord e-mail.
-        if (config('mail.delivery_enabled') && $notifiable->member?->canReceiveEmail()) {
+        if (config('mail.delivery_enabled') && $notifiable->notificationEmail()) {
             $channels[] = 'mail';
         }
+        $channels[] = WebPushChannel::class;
 
         return $channels;
     }
@@ -62,10 +63,10 @@ final class PlatformReminderNotification extends Notification
         return (new MailMessage)
             ->subject($this->title.' — '.app(ChoraleIdentity::class)->name())
             ->greeting('Bonjour '.($notifiable->member?->first_name ?: Str::before((string) $notifiable->name, ' ')).',')
-            ->line($this->personalizedMessage($notifiable))
+            ->line($this->message)
             ->action('Ouvrir mon carnet', url($this->safeUrl()))
             ->line('Message envoyé par '.app(ChoraleIdentity::class)->name().'.')
-            ->line('Vous recevez cette information car les notifications e-mail sont activées dans votre fiche choriste.');
+            ->line('Notification de votre chorale envoyée à votre adresse de contact.');
     }
 
     private function personalizedMessage(object $notifiable): string

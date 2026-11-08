@@ -58,6 +58,7 @@ use App\Livewire\Rehearsals\Rhythms as RehearsalRhythms;
 use App\Livewire\Reminders\History as RemindersHistory;
 use App\Livewire\Seasons\Index as SeasonsIndex;
 use App\Livewire\Settings\Chorale as SettingsChorale;
+use App\Livewire\Settings\EmailDelivery;
 use App\Livewire\Settings\FinancialTypes;
 use App\Livewire\Settings\ManagementYears;
 use App\Livewire\Transactions\Index as TransactionsIndex;
@@ -95,6 +96,7 @@ Route::get('/chorale/logo', ChoraleLogoController::class)
 
 Route::middleware(['auth', 'chorale.session'])->group(function () {
     Route::post('/periode-de-travail', ManagementYearSelectionController::class)->name('management-years.select');
+    Route::get('/parametres/emails', EmailDelivery::class)->middleware('can:manage-settings')->name('settings.email-delivery');
     Route::get('/parametres/annees', ManagementYears::class)->middleware('can:manage-settings')->name('settings.management-years');
     Route::get('/cotisations/reinitialisation', CounterResets::class)->middleware('can:manage-settings')->name('contributions.counter-resets');
     Route::get('/notifications', [NotificationCenterController::class, 'index'])->middleware('throttle:120,1')->name('notifications.index');

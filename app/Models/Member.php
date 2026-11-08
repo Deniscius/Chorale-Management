@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\HasPublicId;
 use App\Enums\MemberStatus;
 use App\Enums\UserRole;
 use App\Enums\Voice;
+use App\Models\Concerns\HasPublicId;
 use App\Tenancy\BelongsToTenant;
 use Database\Factories\MemberFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -19,10 +20,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Member extends Model
 {
     use BelongsToTenant;
-    use HasPublicId;
 
     /** @use HasFactory<MemberFactory> */
     use HasFactory, SoftDeletes;
+
+    use HasPublicId;
 
     protected $fillable = [
         'choir_id',
@@ -89,7 +91,7 @@ class Member extends Model
         return $this->hasMany(ActivityParticipant::class);
     }
 
-    public function commissions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function commissions(): BelongsToMany
     {
         return $this->belongsToMany(ChoirCommission::class, 'choir_commission_member');
     }
@@ -124,7 +126,7 @@ class Member extends Model
      */
     public function canReceiveEmail(): bool
     {
-        return filled($this->email);
+        return filter_var(trim((string) $this->email), FILTER_VALIDATE_EMAIL) !== false;
     }
 
     /**

@@ -20,6 +20,7 @@ use Throwable;
 class SendRehearsalReminders extends Command
 {
     protected $signature = 'chorale:send-reminders
+        {--inline : Envoyer dans ce processus sans dépendre d’un worker séparé}
         {--dry-run : Afficher les rappels sans rien envoyer}
         {--tenant= : Espace client à traiter (tous les espaces actifs par défaut)}
         {--rehearsal= : Ne traiter que la répétition indiquée (identifiant)}
@@ -29,6 +30,19 @@ class SendRehearsalReminders extends Command
     protected $description = 'Envoie les rappels de la chorale et les échéances personnelles';
 
     public function handle(ReminderDispatcher $dispatcher, PlatformReminderDispatcher $platform): int
+    {
+        $queued = config('chorale.reminders.queued');
+        if ($this->option('inline')) {
+            config(['chorale.reminders.queued' => false]);
+        }
+        try {
+            return $this->runDispatch($dispatcher, $platform);
+        } finally {
+            config(['chorale.reminders.queued' => $queued]);
+        }
+    }
+
+    private function runDispatch(ReminderDispatcher $dispatcher, PlatformReminderDispatcher $platform): int
     {
         if ($this->option('platform-only') && $this->option('rehearsals-only')) {
             $this->error('Choisissez soit les rappels transversaux, soit les répétitions.');
@@ -98,10 +112,14 @@ class SendRehearsalReminders extends Command
 
         if (isset($platformResult)) {
             $this->components->info(sprintf(
-                '%d rappel(s) transversal(aux) détecté(s) — %d envoyé(s), %d déjà traité(s), %d échec(s)%s.',
+                '%d rappel(s) transversal(aux) détecté(s) — %d notifié(s), %d déjà traité(s), %d échec(s)%s.',
                 $platformResult['candidates'], $platformResult['sent'], $platformResult['skipped'], $platformResult['failed'],
                 $dryRun ? ' (simulation)' : '',
             ));
+            $this->components->info(($platformResult['emailed'] ?? 0).' e-mail(s) accepté(s) par le transport.');
+            if (! config('mail.delivery_enabled')) {
+                $this->components->warn('Aucun e-mail envoyé : MAIL_DELIVERY_ENABLED=false. Les copies applicatives ne prouvent pas la livraison e-mail.');
+            }
             $result['failed'] += $platformResult['failed'];
         }
 

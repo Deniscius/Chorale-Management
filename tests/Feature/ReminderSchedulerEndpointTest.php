@@ -24,7 +24,7 @@ class ReminderSchedulerEndpointTest extends TestCase
     {
         $this->mock(GitHubActionsTokenVerifier::class)->shouldReceive('verify')->once()->with('valid-oidc-token')->andReturnTrue();
         $this->mock(Kernel::class, function (MockInterface $mock): void {
-            $mock->shouldReceive('call')->once()->with('chorale:send-reminders', ['--dry-run' => true])->andReturn(0);
+            $mock->shouldReceive('call')->once()->with('chorale:send-reminders', ['--dry-run' => true, '--inline' => true])->andReturn(0);
         });
 
         $this->withToken('valid-oidc-token')
@@ -40,7 +40,7 @@ class ReminderSchedulerEndpointTest extends TestCase
         $this->mock(Kernel::class, function (MockInterface $mock): void {
             $mock->shouldReceive('call')->once()->with('chorale:sync-contributions')->ordered()->andReturn(0);
             $mock->shouldReceive('call')->once()->with('chorale:sync-rehearsals')->ordered()->andReturn(0);
-            $mock->shouldReceive('call')->once()->with('chorale:send-reminders', [])->ordered()->andReturn(0);
+            $mock->shouldReceive('call')->once()->with('chorale:send-reminders', ['--inline' => true])->ordered()->andReturn(0);
         });
 
         $this->withToken('valid-oidc-token')->postJson(route('internal.reminders.run'))

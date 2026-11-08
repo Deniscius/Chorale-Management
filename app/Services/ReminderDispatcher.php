@@ -59,7 +59,7 @@ final class ReminderDispatcher
             ->orderBy('id')->lazyById(200);
         foreach ($members as $member) {
             $channels = [];
-            if (config('mail.delivery_enabled') && $member->canReceiveEmail()) {
+            if (config('mail.delivery_enabled') && $this->mailRecipient($member)) {
                 $channels[] = ReminderChannel::Mail;
             }
             if ($member->canReceiveSms()) {
@@ -75,7 +75,7 @@ final class ReminderDispatcher
                     continue;
                 }
                 $recipient = match ($channel) {
-                    ReminderChannel::Mail => $member->email,
+                    ReminderChannel::Mail => $this->mailRecipient($member),
                     ReminderChannel::Sms => $member->phone,
                     ReminderChannel::Application => (string) $member->user->id,
                 };
@@ -130,12 +130,12 @@ final class ReminderDispatcher
             }
             $entry->load(['member.user', 'rehearsal.works']);
             $allowed = config('chorale.reminders.enabled') && $entry->rehearsal?->status !== EventStatus::Annulee && $entry->member?->status === MemberStatus::Actif && match ($entry->channel) {
-                ReminderChannel::Mail => config('mail.delivery_enabled') && $entry->member?->canReceiveEmail(),
+                ReminderChannel::Mail => config('mail.delivery_enabled') && $entry->member && $this->mailRecipient($entry->member) !== null,
                 ReminderChannel::Sms => $entry->member?->canReceiveSms(),
                 ReminderChannel::Application => $entry->member?->user !== null,
             };
             $recipient = match ($entry->channel) {
-                ReminderChannel::Mail => $entry->member?->email,
+                ReminderChannel::Mail => $entry->member ? $this->mailRecipient($entry->member) : null,
                 ReminderChannel::Sms => $entry->member?->phone,
                 ReminderChannel::Application => (string) ($entry->member?->user?->id ?? ''),
             };
@@ -212,6 +212,11 @@ final class ReminderDispatcher
         if ($decision === 'retry') {
             $this->schedule($entry);
         }
+    }
+
+    private function mailRecipient(Member $member): ?string
+    {
+        return $member->canReceiveEmail() ? trim($member->email) : $member->user?->notificationEmail();
     }
 
     public function subject(Rehearsal $rehearsal): string

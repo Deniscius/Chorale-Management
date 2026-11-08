@@ -15,6 +15,11 @@ final class WebPushChannel
             return;
         }
 
-        $this->sender->send($notifiable, $notification->toWebPush($notifiable));
+        try {
+            $this->sender->send($notifiable, $notification->toWebPush($notifiable));
+        } catch (\Throwable $exception) {
+            // Optional browser delivery must not turn an accepted e-mail into a failure.
+            report($exception);
+        }
     }
 }

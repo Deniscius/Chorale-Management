@@ -2,6 +2,7 @@
 
 namespace App\Mail\Transport;
 
+use App\Mail\MailDeliveryRejected;
 use Illuminate\Support\Facades\Http;
 use Symfony\Component\Mailer\Exception\TransportException;
 use Symfony\Component\Mailer\SentMessage;
@@ -20,7 +21,7 @@ final class BrevoApiTransport extends AbstractTransport
     protected function doSend(SentMessage $message): void
     {
         if (blank($this->apiKey)) {
-            throw new TransportException('Brevo API key is not configured.');
+            throw new MailDeliveryRejected('La clé API Brevo n’est pas configurée (BREVO_API_KEY).');
         }
 
         $email = $message->getOriginalMessage();
@@ -30,7 +31,7 @@ final class BrevoApiTransport extends AbstractTransport
 
         $from = $email->getFrom()[0] ?? null;
         if (! $from) {
-            throw new TransportException('A sender address is required.');
+            throw new MailDeliveryRejected('L’adresse d’expédition n’est pas configurée (MAIL_FROM_ADDRESS).');
         }
 
         $payload = [
@@ -65,12 +66,21 @@ final class BrevoApiTransport extends AbstractTransport
         }
 
         if (! $response->successful()) {
-            // Do not include Brevo's response: it can contain provider details.
-            throw new TransportException('Brevo API rejected the e-mail (HTTP '.$response->status().').');
+            // Explain actionable failures without leaking the response or credentials.
+            $reason = match ($response->status()) {
+                400 => 'Adresse d’expédition, destinataire ou contenu refusé.',
+                401 => 'Clé API Brevo invalide ou expirée.',
+                403 => 'Envoi non autorisé : vérifier le compte Brevo, l’expéditeur et les restrictions d’accès.',
+                429 => 'Quota ou limite d’envoi Brevo atteint.',
+                default => 'Service d’envoi indisponible.',
+            };
+            throw new MailDeliveryRejected('Brevo a refusé l’e-mail (HTTP '.$response->status().'). '.$reason);
         }
 
         if (is_string($response->json('messageId')) && $response->json('messageId') !== '') {
             $message->setMessageId($response->json('messageId'));
+        } else {
+            throw new TransportException('Brevo n’a pas retourné de référence de message. Vérifiez les événements du fournisseur avant toute relance.');
         }
     }
 

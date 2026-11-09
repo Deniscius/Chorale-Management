@@ -13,7 +13,7 @@
         </x-slot>
     </x-page-header>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Courriers" :value="$this->stats['total']" icon="mail" color="slate" :href="route('correspondences.index', []).'#resultats'" />
         <x-stat-card label="Entrants" :value="$this->stats['entrants']" icon="inbox" color="sky"
             :hint="$this->stats['sortants'].' sortant(s)'" :href="route('correspondences.index', ['type'=>'entrant']).'#resultats'" />

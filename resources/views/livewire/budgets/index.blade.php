@@ -13,10 +13,10 @@
     </x-page-header>
 
     @if($selectedManagementYear = app(\App\Services\ManagementYearContext::class)->selected())
-        <p class="mb-4 rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-900">Période de référence : {{ $selectedManagementYear->label }}. Les budgets sont des exercices civils annuels : les années qui croisent la période sont affichées en entier, sans proratisation.</p>
+        <p class="mb-4 rounded-lg border border-choir-100 bg-choir-50 px-4 py-3 text-sm text-choir-900">Période de référence : {{ $selectedManagementYear->label }}. Les budgets sont des exercices civils annuels : les années qui croisent la période sont affichées en entier, sans proratisation.</p>
     @endif
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Budget alloué" :value="\App\Support\Money::compact($this->stats['alloue'])" icon="banknotes" color="blue" :href="route('budgets.index', []).'#resultats'" />
         <x-stat-card label="Engagé" :value="\App\Support\Money::compact($this->stats['engage'])" icon="folder" color="amber" :href="route('budgets.index', []).'#resultats'" />
         <x-stat-card label="Réalisé" :value="\App\Support\Money::compact($this->stats['realise'])" icon="sparkles" color="green" :href="route('budgets.index', []).'#resultats'" />

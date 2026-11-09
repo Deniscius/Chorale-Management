@@ -17,7 +17,7 @@
         </x-slot>
     </x-page-header>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card :label="app(\App\Services\FinancialCatalog::class)->section('contribution')" :value="$this->stats['total']" icon="users" color="slate" :href="route('contributions.index', []).'#resultats'" />
         <x-stat-card label="Montant dû" :value="\App\Support\Money::compact($this->stats['du'])" icon="banknotes" color="blue" :href="route('contributions.index', []).'#resultats'" />
         <x-stat-card label="Encaissé" :value="\App\Support\Money::compact($this->stats['encaisse'])" icon="sparkles" color="green" :href="route('contributions.index', ['vue'=>'reglees']).'#resultats'" />

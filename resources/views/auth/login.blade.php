@@ -4,7 +4,7 @@
     <h2 class="text-lg font-semibold text-slate-900">Connexion à votre espace</h2>
     <p class="mt-1 text-sm text-slate-500">Saisissez votre identifiant et votre mot de passe pour accéder à la gestion de la chorale.</p>
     @unless(isset($loginAction))
-        <p class="mt-3 rounded-xl bg-sky-50 p-3 text-sm text-sky-950">Après connexion, vous rejoindrez automatiquement l’espace de votre chorale.</p>
+        <p class="auth-note mt-4">Après connexion, vous rejoindrez automatiquement l’espace de votre chorale.</p>
     @endunless
 
     <form method="POST" action="{{ $loginAction ?? route('login') }}" class="mt-6 space-y-5">
@@ -55,14 +55,14 @@
         </div>
 
         <div class="flex items-center justify-end">
-            <x-primary-button class="w-full justify-center bg-slate-900 hover:bg-slate-700 focus:bg-slate-700">
+            <x-primary-button class="w-full justify-center">
                 Se connecter
             </x-primary-button>
         </div>
     </form>
 
     @if (isset($loginAction))
-        <div class="mt-6 rounded-xl border border-sky-100 bg-sky-50 p-4 text-sm text-sky-950">
+        <div class="auth-note mt-6">
             <p class="font-semibold">Vous souhaitez rejoindre cette chorale ?</p>
             <p class="mt-1">Envoyez votre demande : le responsable la vérifie puis vous adresse votre lien personnel d’activation.</p>
             <a href="{{ route('tenant.join.create', ['slug' => request()->route('slug')]) }}" class="btn btn-secondary mt-3">Demander à rejoindre</a>
@@ -70,7 +70,7 @@
     @endif
 
     @if(config('tenancy.enabled') && config('tenancy.registration'))
-        <p class="mt-6 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-900">Votre chorale découvre l’application ? <a href="{{ route('spaces.create') }}" class="font-semibold underline">Créer un espace et tester 3 jours</a></p>
+        <p class="auth-note mt-6">Votre chorale découvre l’application ? <a href="{{ route('spaces.create') }}" class="font-semibold underline">Créer un espace et tester 3 jours</a></p>
     @endif
     @if(!config('tenancy.enabled') && app()->environment('local'))
     <p class="mt-6 rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-500">

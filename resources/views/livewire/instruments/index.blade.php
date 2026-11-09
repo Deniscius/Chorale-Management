@@ -14,7 +14,7 @@
 
     <x-material-navigation />
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Types de matériel" :value="$this->stats['total']" icon="cube" color="slate" :href="route('instruments.index', []).'#resultats'" />
         <x-stat-card label="Objets au total" :value="$this->stats['quantite']" icon="folder" color="purple" :href="route('instruments.index', []).'#resultats'" />
         <x-stat-card label="Valeur du parc" :value="\App\Support\Money::compact($this->stats['valeur'])" icon="banknotes" color="green" :href="route('instruments.index', []).'#resultats'" />

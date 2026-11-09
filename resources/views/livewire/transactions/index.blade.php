@@ -16,7 +16,7 @@
         </x-slot>
     </x-page-header>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Recettes" :value="\App\Support\Money::compact($this->stats['recettes'])" icon="banknotes" color="green" :href="route('transactions.index', ['activite'=>$activityId,'compte'=>$accountId,'type'=>'recette','vue'=>'validees']).'#resultats'" />
         <x-stat-card label="Dépenses" :value="\App\Support\Money::compact($this->stats['depenses'])" icon="banknotes" color="red" :href="route('transactions.index', ['activite'=>$activityId,'compte'=>$accountId,'type'=>'depense','vue'=>'validees']).'#resultats'" />
         <x-stat-card label="Solde" :value="\App\Support\Money::compact($this->stats['solde'])" icon="chart" color="blue" :href="route('transactions.index', ['activite'=>$activityId,'compte'=>$accountId,'vue'=>'validees']).'#resultats'" />

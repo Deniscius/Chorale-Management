@@ -86,19 +86,19 @@
 <aside id="sidebar" x-ref="navigation" :inert="!desktop && !sidebar"
     :role="desktop ? null : 'dialog'" :aria-modal="!desktop && sidebar ? 'true' : null"
     @keydown.tab="trap($event)" :class="sidebar ? 'translate-x-0' : '-translate-x-full'"
-    class="fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-slate-900 transition-transform duration-200 lg:translate-x-0 lg:w-64"
+    class="app-sidebar fixed inset-y-0 left-0 z-50 flex w-72 flex-col transition-transform duration-200 lg:translate-x-0 lg:w-64"
     aria-label="Navigation principale">
 
-    <div class="flex min-h-20 shrink-0 items-center gap-3 border-b border-slate-800/80 px-4 py-3">
+    <div class="sidebar-brand flex min-h-20 shrink-0 items-center gap-3 border-b border-slate-800/80 px-4 py-3">
         <span class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-700 bg-white p-1 text-slate-900 shadow-sm" aria-hidden="true">
             <x-chorale-logo icon-class="h-7 w-7" class="block h-full w-full object-contain" />
         </span>
         <div class="min-w-0 flex-1">
             <p class="break-words text-sm font-semibold leading-snug text-white">{{ $chorale->name() }}</p>
-            <p class="truncate text-xs text-slate-400">{{ $chorale->tagline() }}</p>
+            <p class="truncate text-xs text-choir-200">{{ $chorale->tagline() }}</p>
         </div>
         <button type="button" @click="close()" aria-label="Fermer le menu"
-            class="help-control ml-auto -mr-1.5 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white lg:hidden">
+            class="help-control ml-auto -mr-1.5 rounded-lg p-1.5 text-choir-200 transition hover:bg-slate-800 hover:text-white lg:hidden">
             <x-icon name="x" class="h-5 w-5" />
         </button>
     </div>
@@ -135,7 +135,7 @@
 
             @if ($visible->isNotEmpty())
                 <section>
-                    <p class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    <p class="sidebar-caption px-3 pb-2">
                         {{ $section['label'] }}
                     </p>
                     <ul class="space-y-1">
@@ -154,10 +154,10 @@
                                         'nav-item-active' => $active,
                                         'nav-item-idle' => ! $active,
                                     ])>
-                                    <x-icon :name="$item['icon']" class="h-5 w-5 shrink-0" />
+                                    <x-icon :name="$item['icon']" class="h-4 w-4 shrink-0" />
                                     <span class="truncate">{{ $item['label'] }}</span>
                                     @if ($active)
-                                        <span class="ml-auto h-1.5 w-1.5 rounded-full bg-amber-400" aria-hidden="true"></span>
+                                        <span class="sr-only">Page actuelle</span>
                                     @endif
                                 </a>
                             </li>
@@ -168,8 +168,8 @@
         @endforeach
     </nav>
 
-    <div class="shrink-0 border-t border-slate-800/80 p-4">
-        <p class="text-xs text-slate-400">
+    <div class="sidebar-note shrink-0 border-t p-4">
+        <p class="text-xs text-choir-200">
             Gestion de la chorale
         </p>
     </div>

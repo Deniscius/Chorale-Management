@@ -1,7 +1,7 @@
 <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-2xl font-bold text-slate-900">Gestion des arriérés</h1>
-        <a href="{{ route('contributions.index') }}" wire:navigate class="text-sm text-indigo-700 underline">Retour aux cotisations</a>
+        <a href="{{ route('contributions.index') }}" wire:navigate class="text-sm text-choir-700 underline">Retour aux cotisations</a>
     </div>
     <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
         La remise à zéro du compteur n'annule pas les anciennes dettes : elles restent dans l'historique.
@@ -49,11 +49,11 @@
             @error('reason') <span class="text-red-600">{{ $message }}</span> @enderror
             @error('period') <span class="text-red-600">{{ $message }}</span> @enderror
         </label>
-        <button type="submit" wire:confirm="Confirmez-vous cette décision concernant les arriérés du choriste ?" class="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-semibold text-white">Confirmer la décision</button>
+        <button type="submit" wire:confirm="Confirmez-vous cette décision concernant les arriérés du choriste ?" class="rounded-lg bg-choir-700 px-4 py-2 text-sm font-semibold text-white">Confirmer la décision</button>
     </form>
     <div class="overflow-x-auto rounded-xl border bg-white">
         <h2 class="px-4 py-3 font-semibold">Historique des nouveaux départs</h2>
-        <table class="w-full text-left text-sm">
+        <table class="table w-full text-left text-sm">
             <thead class="bg-slate-50"><tr><th class="p-3">Choriste</th><th class="p-3">Date de départ</th><th class="p-3">Motif</th><th class="p-3">Autorisé par</th></tr></thead>
             <tbody>
                 @forelse($history as $item)

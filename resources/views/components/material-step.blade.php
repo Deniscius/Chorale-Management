@@ -1,8 +1,8 @@
 @props(['number', 'title', 'icon', 'help'])
 <fieldset class="min-w-0 rounded-2xl border border-slate-200 p-4">
     <legend class="flex max-w-full items-center gap-2 px-2 text-base font-bold text-slate-900">
-        <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-900">{{ $number }}</span>
-        <x-icon :name="$icon" class="h-6 w-6 shrink-0 text-indigo-700" />
+        <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-choir-100 text-choir-900">{{ $number }}</span>
+        <x-icon :name="$icon" class="h-6 w-6 shrink-0 text-choir-700" />
         <span>{{ $title }}</span>
     </legend>
     <div class="mb-4 flex flex-wrap items-start gap-3">

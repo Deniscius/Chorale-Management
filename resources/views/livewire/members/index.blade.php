@@ -19,7 +19,7 @@
     </x-page-header>
 
     {{-- Indicateurs --}}
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Effectif total" :value="$this->stats['total']" icon="users" color="slate" :href="route('members.index', []).'#resultats'" />
         <x-stat-card label="Choristes actifs" :value="$this->stats['actif']" icon="users" color="green" :href="route('members.index', ['statut'=>'actif']).'#resultats'" />
         <x-stat-card label="En attente d'adhésion" :value="$this->stats['invite']" icon="inbox" color="amber" :href="route('members.index', ['statut'=>'invite']).'#resultats'" />
@@ -28,7 +28,7 @@
     </div>
 
     {{-- Filtres --}}
-    <div class="mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div class="work-surface mt-6 p-4">
         <div class="grid gap-3 md:grid-cols-4">
             <div class="md:col-span-2">
                 <label for="search" class="sr-only">Rechercher</label>
@@ -77,9 +77,9 @@
     </div>
 
     {{-- Liste --}}
-    <div class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div class="work-surface mt-4 overflow-hidden">
         <div class="overflow-x-auto">
-            <table id="resultats" class="min-w-full divide-y divide-slate-200">
+            <table id="resultats" class="table min-w-full divide-y divide-slate-200">
                 <thead class="bg-slate-50">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Choriste</th>

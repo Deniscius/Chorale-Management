@@ -14,7 +14,7 @@
 
     <x-material-navigation />
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Mouvements" :value="$this->stats['total']" icon="cube" color="slate" :href="route('instruments.movements', []).'#resultats'" />
         <x-stat-card label="En cours" :value="$this->stats['en_cours']" icon="chart" color="blue" :href="route('instruments.movements', ['statut'=>'en_cours']).'#resultats'" />
         <x-stat-card label="Retours en retard" :value="$this->stats['en_retard']" icon="wrench" color="red" :href="route('instruments.movements', ['statut'=>'en_retard']).'#resultats'" />

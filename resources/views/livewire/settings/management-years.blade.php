@@ -1,11 +1,11 @@
 <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-2xl font-bold text-slate-900">Gestion des années</h1>
-        <a href="{{ route('dashboard') }}" wire:navigate class="text-sm text-indigo-700 underline">Retour au tableau de bord</a>
+        <a href="{{ route('dashboard') }}" wire:navigate class="text-sm text-choir-700 underline">Retour au tableau de bord</a>
     </div>
     <p class="text-sm text-slate-600">Chaque année est propre à votre espace. Les dates pastorales et le thème sont décidés par l'administrateur.</p>
 
-    <form wire:submit="save" class="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
+    <form wire:submit="save" class="work-surface space-y-4 p-5">
         <h2 class="font-semibold">{{ $editingId ? 'Modifier une année' : 'Créer une année' }}</h2>
         <div class="grid gap-4 md:grid-cols-2">
             <label class="block text-sm">Type
@@ -33,13 +33,13 @@
         </label>
         <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" wire:model="is_active"> Disponible à la sélection</label>
         <div class="flex gap-3">
-            <button class="rounded-lg bg-indigo-700 px-4 py-2 text-sm font-semibold text-white">Enregistrer</button>
+            <button class="rounded-lg bg-choir-700 px-4 py-2 text-sm font-semibold text-white">Enregistrer</button>
             @if($editingId)<button type="button" wire:click="resetForm" class="rounded-lg border px-4 py-2 text-sm">Annuler</button>@endif
         </div>
     </form>
 
     <div class="overflow-x-auto rounded-xl border bg-white">
-        <table class="w-full text-left text-sm">
+        <table class="table w-full text-left text-sm">
             <thead class="bg-slate-50"><tr><th class="p-3">Année</th><th class="p-3">Type</th><th class="p-3">Période</th><th class="p-3">Thème</th><th class="p-3">État</th><th class="p-3"></th></tr></thead>
             <tbody>
                 @foreach($years as $year)
@@ -49,7 +49,7 @@
                         <td class="p-3">{{ $year->starts_on->format('d/m/Y') }} – {{ $year->ends_on->format('d/m/Y') }}</td>
                         <td class="p-3">{{ $year->theme ?: '—' }}</td>
                         <td class="p-3">{{ $year->is_active ? 'Active' : 'Inactive' }}</td>
-                        <td class="p-3"><button wire:click="edit({{ $year->id }})" class="font-semibold text-indigo-700">Modifier</button></td>
+                        <td class="p-3"><button wire:click="edit({{ $year->id }})" class="font-semibold text-choir-700">Modifier</button></td>
                     </tr>
                 @endforeach
             </tbody>

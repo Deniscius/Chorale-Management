@@ -14,7 +14,7 @@
         </x-slot>
     </x-page-header>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Total reçu" :value="\App\Support\Money::compact($this->stats['total'])" icon="banknotes" color="green" :href="route('donations.index', []).'#resultats'" />
         <x-stat-card label="Nombre d’entrées" :value="$this->stats['nombre']" icon="sparkles" color="slate" :href="route('donations.index', []).'#resultats'" />
         <x-stat-card label="Montant moyen" :value="\App\Support\Money::compact($this->stats['moyenne'])" icon="chart" color="blue" :href="route('donations.index', []).'#resultats'" />

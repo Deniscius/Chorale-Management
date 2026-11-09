@@ -52,7 +52,7 @@
 
                 @forelse($resources as $resource)
                     @php($canEdit = $isManager || (int)$resource->uploaded_by === (int)auth()->id())
-                    <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <article class="work-surface p-5">
                         <div class="flex flex-wrap items-start justify-between gap-3">
                             <div>
                                 <h3 class="text-lg font-semibold text-slate-900">{{ $resource->title }}</h3>

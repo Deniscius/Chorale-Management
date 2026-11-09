@@ -10,7 +10,7 @@
         </x-slot>
     </x-page-header>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Comptes actifs" :value="$this->stats['total']" icon="users" color="slate" :href="route('users.index', []).'#resultats'" />
         <x-stat-card label="Administrateurs" :value="$this->stats['admins']" icon="cog" color="red" :href="route('users.index', ['role'=>'admin']).'#resultats'" />
         <x-stat-card label="Membres de commission" :value="$this->stats['commissions']" icon="sparkles" color="purple"
@@ -97,7 +97,7 @@
                         {{ $user->updated_at?->diffForHumans() ?? '—' }}
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-right">
-                        <a href="{{ route('users.commissions', $user) }}" wire:navigate class="help-control mb-2 inline-flex items-center rounded-lg px-2 text-sm font-semibold text-indigo-700 underline">Commissions et accès</a>
+                        <a href="{{ route('users.commissions', $user) }}" wire:navigate class="help-control mb-2 inline-flex items-center rounded-lg px-2 text-sm font-semibold text-choir-700 underline">Commissions et accès</a>
                         <button type="button" wire:click="openPasswordReset({{ $user->id }})"
                             class="help-control mb-2 inline-flex items-center rounded-lg px-2 text-sm font-semibold text-amber-700 underline">
                             Réinitialiser le mot de passe

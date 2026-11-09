@@ -11,12 +11,10 @@
         <meta name="tenant-access-expires" content="{{ $accessEnd->toIso8601String() }}">
         <meta name="tenant-server-time" content="{{ now()->toIso8601String() }}">
     @endif
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#493447">
 
     <title>{{ isset($title) ? $title . ' · ' : '' }}{{ $chorale->name() }}</title>
 
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
 
     @if ($chorale->hasLogo())
         <link rel="icon" href="{{ $chorale->logoUrl() }}">
@@ -43,7 +41,7 @@
             @include('layouts.topbar')
 
             <main id="contenu" tabindex="-1"
-                class="mx-auto w-full max-w-[1600px] flex-1 px-3 py-5 focus:outline-none sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+                class="app-content mx-auto w-full max-w-[1480px] flex-1 px-3 py-5 focus:outline-none sm:px-6 sm:py-6 lg:px-8 lg:py-8">
                 <x-accessibility-help />
                 @if(config('tenancy.enabled') && request()->attributes->get('tenant')?->isTrialing())
                     <div class="mb-5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">

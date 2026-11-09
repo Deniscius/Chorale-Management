@@ -13,7 +13,7 @@
         </x-slot>
     </x-page-header>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Séances planifiées" :value="$this->stats['total']" icon="calendar" color="slate" :href="route('rehearsals.index', []).'#resultats'" />
         <x-stat-card label="À venir" :value="$this->stats['avenir']" icon="chart" color="blue" :href="route('rehearsals.index', ['periode'=>'avenir']).'#resultats'" />
         <x-stat-card label="Séances terminées" :value="$this->stats['terminees']" icon="sparkles" color="green" :href="route('rehearsals.index', ['statut'=>'terminee']).'#resultats'" />

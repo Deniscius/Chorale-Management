@@ -100,6 +100,8 @@ jobs:
       - run: npm run test:material
       - run: npm run test:profiles
       - run: npm run test:documents
+      - run: php tests/browser/prepare-design.php
+      - run: npm run test:design
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         if: failure()
         with:

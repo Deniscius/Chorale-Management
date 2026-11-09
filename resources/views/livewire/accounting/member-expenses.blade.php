@@ -29,7 +29,7 @@
     </div>
     <div class="mt-4">{{ $this->expenses->links() }}</div>
     @if($showForm)
-        <section x-init="$el.scrollIntoView({ behavior: 'smooth', block: 'start' })" class="mt-5 rounded-xl border border-slate-200 bg-white p-5" aria-label="Nouvelle avance">
+        <section x-init="$el.scrollIntoView({ behavior: 'smooth', block: 'start' })" class="work-surface mt-5 p-5" aria-label="Nouvelle avance">
             <h2 class="mb-4 font-semibold">Enregistrer une dépense payée par un choriste</h2>
             <form wire:submit="save" class="space-y-4">
                 <x-validation-summary />
@@ -49,7 +49,7 @@
     @endif
     @if($this->selectedExpense)
         @php($selected = $this->selectedExpense)
-        <section wire:key="expense-detail-{{ $selected->id }}" x-init="$el.scrollIntoView({ behavior: 'smooth', block: 'start' })" class="mt-5 space-y-4 rounded-xl border border-slate-200 bg-white p-5" aria-label="Détail de l’avance">
+        <section wire:key="expense-detail-{{ $selected->id }}" x-init="$el.scrollIntoView({ behavior: 'smooth', block: 'start' })" class="work-surface mt-5 space-y-4 p-5" aria-label="Détail de l’avance">
             <h2 class="font-semibold">Avance #{{ $selected->id }} — {{ $selected->member->full_name }}</h2>
             <p>{{ $selected->description }} · {{ $selected->activity?->title ?? 'Hors activité' }} · {{ number_format((float) $selected->amount, 2, ',', ' ') }} FCFA</p>
             <p>Justificatif : {{ $selected->evidence_reference ?: 'Non renseigné' }} · {{ $selected->notes }}</p>

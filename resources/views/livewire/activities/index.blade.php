@@ -1,4 +1,5 @@
 <div>
+    <x-validation-summary />
     <x-page-header title="Activités de la chorale" icon="chart"
         :subtitle="'Répétitions, concerts, sorties et actions — '.$this->stats['total'].' activité(s) enregistrée(s).'">
         <x-slot name="actions">

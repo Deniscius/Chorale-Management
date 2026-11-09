@@ -136,7 +136,12 @@ final class Compose extends Component
     #[Computed]
     public function candidates(): Collection
     {
-        $query = Member::query()->with('user')->where('status', MemberStatus::Actif);
+        $query = Member::query()->with('user');
+        if ($this->audience === 'activity') {
+            $query->activityEligible();
+        } else {
+            $query->where('status', MemberStatus::Actif);
+        }
         if ($this->audience === 'commission') {
             if (! $this->commissions->contains('id', (int) $this->commissionId)) {
                 return collect();

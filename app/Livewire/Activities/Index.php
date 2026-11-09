@@ -12,6 +12,7 @@ use App\Services\ManagementYearContext;
 use App\Support\SearchTerms;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
@@ -113,7 +114,10 @@ class Index extends Component
     {
         $this->authorizeManage();
 
-        Activity::findOrFail($activityId)->delete();
+        DB::transaction(function () use ($activityId): void {
+            $activity = Activity::query()->lockForUpdate()->findOrFail($activityId);
+            $activity->delete();
+        }, 3);
 
         $this->dispatch('toast', type: 'success', message: 'Activité supprimée.');
     }

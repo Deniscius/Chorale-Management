@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Validation\ValidationException;
 
 class Activity extends Model
 {
@@ -18,6 +19,15 @@ class Activity extends Model
 
     /** @use HasFactory<ActivityFactory> */
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::deleting(function (self $activity): void {
+            if ($activity->transactions()->exists() || $activity->participationContributions()->exists() || $activity->memberExpenses()->exists()) {
+                throw ValidationException::withMessages(['operation' => 'Cette activité possède un historique financier. Conservez-la et utilisez son statut plutôt que de la supprimer.']);
+            }
+        });
+    }
 
     protected $fillable = [
         'choir_id',

@@ -18,6 +18,7 @@ use App\Support\SearchTerms;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -57,6 +58,15 @@ class Index extends Component
     #[Url(as: 'compte')]
     public ?int $accountId = null;
 
+    #[Locked]
+    public ?int $classificationId = null;
+
+    public bool $showClassification = false;
+
+    public string $classificationActivity = '';
+
+    public string $classificationAccount = '';
+
     public bool $showForm = false;
 
     public ?int $editingId = null;
@@ -79,12 +89,48 @@ class Index extends Component
         $this->resetPage();
     }
 
+    #[Computed]
+    public function selectedActivity(): ?Activity
+    {
+        return $this->activityId ? Activity::query()->find($this->activityId) : null;
+    }
+
     public function create(): void
     {
         $this->authorizeManage();
 
         $this->editingId = null;
         $this->showForm = true;
+    }
+
+    public function classify(int $transactionId): void
+    {
+        $this->authorizeManage();
+        $entry = Transaction::query()->findOrFail($transactionId);
+        abort_unless($entry->status === TransactionStatus::Brouillon, 422, 'Cette écriture n’est plus en brouillon.');
+        $this->resetValidation();
+        $this->classificationId = $entry->id;
+        $this->classificationActivity = (string) ($entry->activity_id ?? '');
+        $this->classificationAccount = (string) ($entry->account_id ?? '');
+        $this->showClassification = true;
+    }
+
+    public function saveClassification(): void
+    {
+        $this->authorizeManage();
+        $this->validate(['classificationActivity' => 'nullable|integer', 'classificationAccount' => 'nullable|integer']);
+        abort_unless($this->classificationId, 422);
+        app(TransactionWriter::class)->assignContext($this->classificationId,
+            $this->classificationActivity !== '' ? (int) $this->classificationActivity : null,
+            $this->classificationAccount !== '' ? (int) $this->classificationAccount : null);
+        $this->closeClassification();
+        $this->dispatch('toast', type: 'success', message: 'Rattachement comptable enregistré. Le montant et le règlement d’origine sont conservés.');
+    }
+
+    #[On('close-classification')]
+    public function closeClassification(): void
+    {
+        $this->reset('classificationId', 'classificationActivity', 'classificationAccount', 'showClassification');
     }
 
     public function edit(int $transactionId): void

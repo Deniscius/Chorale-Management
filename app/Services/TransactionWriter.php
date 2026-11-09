@@ -5,6 +5,11 @@ namespace App\Services;
 use App\Enums\TransactionStatus;
 use App\Models\Account;
 use App\Models\Activity;
+use App\Models\Budget;
+use App\Models\Contribution;
+use App\Models\Member;
+use App\Models\MemberExpense;
+use App\Models\Performance;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -25,7 +30,12 @@ final class TransactionWriter
                 }
             }
             if ($data['activity_id'] ?? null) {
-                Activity::query()->findOrFail($data['activity_id']);
+                Activity::query()->lockForUpdate()->findOrFail($data['activity_id']);
+            }
+            foreach (['budget_id' => Budget::class, 'member_id' => Member::class, 'performance_id' => Performance::class] as $field => $model) {
+                if ($data[$field] ?? null) {
+                    $model::query()->findOrFail($data[$field]);
+                }
             }
             $entry->fill($data);
             if (! $entry->exists) {
@@ -41,6 +51,35 @@ final class TransactionWriter
             $entry->save();
 
             return $entry;
+        }, 3);
+    }
+
+    /** Classify a draft without changing the financial data owned by its source. */
+    public function assignContext(int $id, ?int $activityId, ?int $accountId): void
+    {
+        DB::transaction(function () use ($id, $activityId, $accountId): void {
+            $entry = Transaction::query()->lockForUpdate()->findOrFail($id);
+            if ($entry->status !== TransactionStatus::Brouillon) {
+                throw ValidationException::withMessages(['classificationActivity' => 'Seul un brouillon peut être rattaché. Une écriture validée nécessite une régularisation.']);
+            }
+            if ($entry->contribution_id) {
+                $origin = Contribution::query()->findOrFail($entry->contribution_id);
+            } elseif ($entry->member_expense_id) {
+                $origin = MemberExpense::query()->findOrFail($entry->member_expense_id);
+            }
+            if (isset($origin) && (int) $origin->activity_id !== (int) $activityId) {
+                throw ValidationException::withMessages(['classificationActivity' => 'L’activité de ce règlement est définie par son document d’origine et doit être conservée.']);
+            }
+            if ($activityId) {
+                Activity::query()->lockForUpdate()->findOrFail($activityId);
+            }
+            if ($accountId) {
+                $account = Account::query()->findOrFail($accountId);
+                if (! $account->is_active && (int) $entry->account_id !== $accountId) {
+                    throw ValidationException::withMessages(['classificationAccount' => 'Choisissez un compte actif.']);
+                }
+            }
+            $entry->update(['activity_id' => $activityId, 'account_id' => $accountId]);
         }, 3);
     }
 

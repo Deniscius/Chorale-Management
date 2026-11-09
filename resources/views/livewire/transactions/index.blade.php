@@ -107,6 +107,13 @@
         <div><label for="transaction-activity-filter" class="form-label">Activité</label><select id="transaction-activity-filter" wire:model.live="activityId" class="form-select"><option value="">Toutes les activités</option>@foreach($this->activities as $activity)<option value="{{ $activity->id }}">{{ $activity->title }}</option>@endforeach</select></div>
         <div><label for="transaction-account-filter" class="form-label">Compte d’opération</label><select id="transaction-account-filter" wire:model.live="accountId" class="form-select"><option value="">Tous les comptes</option>@foreach($this->accounts as $account)<option value="{{ $account->id }}">{{ $account->code }} — {{ $account->name }}{{ $account->is_active ? '' : ' (désactivé)' }}</option>@endforeach</select></div>
     </div>
+    @if($this->selectedActivity)
+        <section class="work-surface my-4 p-4" aria-label="Contexte de l’activité">
+            <h2 class="text-lg">{{ $this->selectedActivity->title }}</h2>
+            <p class="mt-1 text-sm text-slate-600">{{ $this->selectedActivity->starts_at->format('d/m/Y') }}. Une nouvelle opération sera pré-rattachée à cette activité. Seules les écritures validées ou clôturées entrent dans le bilan.</p>
+            <a href="{{ route('activities.detail-report', $this->selectedActivity) }}" target="_blank" rel="noopener" class="btn btn-secondary mt-3">Rapport complet de l’activité</a>
+        </section>
+    @endif
     @if($activityId)<p class="my-3 text-sm text-slate-600">Toutes les écritures de cette activité sont incluses, même hors de la période globale de travail. Les autres filtres ci-dessus restent applicables.</p>@endif
     <div class="mt-4">
         <x-data-table id="resultats" :headers="[
@@ -159,6 +166,7 @@
                         @if ($this->canManage())
                             <div class="flex items-center justify-end gap-1">
                                 @if ($transaction->status->value === 'brouillon')
+                                    <button type="button" wire:click="classify({{ $transaction->id }})" class="btn btn-secondary btn-sm">Rattacher</button>
                                     <x-confirm-action :call="'validateTransaction('.$transaction->id.')'" title="Valider l’écriture"
                                         message="Cette écriture entrera dans les soldes comptables." label="Valider l’écriture"
                                         icon="sparkles" icon-only trigger-class="rounded-lg p-2 text-slate-500 transition hover:bg-emerald-50 hover:text-emerald-600" />
@@ -181,10 +189,21 @@
         {{ $this->transactions->links() }}
     </div>
 
+    @if($showClassification)
+        <x-modal-panel title="Rattachement comptable" subtitle="Classer un brouillon sans modifier son règlement." close-event="close-classification" size="md">
+            <form wire:submit="saveClassification" class="space-y-4">
+                <x-validation-summary />
+                <p class="text-sm text-slate-600">Le montant, la date et le bénéficiaire sont conservés. Pour une cotisation ou un remboursement, l’activité doit rester celle du document d’origine.</p>
+                <div><label for="classification-activity" class="form-label">Activité</label><select id="classification-activity" wire:model="classificationActivity" class="form-select"><option value="">Opération générale, sans activité</option>@foreach($this->activities as $activity)<option value="{{ $activity->id }}">{{ $activity->starts_at->format('d/m/Y') }} — {{ $activity->title }}</option>@endforeach</select></div>
+                <div><label for="classification-account" class="form-label">Compte d’opération</label><select id="classification-account" wire:model="classificationAccount" class="form-select"><option value="">Non classé</option>@foreach($this->accounts as $account)<option value="{{ $account->id }}">{{ $account->code }} — {{ $account->name }}{{ $account->is_active ? '' : ' (désactivé)' }}</option>@endforeach</select></div>
+                <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">Enregistrer le rattachement</button>
+            </form>
+        </x-modal-panel>
+    @endif
     @if ($showForm)
         <x-modal-panel :title="$editingId ? 'Modifier l\'opération' : 'Nouvelle opération'"
             subtitle="La référence d'écriture (OP/AAAA/0000) est attribuée automatiquement.">
-            <livewire:transactions.form :transaction="$this->editingTransaction" :activity-id="$activityId" />
+            <livewire:transactions.form :transaction="$this->editingTransaction" :activity-id="$activityId" :key="'operation-form-'.($editingId ?? 'new-'.($activityId ?? 'general'))" />
         </x-modal-panel>
     @endif
 </div>

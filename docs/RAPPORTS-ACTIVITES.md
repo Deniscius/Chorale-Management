@@ -11,3 +11,17 @@ Dans **Choristes**, utiliser **Nouvel intervenant extérieur** pour une personne
 Dans **Cotisations**, la modification conserve la cotisation existante. Les anciennes cotisations sans type utilisent le type mensuel. Les notes d’un règlement historique restent modifiables sans créer une nouvelle recette. Les montants d’un paiement déjà validé ou historique nécessitant un rapprochement restent protégés par les règles comptables.
 
 Vérification locale : `php artisan test` et `npm run build`. Le contrôle des huit modèles en navigateur s’exécute avec `npm run test:reports` (Chromium Playwright et `pdftotext` requis). Il utilise une base SQLite en mémoire et des personnes fictives ; les exports sont dans `test-results/activity-reports/`.
+
+## Rattacher une opération à une activité
+
+Depuis **Activités > Écritures**, le journal est filtré sur l’activité. **Nouvelle opération** pré-remplit ce lien ; il peut être conservé, changé ou laissé vide pour une opération générale. Le compte classe l’écriture ; l’activité indique son objet. Le lien ne crée pas une deuxième recette ou dépense et ne modifie pas le budget déclaré de l’activité.
+
+Sur un brouillon, **Rattacher** permet de choisir le compte et l’activité sans modifier le montant, la date ou le bénéficiaire. Cette action est aussi disponible pour une recette issue d’un don, dont le montant reste géré depuis le don d’origine. Une recette de cotisation ou un remboursement conserve l’activité définie par son document d’origine. Les frais d’inscription d’activité créent déjà ce lien automatiquement.
+
+Après validation, l’écriture entre dans le bilan de l’activité et devient protégée. Les changements ultérieurs passent par une régularisation comptable. Les avances personnelles se déclarent dans **Avances des choristes** ; leur remboursement suit ce parcours pour éviter une dépense saisie deux fois. Une activité possédant des opérations, cotisations ou avances ne peut plus être supprimée ; son statut peut être modifié en conservant son historique.
+
+## Destinataires des e-mails
+
+Les messages groupés « Toute la chorale » concernent les choristes actifs, avec ou sans compte, sous réserve d’une adresse valide. Les messages d’activité sont limités aux participants éligibles, y compris les intervenants extérieurs. Le rappel de répétition programmé peut également atteindre un choriste sans compte. En revanche, les rappels transversaux du carnet personnel nécessitent actuellement un compte.
+
+**Paramètres > Diagnostic des e-mails** distingue ces possibilités et les adresses manquantes. Les périmètres d’événement ou de commission et la configuration d’envoi restent applicables. Ni ces chiffres ni l’acceptation par le transport ne confirment l’arrivée dans la boîte du destinataire.

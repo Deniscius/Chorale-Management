@@ -4,6 +4,7 @@ namespace App\Livewire\Settings;
 
 use App\Mail\MailDeliveryRejected;
 use App\Mail\TenantAnnouncement;
+use App\Models\Member;
 use App\Models\NotificationDispatch;
 use App\Services\MailConfiguration;
 use App\Tenancy\TenantContext;
@@ -68,6 +69,20 @@ final class EmailDelivery extends Component
         Gate::authorize('manage-settings');
 
         return NotificationDispatch::query()->with('user:id,name')->latest('id')->limit(30)->get();
+    }
+
+    #[Computed]
+    public function coverage(): array
+    {
+        Gate::authorize('manage-settings');
+        $members = Member::query()->active()->with('user.member')->get();
+
+        return [
+            'active' => $members->count(),
+            'automatic' => $members->filter(fn ($member) => $member->user?->notificationEmail())->count(),
+            'without_account' => $members->filter(fn ($member) => ! $member->user && $member->canReceiveEmail())->count(),
+            'missing_address' => $members->filter(fn ($member) => $member->user ? ! $member->user->notificationEmail() : ! $member->canReceiveEmail())->count(),
+        ];
     }
 
     public function render()

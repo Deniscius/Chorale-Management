@@ -12,6 +12,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Services\ChoraleIdentity;
 use App\Services\Platform\Totp;
+use App\Services\PrivateFiles;
 use App\Tenancy\TenantContext;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\Mail;
@@ -39,7 +40,11 @@ Mail::fake();
 Notification::fake();
 $admin = User::withoutGlobalScopes()->where('username', 'review-admin')->firstOrFail();
 app(TenantContext::class)->run($admin->tenant_id, function (): void {
-    Setting::set(ChoraleIdentity::KEY_LOGO_PATH, null);
+    if (blank(Setting::get(ChoraleIdentity::KEY_LOGO_PATH))) {
+        $path = app(TenantContext::class)->path('chorale/design-fixture.png');
+        app(PrivateFiles::class)->storeContents($path, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZrC8AAAAASUVORK5CYII='), 'image/png');
+        Setting::set(ChoraleIdentity::KEY_LOGO_PATH, $path);
+    }
     foreach (['Élise', 'Joseph', 'Anne', 'Paul', 'Marie', 'Emmanuel', 'Grâce', 'Michel'] as $index => $name) {
         if (! Member::where('email', 'design-'.$index.'@example.test')->exists()) {
             Member::factory()->create(['first_name' => $name, 'last_name' => 'Démonstration', 'email' => 'design-'.$index.'@example.test',

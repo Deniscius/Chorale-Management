@@ -112,11 +112,12 @@
                 <x-input-label for="transactions-form-activity_id" value="Activité liée" />
                 <select id="transactions-form-activity_id" aria-describedby="transactions-form-activity_id-error" aria-invalid="{{ $errors->has('activity_id') ? 'true' : 'false' }}" wire:model="activity_id"
                     class="form-select mt-1">
-                    <option value="">—</option>
+                    <option value="">Opération générale, sans activité</option>
                     @foreach ($this->activities as $activity)
-                        <option value="{{ $activity->id }}">{{ $activity->title }}</option>
+                        <option value="{{ $activity->id }}">{{ $activity->starts_at->format('d/m/Y') }} — {{ $activity->title }}</option>
                     @endforeach
                 </select>
+                <p class="mt-2 text-xs text-slate-600">Ce lien rattache la recette ou la dépense au rapport de l’activité. Un remboursement d’avance se saisit depuis « Avances des choristes » pour conserver le suivi du bénéficiaire.</p>
                 <x-input-error id="transactions-form-activity_id-error" :messages="$errors->get('activity_id')" class="mt-1" />
             </div>
             <div>

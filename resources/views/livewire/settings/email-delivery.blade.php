@@ -9,6 +9,12 @@
         <button type="button" wire:click="sendTest" wire:loading.attr="disabled" class="btn btn-primary">Envoyer un mail de test à mon adresse</button>
         @if($result)<p role="status" class="{{ $resultType === 'success' ? 'text-emerald-700' : 'text-rose-700' }}">{{ $result }}</p>@endif
     </section>
+    <section class="work-surface mt-5 space-y-2 p-5" aria-label="Couverture des destinataires">
+        <h2 class="text-lg">Qui peut recevoir les mails ?</h2>
+        <p>{{ $this->coverage['active'] }} choriste(s) actif(s) ; {{ $this->coverage['automatic'] }} avec compte et adresse valide pour les rappels automatiques transversaux.</p>
+        <p>{{ $this->coverage['without_account'] }} sans compte, mais joignable(s) par les messages groupés et les rappels de répétition ; {{ $this->coverage['missing_address'] }} sans adresse valide.</p>
+        <p class="text-sm text-slate-600">Les rappels automatiques transversaux nécessitent actuellement un compte. Le rappel de répétition programmé peut aussi être envoyé aux choristes sans compte. Un message groupé « Toute la chorale » peut aussi atteindre les choristes actifs sans compte. Les messages d’activité ou de commission sont limités aux personnes concernées. Ces chiffres indiquent une possibilité d’envoi, pas une preuve de réception.</p>
+    </section>
     <section class="work-surface mt-5 p-5">
         <h2 class="font-semibold">Derniers rappels automatiques</h2>
         <p class="mb-4 text-sm text-slate-600">La copie dans l’application et l’e-mail sont suivis séparément. « Accepté » signifie que le transport a pris le message en charge. Les notifications antérieures au suivi ne prouvent pas un envoi e-mail.</p>

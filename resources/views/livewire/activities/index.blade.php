@@ -22,7 +22,7 @@
         </x-slot>
     </x-page-header>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Activités" :value="$this->stats['total']" icon="chart" color="slate" :href="route('activities.index', []).'#resultats'" />
         <x-stat-card label="Planifiées" :value="$this->stats['planifiees']" icon="calendar" color="blue" :href="route('activities.index', ['statut'=>'planifiee']).'#resultats'" />
         <x-stat-card label="Terminées" :value="$this->stats['terminees']" icon="sparkles" color="green" :href="route('activities.index', ['statut'=>'terminee']).'#resultats'" />

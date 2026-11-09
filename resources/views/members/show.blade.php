@@ -6,7 +6,7 @@
         </x-slot>
     </x-page-header>
 
-    <section class="mb-5 flex flex-col items-center gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row">
+    <section class="work-surface mb-5 flex flex-col items-center gap-5 p-5 sm:flex-row">
         <div class="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-white bg-slate-100 text-2xl font-bold text-slate-500 shadow">
             @if($member->photo_path)
                 <img src="{{ route('members.photo', $member) }}" alt="Photo d’identité de {{ $member->full_name }}" class="h-full w-full object-cover" />
@@ -25,7 +25,7 @@
         </div>
     </section>
 
-    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Statut" :value="$member->status->label()" icon="user" color="slate" />
         <x-stat-card label="Pupitre" :value="$member->voice?->label() ?? 'Non renseigné'" icon="music" color="blue" />
         <x-stat-card label="Date d’adhésion" :value="$member->joined_on?->format('d/m/Y') ?? 'Non renseignée'" icon="calendar" color="green" />
@@ -33,7 +33,7 @@
     </div>
 
     <div class="mt-5 grid gap-5 xl:grid-cols-3">
-        <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm xl:col-span-1">
+        <section class="work-surface p-5 xl:col-span-1">
             <h2 class="font-semibold text-slate-900">Informations personnelles</h2>
             <dl class="mt-4 space-y-3 text-sm">
                 @foreach([
@@ -55,13 +55,13 @@
                 @php
                     $attendanceStats = $attendance->countBy(fn($row) => $row['status']->value);
                 @endphp
-                <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+                <section class="work-surface">
                     <div class="border-b border-slate-200 p-5">
                         <h2 class="font-semibold text-slate-900">Présences et assiduité</h2>
                         <p class="mt-1 text-sm text-slate-600">{{ $attendanceStats['present'] ?? 0 }} présence(s), {{ $attendanceStats['late'] ?? 0 }} retard(s), {{ $attendanceStats['absent'] ?? 0 }} absence(s), {{ $attendanceStats['excuse'] ?? 0 }} absence(s) excusée(s).</p>
                     </div>
                     <div class="max-h-96 overflow-auto">
-                        <table class="min-w-full divide-y divide-slate-200 text-sm">
+                        <table class="table min-w-full divide-y divide-slate-200 text-sm">
                             <thead class="sticky top-0 bg-slate-50"><tr><th class="px-4 py-3 text-left">Date</th><th class="px-4 py-3 text-left">Événement</th><th class="px-4 py-3 text-left">Statut</th><th class="px-4 py-3 text-left">Précision</th></tr></thead>
                             <tbody class="divide-y divide-slate-100">
                                 @forelse($attendance as $row)
@@ -76,13 +76,13 @@
                     <livewire:members.contribution-exemptions :member="$member" />
                 @endif
 
-                <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+                <section class="work-surface">
                     <div class="border-b border-slate-200 p-5">
                         <h2 class="font-semibold text-slate-900">Incidents de présence</h2>
                         <p class="mt-1 text-sm text-slate-600">Historique des absences et retards transmis à la comptabilité. Les montants restent indicatifs.</p>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-200 text-sm">
+                        <table class="table min-w-full divide-y divide-slate-200 text-sm">
                             <thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left">Date</th><th class="px-4 py-3 text-left">Événement</th><th class="px-4 py-3 text-left">Incident</th><th class="px-4 py-3 text-left">État</th>@if($canViewFinance)<th class="px-4 py-3 text-right">Montant</th>@endif</tr></thead>
                             <tbody class="divide-y divide-slate-100">
                                 @forelse($incidents as $incident)
@@ -100,15 +100,15 @@
                     $paid = (float) $contributions->sum('paid_amount');
                     $incidentAmount = (float) $incidents->where('status', 'pending')->sum('amount');
                 @endphp
-                <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+                <section class="work-surface">
                     <div class="border-b border-slate-200 p-5"><h2 class="font-semibold text-slate-900">Situation financière personnelle</h2></div>
-                    <div class="grid grid-cols-1 gap-3 p-5 sm:grid-cols-3">
+                    <div class="metric-grid grid grid-cols-1 gap-3 p-5 sm:grid-cols-3">
                         <x-stat-card label="Cotisations attendues" :value="number_format($due, 0, ',', ' ').' FCFA'" icon="banknotes" color="blue" />
                         <x-stat-card label="Cotisations versées" :value="number_format($paid, 0, ',', ' ').' FCFA'" icon="check" color="green" />
                         <x-stat-card label="Reste à verser" :value="number_format(max(0, $due - $paid), 0, ',', ' ').' FCFA'" :hint="number_format($incidentAmount, 0, ',', ' ').' FCFA d’incidents indicatifs'" icon="alert" color="amber" />
                     </div>
                     <div class="overflow-x-auto border-t border-slate-100">
-                        <table class="min-w-full divide-y divide-slate-200 text-sm">
+                        <table class="table min-w-full divide-y divide-slate-200 text-sm">
                             <thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left">Période</th><th class="px-4 py-3 text-left">Type</th><th class="px-4 py-3 text-right">Attendu</th><th class="px-4 py-3 text-right">Versé</th><th class="px-4 py-3 text-left">Statut</th></tr></thead>
                             <tbody class="divide-y divide-slate-100">
                                 @forelse($contributions as $contribution)
@@ -119,10 +119,10 @@
                     </div>
                 </section>
 
-                <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+                <section class="work-surface">
                     <div class="border-b border-slate-200 p-5"><h2 class="font-semibold text-slate-900">Opérations comptables liées</h2></div>
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-200 text-sm">
+                        <table class="table min-w-full divide-y divide-slate-200 text-sm">
                             <thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left">Date</th><th class="px-4 py-3 text-left">Référence</th><th class="px-4 py-3 text-left">Libellé</th><th class="px-4 py-3 text-right">Montant</th></tr></thead>
                             <tbody class="divide-y divide-slate-100">
                                 @forelse($transactions as $transaction)

@@ -12,7 +12,7 @@
     <p class="text-sm text-slate-600">Chaque commission liturgique désigne son maître de chœur responsable et, si nécessaire, d'autres maîtres de chœur. La direction désigne le maître de chœur responsable de chaque commission liturgique. Celui-ci peut ensuite choisir et retirer ses maîtres associés, sans changer leurs rôles généraux.</p>
     <div class="grid gap-4 md:grid-cols-2">
         @forelse ($commissions as $commission)
-            <section wire:key="choir-masters-{{ $commission->id }}" class="rounded-xl border border-slate-200 bg-white p-5">
+            <section wire:key="choir-masters-{{ $commission->id }}" class="work-surface p-5">
                 <h2 class="font-semibold text-slate-900">{{ $commission->name }}</h2>
                 <div class="mt-3 rounded-lg bg-sky-50 p-3">
                     <p class="text-xs font-semibold uppercase tracking-wide text-sky-700">Maître de chœur responsable</p>

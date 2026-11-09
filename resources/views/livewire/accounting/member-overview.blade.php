@@ -2,7 +2,7 @@
     <x-page-header title="Vue financière des choristes" icon="users"
         subtitle="Consultez toute la chorale, un pupitre ou un choriste sans mélanger les données des autres espaces." />
 
-    <div class="grid grid-cols-2 gap-4 xl:grid-cols-5">
+    <div class="metric-grid grid grid-cols-2 gap-4 xl:grid-cols-5">
         <x-stat-card label="Choristes" :value="$this->totals['members']" icon="users" color="slate" />
         <x-stat-card label="Cotisations attendues" :value="number_format($this->totals['due'], 0, ',', ' ').' FCFA'" icon="banknotes" color="blue" />
         <x-stat-card label="Cotisations versées" :value="number_format($this->totals['paid'], 0, ',', ' ').' FCFA'" icon="check" color="green" />
@@ -19,8 +19,8 @@
         </div>
     </x-filter-bar>
 
-    <div class="mt-5 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table class="min-w-full divide-y divide-slate-200">
+    <div class="work-surface mt-5 overflow-x-auto">
+        <table class="table min-w-full divide-y divide-slate-200">
             <thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Choriste</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Pupitre</th><th class="px-4 py-3 text-right text-xs font-semibold uppercase">Attendu</th><th class="px-4 py-3 text-right text-xs font-semibold uppercase">Versé</th><th class="px-4 py-3 text-right text-xs font-semibold uppercase">Reste</th><th class="px-4 py-3 text-center text-xs font-semibold uppercase">Absences / retards</th><th class="px-4 py-3 text-right text-xs font-semibold uppercase">Dossier</th></tr></thead>
             <tbody class="divide-y divide-slate-100">
                 @forelse($this->rows as $row)

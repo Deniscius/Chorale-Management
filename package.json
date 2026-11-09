@@ -9,6 +9,7 @@
         "test:material": "node tests/browser/material.mjs",
         "test:profiles": "node tests/browser/profiles.mjs",
         "test:documents": "node tests/browser/documents.mjs",
+        "test:design": "node tests/browser/design.mjs",
         "test:reports": "node tests/browser/activity-reports.mjs"
     },
     "devDependencies": {

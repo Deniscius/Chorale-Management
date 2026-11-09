@@ -16,7 +16,7 @@
         </x-slot>
     </x-page-header>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Documents accessibles" :value="$this->stats['total']" icon="archive" color="slate" :href="route($archiveRoute, $archiveParameters + ['commission'=>$commission]).'#resultats'" />
         <x-stat-card label="Responsables habilités" :value="$this->stats['prives']" icon="folder" color="blue" :href="route($archiveRoute, $archiveParameters + ['commission'=>$commission,'visibilite'=>'private']).'#resultats'" />
         <x-stat-card label="Toute la chorale" :value="$this->stats['partages']" icon="users" color="green" :href="route($archiveRoute, $archiveParameters + ['commission'=>$commission,'visibilite'=>'published']).'#resultats'" />
@@ -210,7 +210,7 @@
             @else
                 <iframe src="{{ route('documents.preview', $this->previewDocument) }}"
                     title="Aperçu de {{ $this->previewDocument->title }}"
-                    class="h-[65vh] min-h-80 w-full rounded-xl border border-slate-200 bg-white"></iframe>
+                    class="work-surface h-[65vh] min-h-80 w-full"></iframe>
             @endif
             <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
                 <p class="text-sm text-slate-600">{{ $this->previewDocument->original_name }} · {{ $this->previewDocument->humanSize() }}</p>

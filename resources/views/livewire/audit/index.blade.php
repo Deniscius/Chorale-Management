@@ -1,6 +1,6 @@
 <div>
     <x-page-header title="Activité des utilisateurs" subtitle="Connexions, déconnexions et modifications tracées pour cette chorale." icon="clock" />
-    <section class="mb-5 rounded-xl border border-slate-200 bg-white p-4" aria-label="Dernières connexions">
+    <section class="work-surface mb-5 p-4" aria-label="Dernières connexions">
         <h2 class="mb-3 text-sm font-semibold text-slate-800">Dernières connexions réussies</h2>
         <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             @forelse($this->recentLogins as $login)

@@ -28,8 +28,8 @@
         @endif
         <p class="text-sm text-slate-700">Cochez les objets dans la liste ci-dessous. Les codes existants sont conservés.</p>
     </x-material-step>
-    <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white" tabindex="0" role="region" aria-label="Liste des objets à étiqueter, défilement horizontal possible">
-        <table class="w-full text-left text-sm">
+    <div class="work-surface overflow-x-auto" tabindex="0" role="region" aria-label="Liste des objets à étiqueter, défilement horizontal possible">
+        <table class="table w-full text-left text-sm">
             <caption class="sr-only">Un objet par ligne, avec son code permanent</caption>
             <thead class="bg-slate-50"><tr><th scope="col" class="p-3">À imprimer</th><th scope="col" class="p-3">Code permanent</th><th scope="col" class="p-3">Objet</th><th scope="col" class="p-3">Présence à l’inventaire</th><th scope="col" class="p-3">Actions</th></tr></thead>
             <tbody class="divide-y divide-slate-100">

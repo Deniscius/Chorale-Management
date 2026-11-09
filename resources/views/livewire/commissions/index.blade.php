@@ -8,7 +8,7 @@
             <button type="button" wire:click="filterStatus('{{ $key }}')" aria-pressed="{{ $status === $key ? 'true' : 'false' }}" class="rounded-2xl border p-4 text-left transition focus-visible:ring-2 focus-visible:ring-sky-500 {{ $status === $key ? 'border-sky-500 bg-sky-50' : 'border-slate-200 bg-white hover:border-sky-300' }}"><span class="block text-sm text-slate-600">{{ $label }}</span><span class="mt-1 block text-2xl font-bold text-slate-900">{{ $counts[$key] }}</span></button>
         @endforeach
     </div>
-    <div class="rounded-2xl border border-slate-200 bg-white p-4">
+    <div class="work-surface p-4">
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div><label for="commission-search" class="text-sm font-medium">Rechercher</label><input id="commission-search" type="search" wire:model.live.debounce.300ms="search" maxlength="120" class="form-input mt-1 w-full" placeholder="Nom ou mission…"></div>
             <div><label for="commission-status" class="text-sm font-medium">Statut</label><select id="commission-status" wire:model.live="status" class="form-select mt-1"><option value="">Tous les statuts</option>@foreach(\App\Models\ChoirCommission::statuses() as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach</select></div>
@@ -18,7 +18,7 @@
     </div>
     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3" wire:loading.class="opacity-60" wire:target="search,status,kindFilter,mine,filterStatus,gotoPage">
         @forelse($commissions as $commission)
-            <article wire:key="commission-{{ $commission->id }}" class="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <article wire:key="commission-{{ $commission->id }}" class="work-surface flex flex-col p-5">
                 <div class="flex flex-wrap items-center gap-2 text-xs"><span class="rounded-full bg-slate-100 px-2.5 py-1 font-medium">{{ $commission->kind === 'ad_hoc' ? 'Ad hoc' : 'Permanente' }}</span><span class="rounded-full bg-sky-50 px-2.5 py-1 text-sky-800">{{ \App\Models\ChoirCommission::statuses()[$commission->status] }}</span></div>
                 <h2 class="mt-3 text-lg font-semibold"><button type="button" wire:click="view({{ $commission->id }})" class="text-left hover:text-sky-700 focus-visible:underline">{{ $commission->name }}</button></h2>
                 <p class="mt-2 line-clamp-3 break-words text-sm text-slate-600">{{ $commission->mission }}</p>

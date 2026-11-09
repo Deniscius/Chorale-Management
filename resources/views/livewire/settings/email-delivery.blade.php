@@ -1,6 +1,6 @@
 <div>
     <x-page-header title="Diagnostic des e-mails" icon="mail" subtitle="Vérifiez la configuration effective et testez la réception sur votre propre adresse." />
-    <section class="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
+    <section class="work-surface space-y-3 p-5">
         <h2 class="font-semibold">Configuration chargée par l’application</h2>
         <p>Transport : {{ $transport }}. Les secrets ne sont jamais affichés.</p>
         <ul class="space-y-2">@foreach($checks as $label => $passed)<li><strong class="{{ $passed ? 'text-emerald-700' : 'text-rose-700' }}">{{ $passed ? 'OK' : 'À corriger' }}</strong> — {{ $label }}</li>@endforeach</ul>
@@ -9,7 +9,7 @@
         <button type="button" wire:click="sendTest" wire:loading.attr="disabled" class="btn btn-primary">Envoyer un mail de test à mon adresse</button>
         @if($result)<p role="status" class="{{ $resultType === 'success' ? 'text-emerald-700' : 'text-rose-700' }}">{{ $result }}</p>@endif
     </section>
-    <section class="mt-5 rounded-xl border border-slate-200 bg-white p-5">
+    <section class="work-surface mt-5 p-5">
         <h2 class="font-semibold">Derniers rappels automatiques</h2>
         <p class="mb-4 text-sm text-slate-600">La copie dans l’application et l’e-mail sont suivis séparément. « Accepté » signifie que le transport a pris le message en charge. Les notifications antérieures au suivi ne prouvent pas un envoi e-mail.</p>
         <div class="overflow-x-auto"><table class="table"><thead><tr><th>Destinataire</th><th>Type</th><th>Application</th><th>E-mail</th><th>Tentatives</th></tr></thead><tbody>

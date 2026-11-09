@@ -8,7 +8,7 @@
                 <h2 class="font-semibold text-amber-950">Demandes reçues depuis le lien de la chorale</h2>
                 <p class="mt-1 text-sm text-amber-900">Vérifiez chaque personne avant de créer son accès. Le lien d’activation personnel est envoyé par e-mail après acceptation.</p>
             </div>
-            <table class="min-w-full divide-y divide-amber-100 text-sm">
+            <table class="table min-w-full divide-y divide-amber-100 text-sm">
                 <thead class="text-left text-amber-950"><tr><th class="p-3">Personne</th><th class="p-3">Contact</th><th class="p-3">Pupitre</th><th class="p-3">Reçue le</th><th class="p-3">Décision</th></tr></thead>
                 <tbody class="divide-y divide-amber-100">
                     @foreach ($this->joinRequests as $request)
@@ -33,7 +33,7 @@
             </table>
         </section>
     @endif
-    <div class="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2">
+    <div class="work-surface grid gap-3 p-4 sm:grid-cols-2">
         <div><label for="onboarding-search" class="form-label">Rechercher un choriste</label>
             <input id="onboarding-search" type="search" wire:model.live.debounce.350ms="search" class="form-input mt-1 w-full" placeholder="Prénom ou nom…">
         </div>
@@ -46,8 +46,8 @@
             </select>
         </div>
     </div>
-    <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-        <table class="min-w-full divide-y divide-slate-100 text-sm">
+    <div class="work-surface overflow-x-auto">
+        <table class="table min-w-full divide-y divide-slate-100 text-sm">
             <thead class="bg-slate-50 text-left text-slate-600"><tr>
                 <th scope="col" class="p-3">Choriste</th><th scope="col" class="p-3">Adhésion</th>
                 <th scope="col" class="p-3">Suivi</th><th scope="col" class="p-3">Dernier contact</th><th scope="col" class="p-3">Action</th>

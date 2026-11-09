@@ -16,7 +16,7 @@
         </x-slot>
     </x-page-header>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Recettes" :value="\App\Support\Money::compact($this->stats['recettes'])" icon="banknotes" color="green" :href="route('transactions.index', ['activite'=>$activityId,'compte'=>$accountId,'type'=>'recette','vue'=>'validees']).'#resultats'" />
         <x-stat-card label="Dépenses" :value="\App\Support\Money::compact($this->stats['depenses'])" icon="banknotes" color="red" :href="route('transactions.index', ['activite'=>$activityId,'compte'=>$accountId,'type'=>'depense','vue'=>'validees']).'#resultats'" />
         <x-stat-card label="Solde" :value="\App\Support\Money::compact($this->stats['solde'])" icon="chart" color="blue" :href="route('transactions.index', ['activite'=>$activityId,'compte'=>$accountId,'vue'=>'validees']).'#resultats'" />
@@ -74,7 +74,7 @@
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-                <select id="month" wire:model.live="month"
+                <select aria-label="Mois" id="month" wire:model.live="month"
                     class="form-select">
                     <option value="">Mois</option>
                     @foreach (range(1, 12) as $m)
@@ -82,7 +82,7 @@
                     @endforeach
                 </select>
 
-                <select id="year" wire:model.live="year"
+                <select aria-label="Exercice" id="year" wire:model.live="year"
                     class="form-select">
                     <option value="">Année</option>
                     @foreach (range((int) now()->year, (int) now()->year - 4) as $y)

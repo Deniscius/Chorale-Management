@@ -22,7 +22,7 @@
         @endforeach
     </x-data-table>
     @if($showForm)
-        <section x-init="$el.scrollIntoView({ behavior: 'smooth', block: 'start' })" class="mt-5 rounded-xl border border-slate-200 bg-white p-5" aria-label="Formulaire de compte">
+        <section x-init="$el.scrollIntoView({ behavior: 'smooth', block: 'start' })" class="work-surface mt-5 p-5" aria-label="Formulaire de compte">
             <h2 class="mb-4 font-semibold">{{ $editingId ? 'Modifier le compte' : 'Nouveau compte' }}</h2>
             <form wire:submit="save" class="space-y-4">
                 <x-validation-summary />

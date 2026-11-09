@@ -1,14 +1,13 @@
 <header
-    class="sticky top-0 z-30 flex min-h-16 flex-wrap items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur sm:px-6 lg:px-8">
+    class="app-topbar sticky top-0 z-30 flex min-h-16 flex-wrap items-center gap-3 border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8">
     <button type="button" @click="open()" aria-controls="sidebar" :aria-expanded="sidebar ? 'true' : 'false'"
         aria-label="Ouvrir le menu"
         class="help-control -ml-1.5 inline-flex items-center gap-2 rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 lg:hidden">
         <x-icon name="menu" class="h-6 w-6" /><span class="text-sm font-semibold">Menu</span>
     </button>
 
-    <div class="hidden min-w-0 items-baseline gap-2 sm:flex">
-        <span class="text-sm font-semibold text-slate-800">{{ $chorale->name() }}</span>
-        <span class="text-xs text-slate-400">·</span>
+    <div class="hidden min-w-0 items-baseline gap-2 xl:flex">
+
         <span class="text-xs font-medium text-slate-500">{{ now()->translatedFormat('l j F Y') }}</span>
     </div>
 
@@ -22,7 +21,7 @@
     @php($selectedYear = $managementYears->selected())
     @php($availableYears = $managementYears->available())
     @if($availableYears->isNotEmpty())
-        <form method="POST" action="{{ route('management-years.select') }}" class="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2">
+        <form method="POST" action="{{ route('management-years.select') }}" class="management-year-form flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2">
             @csrf
             <label for="management-year-selector" class="text-xs font-semibold text-slate-600">Année de travail</label>
             <select id="management-year-selector" name="management_year_id" onchange="this.form.submit()" class="max-w-44 rounded-lg border-slate-300 bg-white text-xs font-medium sm:max-w-52 sm:text-sm" aria-describedby="management-year-range">
@@ -38,7 +37,7 @@
         </form>
     @endif
     @can('manage-settings')
-        <a href="{{ route('settings.management-years') }}" wire:navigate class="text-xs font-semibold text-indigo-700">Gérer les années</a>
+        <a href="{{ route('settings.management-years') }}" wire:navigate aria-label="Gérer les années" class="help-control inline-flex items-center justify-center gap-2 text-xs font-semibold text-choir-700"><x-icon name="calendar" class="h-4 w-4 sm:hidden" /><span class="hidden sm:inline">Gérer les années</span></a>
     @endcan
 
     <div class="relative" x-data="notificationCenter({
@@ -60,7 +59,7 @@
             role="dialog" aria-label="Centre de notifications">
             <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                 <div><p class="font-semibold text-slate-900">Notifications</p><p class="text-xs text-slate-500">Bonjour, {{ auth()->user()->name }}</p></div>
-                <button type="button" x-show="unread > 0" @click="readAll()" class="text-xs font-semibold text-indigo-700 hover:underline">Tout marquer comme lu</button>
+                <button type="button" x-show="unread > 0" @click="readAll()" class="text-xs font-semibold text-choir-700 hover:underline">Tout marquer comme lu</button>
             </div>
             <div class="max-h-80 overflow-y-auto overscroll-contain">
                 <p x-show="loading" class="p-6 text-center text-sm text-slate-500">Actualisation…</p>

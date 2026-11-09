@@ -1,6 +1,6 @@
 <div>
     <x-page-header title="Message groupé" icon="mail" subtitle="Envoyez une note aux choristes de votre commission ou aux participants d’une activité." />
-    <form wire:submit="send" class="mx-auto max-w-3xl space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <form wire:submit="send" class="work-surface mx-auto max-w-3xl space-y-5 p-6">
         <x-validation-summary />
         <div><x-input-label value="Destinataires" /><select wire:model.live="audience" class="form-select mt-1"><option value="commission">Membres d’une de mes commissions</option><option value="activity">Participants d’une activité</option>@if(in_array(auth()->user()->role, [\App\Enums\UserRole::Admin, \App\Enums\UserRole::Directeur], true))<option value="chorale">Toute la chorale</option>@endif</select><x-input-error :messages="$errors->get('audience')" /></div>
         @if($audience === 'commission')<div><x-input-label value="Commission" /><select wire:model.live="commissionId" class="form-select mt-1"><option value="">Choisir…</option>@foreach($this->commissions as $commission)<option value="{{ $commission->id }}">{{ $commission->name }}</option>@endforeach</select></div>@endif

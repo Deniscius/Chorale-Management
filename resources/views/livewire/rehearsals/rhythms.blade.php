@@ -59,7 +59,7 @@
         </div>
         <p class="text-xs text-slate-600">Le rythme prend effet à la date « Applicable à partir du », uniquement pour le jour choisi. Si vous modifiez un rythme avec une date future, l’ancien reste valable jusqu’à la veille et le nouveau prend le relais sans trou dans le planning. Les séances personnalisées, celles ayant des présences, des œuvres ou des rappels conservent leurs données. Aucune répétition passée n’est supprimée.</p>
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
+            <table class="table w-full text-left text-sm">
                 <thead><tr class="border-b"><th class="p-2">Chorale</th><th class="p-2">Jour</th><th class="p-2">Horaire</th><th class="p-2">Période</th><th class="p-2">État</th><th class="p-2"></th></tr></thead>
                 <tbody>
                     @forelse($rhythms as $rhythm)
@@ -71,7 +71,7 @@
                             <td class="p-2">{{ $rhythm->is_active ? 'Actif' : 'Inactif' }}</td>
                             <td class="p-2">
                                 <div class="flex flex-wrap items-center gap-3">
-                                    <button type="button" wire:click="edit({{ $rhythm->id }})" class="text-indigo-700 font-semibold">Modifier</button>
+                                    <button type="button" wire:click="edit({{ $rhythm->id }})" class="text-choir-700 font-semibold">Modifier</button>
                                     <button type="button" wire:click="repairNotebook({{ $rhythm->id }})"
                                         wire:confirm="Vérifier et aligner les séances futures de ce rythme dans les carnets ? Seules les séances automatiquement créées et jamais modifiées, sans présence, œuvre ou rappel, seront corrigées ou annulées. Toutes les autres seront conservées."
                                         class="font-semibold text-sky-700">Réparer les carnets</button>

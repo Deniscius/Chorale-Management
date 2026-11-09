@@ -11,10 +11,10 @@
     :aria-labelledby="$id('modal-title')" @if($subtitle) :aria-describedby="$id('modal-description')" @endif :aria-busy="busy">
     <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm animate-fade-in" aria-hidden="true"></div>
     <div class="relative flex min-h-full items-start justify-center px-3 py-3 sm:px-6 sm:py-8" x-on:click.self="requestClose()">
-        <div class="relative flex max-h-[calc(100dvh-1.5rem)] w-full {{ $sizes[$size] ?? $sizes['xl'] }} animate-modal-pop flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-900/5 sm:max-h-[calc(100dvh-4rem)]">
+        <div class="relative flex max-h-[calc(100dvh-1.5rem)] w-full {{ $sizes[$size] ?? $sizes['xl'] }} animate-modal-pop flex-col overflow-hidden rounded-lg bg-white shadow-2xl ring-1 ring-slate-900/5 sm:max-h-[calc(100dvh-4rem)]">
             <div class="flex shrink-0 items-start justify-between gap-4 border-b border-slate-100 px-4 py-4 sm:px-6">
                 <div class="min-w-0">
-                    <h2 :id="$id('modal-title')" class="text-base font-semibold text-slate-900 sm:text-lg">{{ $title }}</h2>
+                    <h2 :id="$id('modal-title')" class="modal-heading">{{ $title }}</h2>
                     @if ($subtitle)<p :id="$id('modal-description')" class="mt-1 text-sm text-slate-500">{{ $subtitle }}</p>@endif
                 </div>
                 <button type="button" x-on:click="requestClose()" :disabled="busy" aria-label="Fermer la fenêtre"

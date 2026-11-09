@@ -15,7 +15,7 @@
             this.items = this.items.filter((item) => item.id !== id);
         },
     }" @toast.window="push($event.detail)"
-    class="pointer-events-none fixed inset-x-4 top-4 z-[100] flex flex-col items-end gap-2 sm:inset-x-auto sm:right-6 sm:top-6 sm:w-full sm:max-w-sm"
+    x-cloak x-show="items.length > 0" class="mb-4 flex flex-col gap-2"
     aria-live="polite" aria-atomic="false">
 
     <template x-for="item in items" :key="item.id">
@@ -23,7 +23,7 @@
             x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150"
             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
             :role="item.type === 'error' ? 'alert' : 'status'"
-            class="pointer-events-auto w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl ring-1 ring-slate-900/5">
+            class="w-full overflow-hidden rounded-md border border-slate-200 bg-white">
             <div class="flex items-start gap-3 p-4">
                 <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
                     :class="{

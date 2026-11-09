@@ -3,7 +3,7 @@
     <x-page-header title="Fiches de présence" icon="users"
         subtitle="Saisissez les faits, enregistrez un brouillon puis finalisez la fiche pour la transmettre à la comptabilité." />
 
-    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div class="work-surface p-5">
         <div class="grid gap-4 md:grid-cols-2">
             <div>
                 <label for="attendance-type" class="form-label">Type d’événement</label>
@@ -34,7 +34,7 @@
     @if($this->selectedEvent)
         @if($eventType === 'activity' && !$this->isFinalized())
             @can('manage-attendance')
-                <section class="mt-5 rounded-xl border border-slate-200 bg-white p-5" aria-label="Ajouter des choristes à l’activité">
+                <section class="work-surface mt-5 p-5" aria-label="Ajouter des choristes à l’activité">
                     <h2 class="font-semibold">Choristes attendus pour cette activité</h2>
                     <p class="mt-1 text-sm text-slate-600">Sélectionnez les participants pour préparer la fiche. L’ajout ne les marque pas présents. Les frais de participation s’appliquent aux choristes actifs ; les intervenants extérieurs en sont exclus.</p>
                     <x-input id="attendance-member-search" name="memberSearch" label="Rechercher un choriste" wire:model.live.debounce.300ms="memberSearch" class="mt-3" />
@@ -48,7 +48,7 @@
                 </section>
             @endcan
         @endif
-        <div class="mt-5 rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="work-surface mt-5">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
                 <div>
                     <h2 class="font-semibold text-slate-900">Feuille des choristes attendus</h2>
@@ -74,7 +74,7 @@
                 </div>
             @else
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200">
+                    <table class="table min-w-full divide-y divide-slate-200">
                         <thead class="bg-slate-50"><tr>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-600">Choriste</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-600">Présence</th>

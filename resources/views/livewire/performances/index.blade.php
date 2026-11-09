@@ -12,7 +12,7 @@
         </x-slot>
     </x-page-header>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Événements" :value="$this->stats['total']" icon="sparkles" color="slate" :href="route('performances.index', []).'#resultats'" />
         <x-stat-card label="À venir" :value="$this->stats['avenir']" icon="calendar" color="blue" :href="route('performances.index', ['periode'=>'avenir']).'#resultats'" />
         <x-stat-card label="Budget cumulé" :value="\App\Support\Money::compact($this->stats['budget'])" icon="banknotes" color="amber" :href="route('performances.index', []).'#resultats'" />

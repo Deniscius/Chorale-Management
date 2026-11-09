@@ -15,7 +15,7 @@
             <label class="flex items-center gap-3 rounded-xl border bg-white p-4"><input type="checkbox" checked disabled class="h-5 w-5 rounded"><span>Choriste : {{ $this->account->member->full_name }}</span></label>
             @forelse($this->commissions as $entry)
                 @php($private = $entry->archive_commission && \App\Enums\Commission::from($entry->archive_commission)->hasPrivateArchive())
-                <fieldset wire:key="assignment-{{ $entry->id }}" class="rounded-xl border border-slate-200 bg-white p-4">
+                <fieldset wire:key="assignment-{{ $entry->id }}" class="work-surface p-4">
                     <legend class="px-2 font-bold text-slate-900">{{ $entry->name }}</legend>
                     <p class="mb-3 text-sm text-slate-700">{{ \App\Models\ChoirCommission::statuses()[$entry->status] }} · {{ \App\Models\ChoirCommission::moduleLabels()[$entry->module_key] ?? 'Mission sans module supplémentaire' }}</p>
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">

@@ -9,9 +9,9 @@
 
     <p class="mb-5 rounded-xl bg-blue-50 p-4 text-sm text-blue-900">Une échéance récurrente est créée au jour choisi. Les montants et règlements déjà enregistrés restent inchangés quand vous modifiez une règle.</p>
 
-    <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <section class="work-surface overflow-hidden">
         <div class="border-b p-5"><h2 class="font-semibold">Règles de la chorale</h2><p class="mt-1 text-sm text-slate-500">Les types désactivés restent visibles dans l’historique.</p></div>
-        <div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="p-3">Type</th><th class="p-3">Rubrique</th><th class="p-3">Rythme et échéance</th><th class="p-3">Montant</th><th class="p-3">État</th><th class="p-3 text-right">Action</th></tr></thead>
+        <div class="overflow-x-auto"><table class="table w-full text-left text-sm"><thead class="bg-slate-50 text-slate-500"><tr><th class="p-3">Type</th><th class="p-3">Rubrique</th><th class="p-3">Rythme et échéance</th><th class="p-3">Montant</th><th class="p-3">État</th><th class="p-3 text-right">Action</th></tr></thead>
             <tbody class="divide-y divide-slate-100">
                 @foreach($this->types as $type)
                     <tr wire:key="financial-type-{{ $type->id }}" class="hover:bg-slate-50">

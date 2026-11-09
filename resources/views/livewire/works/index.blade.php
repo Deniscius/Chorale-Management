@@ -14,7 +14,7 @@
         </x-slot>
     </x-page-header>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <x-stat-card label="Œuvres au catalogue" :value="$this->stats['total']" icon="book" color="slate" :href="route('works.index', []).'#resultats'" />
         <x-stat-card label="Au répertoire" :value="$this->stats['repertoire']" icon="music" color="purple"
             hint="œuvres chantées régulièrement" :href="route('works.index', ['repertoire'=>'oui']).'#resultats'" />

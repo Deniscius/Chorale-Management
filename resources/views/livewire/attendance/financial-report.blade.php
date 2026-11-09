@@ -12,7 +12,7 @@
     </div>
 
     @can('configure-attendance-finance')
-        <details class="mb-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <details class="work-surface mb-5 p-5">
             <summary class="cursor-pointer font-semibold text-slate-900">Règles financières de la chorale</summary>
             <form wire:submit="saveRules" class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 <label class="flex items-center gap-3 rounded-lg border p-3"><input type="checkbox" wire:model="financialTrackingEnabled" class="rounded border-slate-300"><span class="text-sm">Activer les montants indicatifs</span></label>
@@ -26,7 +26,7 @@
         </details>
     @endcan
 
-    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div class="metric-grid grid grid-cols-2 gap-4 lg:grid-cols-4">
         <x-stat-card label="Incidents" :value="$this->totals['count']" icon="users" color="slate" />
         <x-stat-card label="Absences" :value="$this->totals['absences']" icon="alert" color="red" />
         <x-stat-card label="Retards" :value="$this->totals['late']" icon="clock" color="amber" />
@@ -39,13 +39,13 @@
         <div><label class="form-label" for="incident-to">Au</label><input id="incident-to" type="date" wire:model.live="to" class="form-input"></div>
     </div></x-filter-bar>
 
-    <section class="mt-5 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <section class="work-surface mt-5 overflow-hidden">
         <div class="border-b border-slate-200 px-5 py-4">
             <h2 class="font-semibold text-slate-900">Fiches de présence validées</h2>
             <p class="mt-1 text-sm text-slate-600">Toutes les fiches transmises par le secrétariat apparaissent ici, y compris lorsqu’il n’y a ni absence ni retard.</p>
         </div>
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200">
+            <table class="table min-w-full divide-y divide-slate-200">
                 <thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Date</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Événement</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Présences</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Validation</th><th class="px-4 py-3 text-right text-xs font-semibold uppercase">Rapport</th></tr></thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($this->finalizedSheets as $sheet)
@@ -64,9 +64,9 @@
         </div>
     </section>
 
-    <div id="resultats" class="mt-5 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div id="resultats" class="work-surface mt-5 overflow-x-auto">
         <div class="border-b border-slate-200 px-5 py-4"><h2 class="font-semibold text-slate-900">Incidents à examiner par la comptabilité</h2><p class="mt-1 text-sm text-slate-600">Absences non excusées et retards dépassant le seuil configuré.</p></div>
-        <table class="min-w-full divide-y divide-slate-200">
+        <table class="table min-w-full divide-y divide-slate-200">
             <thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Date</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Choriste</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Événement</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase">Incident</th><th class="px-4 py-3 text-right text-xs font-semibold uppercase">Montant</th><th class="px-4 py-3 text-right text-xs font-semibold uppercase">Action</th></tr></thead>
             <tbody class="divide-y divide-slate-100">
                 @forelse($this->incidents as $incident)

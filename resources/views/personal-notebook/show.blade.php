@@ -13,7 +13,7 @@
             Votre compte n’est pas encore rattaché à une fiche de choriste. Complétez vos informations personnelles pour activer votre carnet.
         </x-alert>
     @else
-        <section class="overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-lg">
+        <section class="overflow-hidden profile-banner p-6 text-white">
             <div class="flex flex-col gap-5 sm:flex-row sm:items-center">
                 <div class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-white/30 bg-white/10 text-2xl font-bold shadow-lg">
                     @if($member->photo_path)
@@ -38,7 +38,7 @@
             </div>
         </section>
 
-        <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="metric-grid mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <x-stat-card label="Présences" :value="$attendance['present'] ?? 0" icon="check" color="green" />
             <x-stat-card label="Retards" :value="$attendance['late'] ?? 0" icon="clock" color="amber" />
             <x-stat-card label="Absences" :value="$attendance['absent'] ?? 0" icon="alert" color="red" />
@@ -46,7 +46,7 @@
         </div>
 
         <div class="mt-6 grid gap-6 xl:grid-cols-3">
-            <section class="rounded-xl border border-slate-200 bg-white shadow-sm xl:col-span-2">
+            <section class="work-surface xl:col-span-2">
                 <header class="border-b border-slate-200 px-5 py-4">
                     <h2 class="font-semibold text-slate-900">Mes prochains rendez-vous</h2>
                     <p class="mt-1 text-sm text-slate-500">Répétitions, activités, célébrations et concerts auxquels je suis attendu.</p>
@@ -80,7 +80,7 @@
             </section>
 
             <div class="space-y-6">
-                <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+                <section class="work-surface">
                     <header class="border-b border-slate-200 px-5 py-4"><h2 class="font-semibold text-slate-900">Ma situation</h2></header>
                     <div class="space-y-4 p-5 text-sm">
                         <div class="flex items-center justify-between gap-3"><span class="text-slate-600">Mois attendus depuis l’adhésion</span><strong>{{ $monthlyArrears['expected_months'] }}</strong></div>
@@ -100,7 +100,7 @@
                 </section>
 
                 @if($tasks->isNotEmpty())
-                    <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <section class="work-surface">
                         <header class="border-b border-slate-200 px-5 py-4"><h2 class="font-semibold text-slate-900">Mes tâches</h2></header>
                         <ul class="divide-y divide-slate-100">
                             @foreach($tasks as $task)
@@ -132,7 +132,7 @@
             </div>
         </div>
 
-        <section class="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm">
+        <section class="work-surface mt-6">
             <header class="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
                 <div>
                     <h2 class="font-semibold text-slate-900">Courriers de la chorale</h2>
@@ -164,7 +164,7 @@
             @endif
         </section>
 
-        <section class="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm">
+        <section class="work-surface mt-6">
             <header class="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
                 <div>
                     <h2 class="font-semibold text-slate-900">Archives à consulter</h2>

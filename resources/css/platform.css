@@ -1,12 +1,12 @@
 .platform-body {
-    --p-ink: #182c25;
-    --p-muted: #687970;
-    --p-line: #e0e7e2;
-    --p-green: #23664d;
-    --p-soft: #edf5ef;
-    background: #f5f7f4;
+    --p-ink: #302c32;
+    --p-muted: #716963;
+    --p-line: #dedad6;
+    --p-green: #593c53;
+    --p-soft: #f6f2f5;
+    background: #faf9f6;
     color: var(--p-ink);
-    font-family: Inter,"Segoe UI",system-ui,sans-serif;
+    font-family: "Source Sans 3","Segoe UI",system-ui,sans-serif;
     font-size: 14px;
     line-height: 1.5
 }
@@ -17,7 +17,7 @@
     display: none!important
 }
 .platform-body :focus-visible {
-    outline: 3px solid #6fa88a;
+    outline: 3px solid #a17f98;
     outline-offset: 4px
 }
 .platform-body a,.platform-body button {
@@ -38,8 +38,8 @@
     display: flex;
     flex-direction: column;
     padding: 30px 18px 22px;
-    background: #13271f;
-    color: #c3d0c8
+    background: #392c38;
+    color: #dbcbd8
 }
 .p-brand {
     display: flex;
@@ -56,26 +56,26 @@
     width: 39px;
     height: 39px;
     border-radius: 12px;
-    background: #ebc77c;
-    color: #213c2c;
+    background: #c4a46f;
+    color: #392c38;
     flex-shrink: 0
 }
 .p-brand small {
     display: block;
     margin-top: 2px;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 500;
-    letter-spacing: .13em;
-    text-transform: uppercase;
-    color: #a1b6a8
+    letter-spacing: normal;
+    text-transform: none;
+    color: #c7b8c4
 }
 .p-nav-label {
     margin: 49px 12px 14px;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 650;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-    color: #8da596
+    letter-spacing: normal;
+    text-transform: none;
+    color: #c7b8c4
 }
 .p-nav {
     display: grid;
@@ -89,16 +89,16 @@
     border-radius: 9px;
     font-size: 13px;
     font-weight: 550;
-    color: #b9cec0
+    color: #ede3eb
 }
 .p-nav a:hover {
-    background: #203c2e;
+    background: #493447;
     color: white
 }
 .p-nav a[aria-current] {
-    background: #294c39;
+    background: #593c53;
     color: #fff;
-    box-shadow: inset 3px 0 #e6c17a
+    box-shadow: inset 3px 0 #c4a46f
 }
 .p-sidebar-note {
     margin: auto 10px 0;
@@ -139,7 +139,7 @@
     color: #eff5ef
 }
 .p-sidebar-profile small {
-    font-size: 10px;
+    font-size: 12px;
     color: #9bb1a3
 }
 .p-workspace {
@@ -176,7 +176,7 @@
     display: flex;
     align-items: center;
     gap: 7px;
-    font-size: 11px;
+    font-size: 12px;
     color: #4d6b57
 }
 .p-session svg {
@@ -195,7 +195,7 @@
     margin: auto;
     padding: 0 36px 25px;
     color: #647668;
-    font-size: 11px
+    font-size: 12px
 }
 .p-page-head {
     display: flex;
@@ -205,10 +205,10 @@
 }
 .p-kicker {
     margin: 0 0 7px;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: .16em;
-    text-transform: uppercase;
+    letter-spacing: normal;
+    text-transform: none;
     color: var(--p-green)
 }
 .p-page-head h1 {
@@ -230,7 +230,7 @@
     align-items: center;
     gap: 8px;
     color: var(--p-muted);
-    font-size: 11px;
+    font-size: 12px;
     white-space: nowrap
 }
 .p-btn {
@@ -250,8 +250,8 @@
     cursor: pointer
 }
 .p-btn:hover {
-    background: #f3f7f2;
-    border-color: #b9c9be
+    background: #faf9f6;
+    border-color: #c8c2bd
 }
 .p-btn svg {
     width: 16px;
@@ -313,7 +313,7 @@
     justify-content: space-between;
     gap: 8px;
     min-height: 30px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 550;
     color: var(--p-muted)
 }
@@ -351,7 +351,7 @@
     margin-top: auto;
     padding-top: 11px;
     border-top: 1px solid #f0f3ef;
-    font-size: 10px;
+    font-size: 12px;
     color: var(--p-muted)
 }
 .p-kpi-foot svg {
@@ -382,7 +382,7 @@
 }
 .p-panel-head p {
     margin: 4px 0 0;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--p-muted)
 }
 .p-panel-body {
@@ -407,12 +407,12 @@
     grid-template-columns: repeat(3,minmax(0,1fr));
     border: 1px solid var(--p-line);
     border-radius: 12px;
-    background: #edf2ec;
+    background: #f0eeeb;
     padding: 19px 0
 }
 .p-stat-strip>div,.p-stat-strip>a {
     padding: 0 24px;
-    border-right: 1px solid #dce5db
+    border-right: 1px solid #dedad6
 }
 .p-stat-strip>:last-child {
     border: 0
@@ -426,8 +426,8 @@
 .p-stat-strip span {
     display: block;
     margin-bottom: 5px;
-    font-size: 11px;
-    color: #607767
+    font-size: 12px;
+    color: #625b56
 }
 .p-list-item {
     display: flex;
@@ -455,11 +455,11 @@
 .p-list-name small {
     display: block;
     margin-top: 3px;
-    font-size: 10px;
+    font-size: 12px;
     color: var(--p-muted)
 }
 .p-list-item:hover {
-    background: #fafcf9
+    background: #faf9f6
 }
 .p-badge {
     display: inline-flex;
@@ -468,7 +468,7 @@
     flex-shrink: 0;
     padding: 4px 9px;
     border-radius: 6px;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.4;
     font-weight: 600;
     background: #edf2ee;
@@ -510,7 +510,7 @@
     color: var(--p-muted)
 }
 .p-small {
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.75
 }
 .p-note {
@@ -521,7 +521,7 @@
     border-radius: 8px;
     background: #f6f7f2;
     color: #5f6e5c;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.7
 }
 .p-note svg {
@@ -609,14 +609,14 @@
     gap: 7px
 }
 .p-field label {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
-    color: #42584b
+    color: #514b48
 }
 .p-field input,.p-field select,.p-field textarea {
     width: 100%;
     min-width: 0;
-    border: 1px solid #d7e0d8;
+    border: 1px solid #c8c2bd;
     border-radius: 8px;
     background: #fff;
     padding: 11px 12px;
@@ -626,18 +626,18 @@
     box-shadow: 0 1px 2px #18332203
 }
 .p-field input:focus,.p-field textarea:focus,.p-field select:focus {
-    border-color: #68967b;
+    border-color: #6b4964;
     outline: 0;
-    box-shadow: 0 0 0 3px #23664d14
+    box-shadow: 0 0 0 3px #593c5314
 }
 .p-field [aria-invalid=true] {
     border-color: #bd786f
 }
 .p-field input::placeholder {
-    color: #65766b
+    color: #716963
 }
 .p-field small {
-    font-size: 10px;
+    font-size: 12px;
     color: var(--p-muted);
     line-height: 1.6
 }
@@ -672,8 +672,8 @@
     padding: 12px 23px;
     background: #fafbf8;
     border-bottom: 1px solid var(--p-line);
-    font-size: 10px;
-    text-transform: uppercase;
+    font-size: 12px;
+    text-transform: none;
     letter-spacing: .05em;
     font-weight: 600;
     color: #637367;
@@ -763,7 +763,7 @@
     border-top: 1px solid var(--p-line);
     padding-top: 18px;
     margin-top: 22px;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--p-muted);
     line-height: 1.8
 }
@@ -833,19 +833,19 @@
 }
 .p-timeline-title time {
     color: #67786a;
-    font-size: 10px;
+    font-size: 12px;
     white-space: nowrap
 }
 .p-timeline-item p {
     margin-top: 6px;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.75;
     color: var(--p-muted);
     overflow-wrap: anywhere
 }
 .p-timeline-item details {
     margin-top: 10px;
-    font-size: 11px
+    font-size: 12px
 }
 .p-timeline-item summary {
     color: var(--p-green);
@@ -857,7 +857,7 @@
     overflow-x: auto;
     border-radius: 7px;
     background: #f5f7f3;
-    font-size: 10px
+    font-size: 12px
 }
 .p-health-grid {
     display: grid;
@@ -883,7 +883,7 @@
     font-weight: 600
 }
 .p-health-value small {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 400;
     color: var(--p-muted)
 }
@@ -896,7 +896,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background: #132b21;
+    background: #392c38;
     color: #f2f5ec;
     padding: 48px 12% 38px;
     position: relative;
@@ -950,7 +950,7 @@
     color: #d5bd7f
 }
 .p-auth-bottom {
-    font-size: 10px;
+    font-size: 12px;
     color: #8fab95;
     letter-spacing: .04em
 }
@@ -1036,7 +1036,7 @@
     gap: 6px;
     margin-top: 24px;
     color: #61735f;
-    font-size: 10px
+    font-size: 12px
 }
 .p-auth-trust svg {
     width: 13px;
@@ -1068,7 +1068,7 @@
         padding: 17px 15px
     }
     .p-kpi-top {
-        font-size: 10px
+        font-size: 12px
     }
     .p-icon-box {
         width: 27px;
@@ -1114,10 +1114,10 @@
         justify-content: center;
         padding: 11px 8px;
         gap: 8px;
-        font-size: 11px
+        font-size: 12px
     }
     .p-nav a[aria-current] {
-        box-shadow: inset 0 -2px #e6c17a
+        box-shadow: inset 0 -2px #c4a46f
     }
     .p-nav svg {
         width: 17px;
@@ -1127,7 +1127,7 @@
         grid-template-columns: 1.3fr 1fr
     }
     .p-session {
-        font-size: 10px
+        font-size: 12px
     }
     .p-auth-story {
         padding: 35px 9%
@@ -1152,12 +1152,12 @@
         display: none
     }
     .p-breadcrumb {
-        font-size: 10px
+        font-size: 12px
     }
     .p-topbar .p-btn {
         padding: 8px 11px;
         min-height: 35px;
-        font-size: 10px
+        font-size: 12px
     }
     .p-page-head {
         align-items: flex-start
@@ -1183,10 +1183,10 @@
         margin: 13px 0 12px
     }
     .p-kpi-foot {
-        font-size: 9px
+        font-size: 12px
     }
     .p-kpi-top {
-        font-size: 10px;
+        font-size: 12px;
         align-items: flex-start
     }
     .p-columns,.p-columns-equal {
@@ -1208,7 +1208,7 @@
         padding: 0 13px
     }
     .p-stat-strip span {
-        font-size: 9px;
+        font-size: 12px;
         line-height: 1.6
     }
     .p-stat-strip strong {
@@ -1221,7 +1221,7 @@
     .p-nav a {
         flex-direction: column;
         gap: 6px;
-        font-size: 10px;
+        font-size: 12px;
         padding: 10px 3px
     }
     .p-brand {
@@ -1233,7 +1233,7 @@
         border-radius: 10px
     }
     .p-brand small {
-        font-size: 9px
+        font-size: 12px
     }
     .p-toolbar {
         flex-wrap: wrap;
@@ -1248,7 +1248,7 @@
     }
     .p-footer {
         padding: 0 17px 22px;
-        font-size: 10px
+        font-size: 12px
     }
     .p-form-row {
         grid-template-columns: 1fr
@@ -1263,7 +1263,7 @@
     }
     .p-detail-list>div {
         gap: 15px;
-        font-size: 11px
+        font-size: 12px
     }
     .p-pagination {
         padding: 16px
@@ -1319,3 +1319,36 @@
 .p-topbar .p-breadcrumb {
     min-width: 0
 }
+
+/* La plateforme partage la charte, tout en gardant sa navigation propre. */
+.p-main h1, .p-login h1 { font-family: "Alegreya", Georgia, serif; font-weight:500; color:#493447; }
+.p-main h1 { font-size:2.5rem; line-height:1.15; }
+.p-card, .p-panel { box-shadow:none; border-radius:8px; }
+.p-brand-mark { border-radius:6px; }
+
+.p-sidebar-note p,.p-sidebar-profile small { color:#c7b8c4; }
+.p-sidebar-profile .p-avatar { background:#593c53; color:#fff; }
+.p-avatar { background:#ede3eb; color:#493447; }
+.p-icon-box { color:#593c53; border-radius:5px; }
+.p-kpi { border:0; border-bottom:2px solid #dedad6; border-radius:0; background:transparent; box-shadow:none; }
+.p-kpi[href]:hover { border-color:#6b4964; box-shadow:none; }
+.p-kpi-top .p-icon-box { display:none; }
+.p-btn-primary:hover { background:#493447; border-color:#493447; }
+.p-page-head h1 { font-family:"Alegreya",Georgia,serif; font-weight:500; letter-spacing:0; font-size:2.5rem; }
+
+.p-auth-copy h2,.p-auth-card h1 { font-family:"Alegreya",Georgia,serif; font-weight:400; letter-spacing:0; }
+.p-auth-copy h2 em { color:inherit; }
+.p-auth-copy>p,.p-auth-copy .p-kicker,.p-auth-benefits li,.p-auth-bottom { color:#dbcbd8; }
+.p-auth-art { display:none; }
+.p-auth-card h1 { color:#493447; }
+
+.p-main { width:100%; min-width:0; }
+.p-main>*,.p-panel,.p-table-wrap { min-width:0; max-width:100%; }
+.p-page-head,.p-topbar { flex-wrap:wrap; }
+.p-btn { min-height:44px; }
+@media(max-width:700px) {
+    .p-topbar .p-btn { min-height:44px; }
+    .p-main h1,.p-page-head h1 { font-size:2rem; }
+}
+/* Contenir aussi les libellés masqués des colonnes dans le tableau défilant. */
+.p-table-wrap { position:relative; }

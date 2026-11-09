@@ -3,7 +3,7 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="robots" content="noindex, nofollow"><meta name="theme-color" content="#13271f">
+    <meta name="robots" content="noindex, nofollow"><meta name="theme-color" content="#392c38">
     <title>{{ $title }} · Gestion Chorale</title>
     <link rel="icon" href="{{ asset('brand-icon.svg') }}" type="image/svg+xml">
     @vite(['resources/css/app.css', 'resources/css/platform.css', 'resources/js/platform.js'])

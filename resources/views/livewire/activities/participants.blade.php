@@ -1,11 +1,11 @@
 <div class="space-y-5">
-    <section class="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4" aria-labelledby="batch-participants-title">
+    <section class="rounded-xl border border-choir-200 bg-choir-50/50 p-4" aria-labelledby="batch-participants-title">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h3 id="batch-participants-title" class="font-semibold text-slate-900">Ajouter plusieurs participants</h3>
                 <p class="mt-1 text-xs text-slate-600">Cochez les choristes à inscrire. Le rôle, les heures et la présence pourront être renseignés après l'inscription.</p>
             </div>
-            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-indigo-800">{{ count($selectedMemberIds) }} sélectionné(s)</span>
+            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-choir-800">{{ count($selectedMemberIds) }} sélectionné(s)</span>
         </div>
         <div class="mt-4">
             <label for="participant-batch-search" class="form-label">Rechercher un choriste</label>
@@ -20,8 +20,8 @@
             <fieldset class="max-h-64 space-y-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-2" aria-describedby="participant-batch-help">
                 <legend class="sr-only">Choristes à inscrire</legend>
                 @forelse($this->availableMembers as $member)
-                    <label wire:key="member-check-{{ $member->id }}" class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-slate-50 focus-within:ring-2 focus-within:ring-indigo-500">
-                        <input type="checkbox" value="{{ $member->id }}" wire:model.live="selectedMemberIds" class="h-4 w-4 rounded border-slate-300 text-indigo-700" />
+                    <label wire:key="member-check-{{ $member->id }}" class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-slate-50 focus-within:ring-2 focus-within:ring-choir-500">
+                        <input type="checkbox" value="{{ $member->id }}" wire:model.live="selectedMemberIds" class="h-4 w-4 rounded border-slate-300 text-choir-700" />
                         <span class="font-medium text-slate-800">{{ $member->full_name }}{{ $member->status === \App\Enums\MemberStatus::Externe ? ' · Intervenant extérieur' : '' }}</span>
                     </label>
                 @empty
@@ -37,7 +37,7 @@
         </form>
     </section>
 
-    <details class="rounded-xl border border-slate-200 bg-white">
+    <details class="work-surface">
         <summary class="cursor-pointer px-4 py-3 text-sm font-semibold text-slate-800">Ajout individuel avec détails (optionnel)</summary>
     <form wire:submit="add" class="rounded-lg border border-slate-200 bg-slate-50 p-4">
         <p class="text-sm font-semibold text-slate-800">Ajouter un participant</p>
@@ -110,8 +110,8 @@
             </p>
         </div>
 
-        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-            <table class="min-w-full divide-y divide-slate-200">
+        <div class="work-surface overflow-hidden">
+            <table class="table min-w-full divide-y divide-slate-200">
                 <thead class="bg-slate-50">
                     <tr>
                         <th scope="col" class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Choriste</th>

@@ -9,10 +9,10 @@
     <x-welcome-actions />
 
     @if($personalNotebook['member'])
-        <section class="mb-6 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-white shadow-sm">
+        <section class="work-surface mb-6 overflow-hidden">
             <div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-amber-700">Mon carnet personnel</p>
+                    <p class="text-sm font-semibold text-choir-700">Mon carnet personnel</p>
                     <h2 class="mt-1 text-lg font-bold text-slate-900">
                         {{ $personalNotebook['timeline']->count() }} rendez-vous à venir
                     </h2>
@@ -35,11 +35,11 @@
         </section>
     @endif
 
-    <details class="rounded-2xl border border-slate-200 bg-white p-4">
+    <details class="work-surface p-4">
         <summary class="help-control cursor-pointer rounded-lg px-2 py-3 text-lg font-semibold text-slate-900">Voir les détails de la chorale</summary>
         <div class="mt-4">
     {{-- Indicateurs --}}
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="metric-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         @can('view-module', \App\Enums\UserRole::MODULE_MEMBERS)
             <x-stat-card label="Choristes actifs" :value="$kpis['choristes']" icon="users" color="blue"
                 :href="route('members.index', ['statut'=>'actif'])" />
@@ -62,7 +62,7 @@
     <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         {{-- Prochaines répétitions --}}
         @can('view-module', \App\Enums\UserRole::MODULE_LITURGIQUE)
-            <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+            <section class="work-surface">
                 <header class="flex items-center justify-between border-b border-slate-200 px-5 py-3">
                     <h2 class="text-sm font-semibold text-slate-900">Prochaines répétitions</h2>
                     <span class="text-xs text-slate-500">{{ $kpis['repetitions'] }} à venir</span>
@@ -97,7 +97,7 @@
 
         {{-- Célébrations & concerts --}}
         @can('view-module', \App\Enums\UserRole::MODULE_LITURGIQUE)
-            <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+            <section class="work-surface">
                 <header class="flex items-center justify-between border-b border-slate-200 px-5 py-3">
                     <h2 class="text-sm font-semibold text-slate-900">Célébrations & concerts</h2>
                     <span class="text-xs text-slate-500">{{ $kpis['concerts'] }} à venir</span>
@@ -129,7 +129,7 @@
 
         {{-- Derniers courriers --}}
         @can('view-module', \App\Enums\UserRole::MODULE_COURRIERS)
-            <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+            <section class="work-surface">
                 <header class="flex items-center justify-between border-b border-slate-200 px-5 py-3">
                     <h2 class="text-sm font-semibold text-slate-900">Derniers courriers</h2>
                     <span class="text-xs text-slate-500">{{ $kpis['courriers'] }} en attente</span>
@@ -165,7 +165,7 @@
 
         {{-- Activités --}}
         @can('view-module', \App\Enums\UserRole::MODULE_ACTIVITES)
-            <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+            <section class="work-surface">
                 <header class="flex items-center justify-between border-b border-slate-200 px-5 py-3">
                     <h2 class="text-sm font-semibold text-slate-900">Prochaines activités</h2>
                     <span class="text-xs text-slate-500">{{ $kpis['activites'] }} actives</span>

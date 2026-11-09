@@ -54,15 +54,17 @@ try {
     }
     await page.goto(origin + '/membres');
     await page.getByRole('button', { name: 'Nouvel intervenant extérieur', exact: true }).click();
-    await page.getByRole('dialog').waitFor();
-    await page.screenshot({ path: `${directory}/external-member-form-mobile.png`, fullPage: true });
+    await page.getByRole('heading', { name: 'Nouvel intervenant extérieur', exact: true }).waitFor();
+    await page.locator('#members-form-status').waitFor({ state: 'visible' });
+    await page.screenshot({ path: `${directory}/external-member-form-mobile.png` });
     assert.equal(await page.locator('#members-form-status').inputValue(), 'externe');
     await page.getByRole('button', { name: 'Fermer la fenêtre', exact: true }).click();
     await page.goto(origin + '/cotisations');
     const edit = page.getByRole('button', { name: 'Modifier', exact: true }).first();
     await edit.click();
-    await page.getByRole('dialog').waitFor();
-    await page.screenshot({ path: `${directory}/contribution-form-mobile.png`, fullPage: true });
+    await page.getByRole('heading', { name: 'Modifier la cotisation', exact: true }).waitFor();
+    await page.locator('#contributions-form-due_amount').waitFor({ state: 'visible' });
+    await page.screenshot({ path: `${directory}/contribution-form-mobile.png` });
     await page.getByRole('button', { name: 'Fermer la fenêtre', exact: true }).click();
     await capture('/plateforme/connexion', 'platform-login-mobile', true);
     const bits = [...credentials.platform.secret].map(c => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'.indexOf(c).toString(2).padStart(5, '0')).join('');

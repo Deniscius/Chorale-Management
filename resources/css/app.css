@@ -447,3 +447,7 @@ html.comfortable-text { font-size: 125%; }
     .table button { min-height:44px; }
     .table a[title] { display:inline-flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; }
 }
+
+@media(max-width:639px) {
+    .table:has(th:nth-child(6)) { min-width:56rem; }
+}

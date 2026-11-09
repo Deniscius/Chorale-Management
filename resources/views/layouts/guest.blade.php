@@ -55,6 +55,7 @@
                 </div>
 
                 <div class="auth-form">
+                    @include('layouts.toasts')
                     <x-accessibility-help :guest="true" />
                     {{ $slot }}
                 </div>
@@ -65,7 +66,6 @@
             </div>
         </main>
     </div>
-    @include('layouts.toasts')
 </body>
 
 </html>

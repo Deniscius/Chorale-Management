@@ -74,7 +74,7 @@
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-                <select id="month" wire:model.live="month"
+                <select aria-label="Mois" id="month" wire:model.live="month"
                     class="form-select">
                     <option value="">Mois</option>
                     @foreach (range(1, 12) as $m)
@@ -82,7 +82,7 @@
                     @endforeach
                 </select>
 
-                <select id="year" wire:model.live="year"
+                <select aria-label="Exercice" id="year" wire:model.live="year"
                     class="form-select">
                     <option value="">Année</option>
                     @foreach (range((int) now()->year, (int) now()->year - 4) as $y)

@@ -13,8 +13,8 @@ COPY tailwind.config.js postcss.config.js ./
 RUN npm run build
 
 FROM php:8.4-apache-bookworm AS runtime
-RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev libicu-dev libonig-dev libzip-dev unzip git gosu libreoffice-writer-nogui libreoffice-calc-nogui libreoffice-impress-nogui poppler-utils fonts-dejavu-core \
-    && docker-php-ext-install -j$(nproc) pdo_pgsql intl mbstring zip pcntl opcache \
+RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev libicu-dev libonig-dev libzip-dev libgmp-dev unzip git gosu libreoffice-writer-nogui libreoffice-calc-nogui libreoffice-impress-nogui poppler-utils fonts-dejavu-core \
+    && docker-php-ext-install -j$(nproc) pdo_pgsql intl mbstring zip pcntl opcache bcmath gmp \
     && a2enmod rewrite headers remoteip \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
